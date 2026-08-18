@@ -1,0 +1,171 @@
+using System;
+using System.Collections.Generic;
+using HappyShoot.Domain.Events;
+using HappyShoot.Domain.Skills;
+using HappyShoot.Domain.Spatial;
+
+namespace HappyShoot.Domain.Entities
+{
+    /// <summary>
+    /// Pure C# Player entity containing all player domain logic, stats, and skill execution.
+    /// </summary>
+    public class PlayerEntity : ISpatialEntity
+    {
+        public int Id { get; }
+        public Vector2D Position { get; private set; }
+        public float Radius { get; set; } = 0.5f;
+        public bool IsActive => !IsDead;
+
+        public CharacterStats Stats { get; set; }
+        public float CurrentHealth { get; private set; }
+        public bool IsDead => CurrentHealth <= 0f;
+
+        private readonly List<ISkill> _skills = new List<ISkill>(8);
+        public IReadOnlyList<ISkill> Skills => _skills;
+
+        private readonly HashSet<string> _ownedPassives = new HashSet<string>(8);
+        public IReadOnlyCollection<string> OwnedPassives => _ownedPassives;
+
+        private readonly EventBus _eventBus;
+        private readonly SkillContext _skillContext;
+
+        public PlayerEntity(int id, CharacterStats stats, Vector2D startPosition, EventBus eventBus = null)
+        {
+            Id = id;
+            Stats = stats;
+            Position = startPosition;
+            CurrentHealth = stats.MaxHealth;
+            _eventBus = eventBus;
+
+            _skillContext = new SkillContext
+            {
+                CasterId = id,
+                CasterPosition = startPosition,
+                BaseDamage = 10f,
+                AreaMultiplier = stats.AreaMultiplier,
+                SpeedMultiplier = stats.ProjectileSpeedMultiplier
+            };
+        }
+
+        /// <summary>
+        /// Moves the player by the given direction vector (normalized automatically).
+        /// </summary>
+        public void Move(Vector2D direction, float deltaTime)
+        {
+            if (IsDead || deltaTime <= 0f) return;
+
+            Vector2D norm = direction.Normalized;
+            if (norm.SqrMagnitude > 0f)
+            {
+                Position += norm * (Stats.MoveSpeed * deltaTime);
+                _skillContext.CasterPosition = Position;
+                _eventBus?.Publish(new PlayerMovedEvent(Id, Position));
+            }
+        }
+
+        /// <summary>
+        /// Applies mitigated damage based on Armor and publishes PlayerDamagedEvent or PlayerDiedEvent.
+        /// </summary>
+        public void TakeDamage(float rawDamage)
+        {
+            if (IsDead || rawDamage <= 0f) return;
+
+            float damageToApply = Stats.CalculateMitigatedDamage(rawDamage);
+            CurrentHealth = Math.Max(0f, CurrentHealth - damageToApply);
+
+            _eventBus?.Publish(new PlayerDamagedEvent(Id, damageToApply, CurrentHealth, Stats.MaxHealth));
+
+            if (CurrentHealth <= 0f)
+            {
+                _eventBus?.Publish(new PlayerDiedEvent(Id));
+            }
+        }
+
+        /// <summary>
+        /// Restores player health capped at MaxHealth.
+        /// </summary>
+        public void Heal(float amount)
+        {
+            if (IsDead || amount <= 0f) return;
+
+            float previousHealth = CurrentHealth;
+            CurrentHealth = Math.Min(Stats.MaxHealth, CurrentHealth + amount);
+            float actualHealed = CurrentHealth - previousHealth;
+
+            if (actualHealed > 0f)
+            {
+                _eventBus?.Publish(new PlayerHealedEvent(Id, actualHealed, CurrentHealth, Stats.MaxHealth));
+            }
+        }
+
+        /// <summary>
+        /// Equips a skill to the player.
+        /// </summary>
+        public void AddSkill(ISkill skill)
+        {
+            if (skill == null) throw new ArgumentNullException(nameof(skill));
+            if (!_skills.Contains(skill))
+            {
+                _skills.Add(skill);
+            }
+        }
+
+        /// <summary>
+        /// Replaces an existing skill (used for skill evolution).
+        /// </summary>
+        public bool ReplaceSkill(string oldSkillId, ISkill newSkill)
+        {
+            if (newSkill == null) throw new ArgumentNullException(nameof(newSkill));
+
+            for (int i = 0; i < _skills.Count; i++)
+            {
+                if (_skills[i].Id == oldSkillId)
+                {
+                    _skills[i] = newSkill;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Registers an acquired passive item ID.
+        /// </summary>
+        public void AddPassive(string passiveId)
+        {
+            if (!string.IsNullOrEmpty(passiveId))
+            {
+                _ownedPassives.Add(passiveId);
+            }
+        }
+
+        public bool HasPassive(string passiveId) => _ownedPassives.Contains(passiveId);
+
+        /// <summary>
+        /// Regular domain tick to handle health regeneration and active skill cycles.
+        /// </summary>
+        public void Update(float deltaTime, ISpatialGrid2D enemyGrid, Projectiles.ProjectileManager projectileManager = null)
+        {
+            if (IsDead || deltaTime <= 0f) return;
+
+            // Health regen
+            if (Stats.HealthRegen > 0f && CurrentHealth < Stats.MaxHealth)
+            {
+                Heal(Stats.HealthRegen * deltaTime);
+            }
+
+            // Update skill context
+            _skillContext.CasterPosition = Position;
+            _skillContext.AreaMultiplier = Stats.AreaMultiplier;
+            _skillContext.SpeedMultiplier = Stats.ProjectileSpeedMultiplier;
+            _skillContext.TargetGrid = enemyGrid;
+            _skillContext.ProjectileManager = projectileManager;
+
+            // Execute skills
+            for (int i = 0; i < _skills.Count; i++)
+            {
+                _skills[i].Update(deltaTime, _skillContext);
+            }
+        }
+    }
+}
