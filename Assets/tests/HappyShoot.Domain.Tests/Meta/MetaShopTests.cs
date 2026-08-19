@@ -40,6 +40,20 @@ namespace HappyShoot.Domain.Tests.Meta
         }
 
         [Test]
+        public void CannotPurchase_BeyondMaxLevel()
+        {
+            _shop.AddGold(10000); // Plenty of gold
+
+            // Amount max level is 2
+            Assert.That(_shop.TryPurchaseUpgrade(MetaUpgradeApplier.UpgradeExtraProjectile), Is.True);
+            Assert.That(_shop.TryPurchaseUpgrade(MetaUpgradeApplier.UpgradeExtraProjectile), Is.True);
+            
+            // 3rd attempt should fail
+            Assert.That(_shop.TryPurchaseUpgrade(MetaUpgradeApplier.UpgradeExtraProjectile), Is.False);
+            Assert.That(_shop.SaveData.GetLevel(MetaUpgradeApplier.UpgradeExtraProjectile), Is.EqualTo(2));
+        }
+
+        [Test]
         public void RefundAll_RestoresTotalInvestedGold_AndResetsLevels()
         {
             // Start with 1000 gold
@@ -58,6 +72,17 @@ namespace HappyShoot.Domain.Tests.Meta
             Assert.That(_shop.TotalGold, Is.EqualTo(1000));
             Assert.That(_shop.SaveData.GetLevel(MetaUpgradeApplier.UpgradeHealth), Is.EqualTo(0));
             Assert.That(_shop.SaveData.GetLevel(MetaUpgradeApplier.UpgradeArmor), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void AddGold_PersistsCorrectly()
+        {
+            _shop.AddGold(250);
+            Assert.That(_shop.TotalGold, Is.EqualTo(750));
+
+            // Reload from storage
+            var newShop = new MetaShopManager(_storage);
+            Assert.That(newShop.TotalGold, Is.EqualTo(750));
         }
     }
 }

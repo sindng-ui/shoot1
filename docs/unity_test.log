@@ -1,0 +1,24 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.3/staging' branch; Version is '6000.3.22f1 (1c726e1fb402) revision 1864302'; Using compiler version '194234433'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) Professional' Language: 'ko' Physical Memory: 32511 MB
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-simja" at "2026-08-19T15:13:45.6991584Z"
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+System  architecture: x64
+Process architecture: x64
+Date: 2026-08-19T15:13:45Z
+
+COMMAND LINE ARGUMENTS:
+Unity.exe
+-batchmode
+-projectPath
+K:\unityprojects\shoot1\shoot1
+-runTests
+-testPlatform
+EditMode
+-testResults
+K:\unityprojects\shoot1\shoot1\docs\TestResults.xml
+-logfile
+K:\unityprojects\shoot1\shoot1\docs\unity_test.log
+Successfully changed project path to: K:\unityprojects\shoot1\shoot1
+K:/unityprojects/shoot1/shoot1
+Exiting without the bug reporter. Application will terminate with return code 1

@@ -33,10 +33,42 @@ namespace HappyShoot.View.Monsters
             _animTimer = Random.Range(0f, 10f);
         }
 
+        private float _baseScale = 1.4f;
+
         public void Bind(MonsterEntity entity)
         {
             _entity = entity;
             transform.position = new Vector3(entity.Position.X, entity.Position.Y, 0f);
+
+            if (_spriteRenderer != null)
+            {
+                switch (entity.Type)
+                {
+                    case MonsterType.Bat:
+                        _spriteRenderer.sprite = Utils.SpriteHelper.GetOrCreateBatSprite();
+                        _baseScale = 1.2f;
+                        break;
+                    case MonsterType.Skeleton:
+                        _spriteRenderer.sprite = Utils.SpriteHelper.GetOrCreateSkeletonSprite();
+                        _baseScale = 1.4f;
+                        break;
+                    case MonsterType.Golem:
+                        _spriteRenderer.sprite = Utils.SpriteHelper.GetOrCreateGolemSprite();
+                        _baseScale = 2.0f;
+                        break;
+                    case MonsterType.Boss:
+                        _spriteRenderer.sprite = Utils.SpriteHelper.GetOrCreateBossSprite();
+                        _baseScale = 3.2f;
+                        break;
+                    case MonsterType.Slime:
+                    default:
+                        _spriteRenderer.sprite = Utils.SpriteHelper.GetOrCreateSlimeSprite();
+                        _baseScale = 1.4f;
+                        break;
+                }
+                _spriteRenderer.color = Color.white;
+            }
+
             gameObject.SetActive(true);
         }
 
@@ -50,15 +82,16 @@ namespace HappyShoot.View.Monsters
 
             transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, 0f);
 
-            // Cute jelly squash & stretch bounce
-            _animTimer += Time.deltaTime * 6f;
-            float squash = Mathf.Sin(_animTimer) * 0.12f;
-            transform.localScale = new Vector3(1.4f * (1f + squash), 1.4f * (1f - squash), 1f);
+            // Type-based idle bounce
+            float speedMult = _entity.Type == MonsterType.Bat ? 16f : (_entity.Type == MonsterType.Golem ? 4f : 8f);
+            _animTimer += Time.deltaTime * speedMult;
+            float squash = Mathf.Sin(_animTimer) * 0.10f;
+            transform.localScale = new Vector3(_baseScale * (1f + squash), _baseScale * (1f - squash), 1f);
 
             if (_flashTimer > 0f)
             {
                 _flashTimer -= Time.deltaTime;
-                if (_flashTimer <= 0f)
+                if (_flashTimer <= 0f && _spriteRenderer != null)
                 {
                     _spriteRenderer.color = _originalColor;
                 }

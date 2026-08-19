@@ -60,14 +60,14 @@ namespace HappyShoot.Domain.Tests.Projectiles
                 lifetime: 2f
             );
 
-            // Tick 1: reaches 4.0 units (hits m1)
-            _projectileManager.Update(deltaTime: 0.4f, _monsterGrid);
+            // Tick 1: reaches 3.0 units (hits m1 exactly at (3, 0))
+            _projectileManager.Update(deltaTime: 0.3f, _monsterGrid);
             Assert.That(m1.CurrentHealth, Is.EqualTo(30f));
             Assert.That(m2.CurrentHealth, Is.EqualTo(50f));
             Assert.That(_projectileManager.ActiveCount, Is.EqualTo(1));
 
-            // Tick 2: reaches 8.0 units (hits m2)
-            _projectileManager.Update(deltaTime: 0.4f, _monsterGrid);
+            // Tick 2: reaches 6.0 units (hits m2 exactly at (6, 0))
+            _projectileManager.Update(deltaTime: 0.3f, _monsterGrid);
             Assert.That(m2.CurrentHealth, Is.EqualTo(30f));
             Assert.That(_projectileManager.ActiveCount, Is.EqualTo(0)); // All 2 pierces consumed
         }

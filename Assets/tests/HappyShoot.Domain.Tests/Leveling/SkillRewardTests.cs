@@ -22,12 +22,17 @@ namespace HappyShoot.Domain.Tests.Leveling
             _rewardManager = new SkillRewardManager(seed: 42);
             _player = PlayerClassFactory.CreatePlayer(1, CharacterClassType.Warrior, Vector2D.Zero);
 
-            // Register some skills
+            // Register skills and passives
+            _rewardManager.RegisterSkill("slash", "Greatsword Slash", "Slash effect",
+                () => new CompositeSkill("slash", "Greatsword Slash", new CooldownTrigger(1f), new ClosestEnemyTargeter(), new GreatswordSlashEffect()));
+
             _rewardManager.RegisterSkill("fireball", "Fireball", "Launches explosive fireball",
                 () => new CompositeSkill("fireball", "Fireball", new CooldownTrigger(1f), new ClosestEnemyTargeter(), new ArcaneExplosionEffect()));
 
             _rewardManager.RegisterSkill("thunder", "Lightning Strike", "Strikes random enemy",
                 () => new CompositeSkill("thunder", "Lightning Strike", new CooldownTrigger(1.5f), new ClosestEnemyTargeter(), new ArcaneExplosionEffect()));
+
+            _rewardManager.RegisterPassive("passive_hp", "Vitality", "+20 HP", 5, (p, lv) => p.Heal(20f));
         }
 
         [Test]

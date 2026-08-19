@@ -41,6 +41,22 @@ namespace HappyShoot.Domain.Tests.Entities
         }
 
         [Test]
+        public void UpdateAI_WithPlayerEntity_DealsContactDamage_WhenColliding()
+        {
+            var player = PlayerClassFactory.CreatePlayer(1, CharacterClassType.Warrior, Vector2D.Zero, _eventBus);
+            float initialHp = player.CurrentHealth;
+
+            // Monster placed right on top of player (0.1, 0)
+            _monster.Initialize(105, "Slime", 30f, 2f, 15f, 1, 1, new Vector2D(0.1f, 0f), _eventBus);
+
+            // UpdateAI ticks contact timer
+            _monster.UpdateAI(player, deltaTime: 0.6f);
+
+            // Player takes mitigated contact damage
+            Assert.That(player.CurrentHealth, Is.LessThan(initialHp));
+        }
+
+        [Test]
         public void TakeDamage_Lethal_FiresMonsterDiedEvent()
         {
             bool diedEventFired = false;

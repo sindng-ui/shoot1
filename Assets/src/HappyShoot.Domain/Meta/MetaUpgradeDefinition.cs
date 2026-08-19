@@ -18,6 +18,7 @@ namespace HappyShoot.Domain.Meta
     {
         public string Id { get; }
         public string Title { get; }
+        public string Name => Title;
         public string Description { get; }
         public MetaUpgradeCategory Category { get; }
         public int MaxLevel { get; }

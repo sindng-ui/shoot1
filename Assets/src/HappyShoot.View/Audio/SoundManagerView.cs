@@ -1,63 +1,165 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using HappyShoot.Domain.Events;
+using HappyShoot.Domain.Session;
 
 namespace HappyShoot.View.Audio
 {
     /// <summary>
-    /// Unity Sound Manager that listens to domain events and plays appropriate sound effects.
+    /// Master Zero-GC Sound Manager with 16-channel AudioSource pooling, procedural audio clips,
+    /// BGM loop playback, and smart sound debouncing for high-frequency combat events.
     /// </summary>
-    [RequireComponent(typeof(AudioSource))]
     public class SoundManagerView : MonoBehaviour
     {
-        [Header("Audio Clips")]
-        [SerializeField] private AudioClip _attackClip;
-        [SerializeField] private AudioClip _hitClip;
-        [SerializeField] private AudioClip _gemClip;
-        [SerializeField] private AudioClip _levelUpClip;
-        [SerializeField] private AudioClip _evolveClip;
+        private const int SfxPoolSize = 16;
+        private const float DefaultDebounceTime = 0.05f;
 
-        private AudioSource _audioSource;
+        private readonly AudioSource[] _sfxSources = new AudioSource[SfxPoolSize];
+        private int _currentSourceIndex = 0;
+
+        private AudioSource _bgmSource;
         private EventBus _eventBus;
 
-        private void Awake()
+        private readonly Dictionary<SoundEffectType, AudioClip> _clipCache = new Dictionary<SoundEffectType, AudioClip>();
+        private readonly Dictionary<SoundEffectType, float> _lastPlayTimes = new Dictionary<SoundEffectType, float>();
+
+        public void Initialize(EventBus eventBus)
         {
-            _audioSource = GetComponent<AudioSource>();
-            _audioSource.playOnAwake = false;
+            EnsureAudioSources();
+            PreloadProceduralClips();
+            BindEventBus(eventBus);
+            PlayBgm();
+        }
+
+        private void EnsureAudioSources()
+        {
+            // Create BGM source
+            if (_bgmSource == null)
+            {
+                var bgmGo = new GameObject("BgmSource");
+                bgmGo.transform.SetParent(transform, false);
+                _bgmSource = bgmGo.AddComponent<AudioSource>();
+                _bgmSource.loop = true;
+                _bgmSource.playOnAwake = false;
+                _bgmSource.volume = 0.35f;
+            }
+
+            // Create SFX pool
+            var sfxRoot = new GameObject("SfxPool");
+            sfxRoot.transform.SetParent(transform, false);
+            for (int i = 0; i < SfxPoolSize; i++)
+            {
+                var srcGo = new GameObject($"SfxSource_{i}");
+                srcGo.transform.SetParent(sfxRoot.transform, false);
+                var src = srcGo.AddComponent<AudioSource>();
+                src.playOnAwake = false;
+                _sfxSources[i] = src;
+            }
+        }
+
+        private void PreloadProceduralClips()
+        {
+            foreach (SoundEffectType type in Enum.GetValues(typeof(SoundEffectType)))
+            {
+                if (!_clipCache.ContainsKey(type))
+                {
+                    _clipCache[type] = ProceduralAudioHelper.CreateSoundEffect(type);
+                }
+            }
         }
 
         public void BindEventBus(EventBus eventBus)
         {
             _eventBus = eventBus;
-            _eventBus?.Subscribe<PlaySoundEvent>(OnPlaySound);
-            _eventBus?.Subscribe<MonsterDamagedEvent>(OnMonsterDamaged);
-            _eventBus?.Subscribe<ExpGainedEvent>(OnExpGained);
-            _eventBus?.Subscribe<PlayerLevelUpEvent>(OnLevelUp);
-            _eventBus?.Subscribe<SkillEvolvedEvent>(OnSkillEvolved);
+            if (_eventBus == null) return;
+
+            _eventBus.Subscribe<PlaySoundEvent>(OnPlaySound);
+            _eventBus.Subscribe<PlayBgmEvent>(OnPlayBgm);
+            _eventBus.Subscribe<StopBgmEvent>(OnStopBgm);
+
+            // Gameplay reactive audio hooks
+            _eventBus.Subscribe<MonsterDamagedEvent>(evt => PlaySfx(SoundEffectType.MonsterHit, 0.4f, 0.04f));
+            _eventBus.Subscribe<MonsterDiedEvent>(evt => PlaySfx(SoundEffectType.MonsterDeath, 0.5f, 0.06f));
+            _eventBus.Subscribe<ExpGainedEvent>(evt => PlaySfx(SoundEffectType.GemCollect, 0.4f, 0.03f));
+            _eventBus.Subscribe<PlayerLevelUpEvent>(evt => PlaySfx(SoundEffectType.LevelUp, 0.9f, 0.2f));
+            _eventBus.Subscribe<SkillEvolvedEvent>(evt => PlaySfx(SoundEffectType.WeaponEvolve, 1.0f, 0.3f));
+            _eventBus.Subscribe<BossSpawnedEvent>(evt => PlaySfx(SoundEffectType.BossSpawn, 1.0f, 0.5f));
+            _eventBus.Subscribe<TreasureChestOpenedEvent>(evt => PlaySfx(SoundEffectType.ChestOpen, 0.85f, 0.2f));
+            _eventBus.Subscribe<PlayerDamagedEvent>(evt => PlaySfx(SoundEffectType.PlayerHurt, 0.8f, 0.1f));
+            _eventBus.Subscribe<PlayerDiedEvent>(evt => {
+                PlaySfx(SoundEffectType.GameOver, 1.0f, 0.5f);
+                if (_bgmSource != null) _bgmSource.volume = 0.1f;
+            });
+            _eventBus.Subscribe<GameStateChangedEvent>(OnGameStateChanged);
+        }
+
+        public void PlaySfx(SoundEffectType type, float volume = 1.0f, float debounceSeconds = DefaultDebounceTime)
+        {
+            float now = Time.unscaledTime;
+            if (_lastPlayTimes.TryGetValue(type, out float lastTime) && (now - lastTime < debounceSeconds))
+            {
+                return; // Debounce rapid triggers
+            }
+            _lastPlayTimes[type] = now;
+
+            if (_clipCache.TryGetValue(type, out var clip) && clip != null)
+            {
+                var src = _sfxSources[_currentSourceIndex];
+                _currentSourceIndex = (_currentSourceIndex + 1) % SfxPoolSize;
+
+                src.clip = clip;
+                src.volume = Mathf.Clamp01(volume);
+                src.Play();
+            }
+        }
+
+        public void PlayBgm()
+        {
+            if (_bgmSource == null) return;
+
+            var bgmClip = ProceduralAudioHelper.CreateRetroBgmTrack();
+            _bgmSource.clip = bgmClip;
+            _bgmSource.volume = 0.30f;
+            _bgmSource.Play();
         }
 
         private void OnPlaySound(PlaySoundEvent evt)
         {
-            // Play based on sound type
+            PlaySfx(evt.SoundType, evt.Volume);
         }
 
-        private void OnMonsterDamaged(MonsterDamagedEvent evt)
+        private void OnPlayBgm(PlayBgmEvent evt)
         {
-            if (_hitClip != null) _audioSource.PlayOneShot(_hitClip, 0.4f);
+            if (_bgmSource != null)
+            {
+                _bgmSource.volume = evt.Volume;
+                if (!_bgmSource.isPlaying) _bgmSource.Play();
+            }
         }
 
-        private void OnExpGained(ExpGainedEvent evt)
+        private void OnStopBgm(StopBgmEvent evt)
         {
-            if (_gemClip != null) _audioSource.PlayOneShot(_gemClip, 0.3f);
+            if (_bgmSource != null)
+            {
+                _bgmSource.Stop();
+            }
         }
 
-        private void OnLevelUp(PlayerLevelUpEvent evt)
+        private void OnGameStateChanged(GameStateChangedEvent evt)
         {
-            if (_levelUpClip != null) _audioSource.PlayOneShot(_levelUpClip, 0.8f);
-        }
+            if (_bgmSource == null) return;
 
-        private void OnSkillEvolved(SkillEvolvedEvent evt)
-        {
-            if (_evolveClip != null) _audioSource.PlayOneShot(_evolveClip, 1.0f);
+            if (evt.NewState == GameState.Paused)
+            {
+                _bgmSource.pitch = 0.8f;
+                _bgmSource.volume = 0.15f;
+            }
+            else if (evt.NewState == GameState.Playing)
+            {
+                _bgmSource.pitch = 1.0f;
+                _bgmSource.volume = 0.30f;
+            }
         }
     }
 }

@@ -7,7 +7,7 @@ using HappyShoot.Domain.Spatial;
 namespace HappyShoot.Domain.Entities
 {
     /// <summary>
-    /// Pure C# Player entity containing all player domain logic, stats, and skill execution.
+    /// Pure C# Player entity containing all player domain logic, stats, passives, and skill execution.
     /// </summary>
     public class PlayerEntity : ISpatialEntity
     {
@@ -23,8 +23,9 @@ namespace HappyShoot.Domain.Entities
         private readonly List<ISkill> _skills = new List<ISkill>(8);
         public IReadOnlyList<ISkill> Skills => _skills;
 
-        private readonly HashSet<string> _ownedPassives = new HashSet<string>(8);
-        public IReadOnlyCollection<string> OwnedPassives => _ownedPassives;
+        private readonly Dictionary<string, int> _passiveLevels = new Dictionary<string, int>(8);
+        public IReadOnlyDictionary<string, int> PassiveLevels => _passiveLevels;
+        public IReadOnlyCollection<string> OwnedPassives => _passiveLevels.Keys;
 
         private readonly EventBus _eventBus;
         private readonly SkillContext _skillContext;
@@ -129,17 +130,34 @@ namespace HappyShoot.Domain.Entities
         }
 
         /// <summary>
-        /// Registers an acquired passive item ID.
+        /// Registers or upgrades a passive item level.
         /// </summary>
-        public void AddPassive(string passiveId)
+        public int AddOrUpgradePassive(string passiveId, int maxLevel = 5)
         {
-            if (!string.IsNullOrEmpty(passiveId))
+            if (string.IsNullOrEmpty(passiveId)) return 0;
+
+            if (_passiveLevels.TryGetValue(passiveId, out int currentLevel))
             {
-                _ownedPassives.Add(passiveId);
+                if (currentLevel < maxLevel)
+                {
+                    currentLevel++;
+                    _passiveLevels[passiveId] = currentLevel;
+                }
+                return currentLevel;
             }
+
+            _passiveLevels[passiveId] = 1;
+            return 1;
         }
 
-        public bool HasPassive(string passiveId) => _ownedPassives.Contains(passiveId);
+        public void AddPassive(string passiveId) => AddOrUpgradePassive(passiveId);
+
+        public bool HasPassive(string passiveId) => _passiveLevels.ContainsKey(passiveId);
+
+        public int GetPassiveLevel(string passiveId)
+        {
+            return _passiveLevels.TryGetValue(passiveId, out int level) ? level : 0;
+        }
 
         /// <summary>
         /// Regular domain tick to handle health regeneration and active skill cycles.

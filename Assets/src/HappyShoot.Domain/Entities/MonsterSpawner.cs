@@ -7,7 +7,7 @@ using HappyShoot.Domain.Spatial;
 namespace HappyShoot.Domain.Entities
 {
     /// <summary>
-    /// Manages zero-allocation monster spawning, pooling, and spatial grid updates.
+    /// Manages zero-allocation monster spawning, pooling, archetypes, and spatial grid updates.
     /// </summary>
     public class MonsterSpawner
     {
@@ -31,7 +31,7 @@ namespace HappyShoot.Domain.Entities
         }
 
         /// <summary>
-        /// Spawns a monster at the specified position.
+        /// Spawns a monster at the specified position using raw stats (legacy support).
         /// </summary>
         public MonsterEntity SpawnMonster(
             string typeName,
@@ -41,6 +41,19 @@ namespace HappyShoot.Domain.Entities
             int expValue,
             int goldValue,
             Vector2D position)
+        {
+            return SpawnMonster(typeName, maxHealth, moveSpeed, contactDamage, expValue, goldValue, position, MonsterType.Slime);
+        }
+
+        public MonsterEntity SpawnMonster(
+            string typeName,
+            float maxHealth,
+            float moveSpeed,
+            float contactDamage,
+            int expValue,
+            int goldValue,
+            Vector2D position,
+            MonsterType type)
         {
             MonsterEntity monster = _monsterPool.Spawn();
             monster.Initialize(
@@ -52,8 +65,22 @@ namespace HappyShoot.Domain.Entities
                 expValue: expValue,
                 goldValue: goldValue,
                 startPosition: position,
-                eventBus: _eventBus
+                eventBus: _eventBus,
+                type: type
             );
+
+            _activeMonsters.Add(monster);
+            _monsterGrid.Register(monster);
+            return monster;
+        }
+
+        /// <summary>
+        /// Spawns a monster defined by MonsterDefinition.
+        /// </summary>
+        public MonsterEntity SpawnByDefinition(MonsterDefinition def, Vector2D position, float hpMultiplier = 1.0f, float damageMultiplier = 1.0f)
+        {
+            MonsterEntity monster = _monsterPool.Spawn();
+            monster.InitializeFromDefinition(++_idCounter, def, position, _eventBus, hpMultiplier, damageMultiplier);
 
             _activeMonsters.Add(monster);
             _monsterGrid.Register(monster);
@@ -80,7 +107,65 @@ namespace HappyShoot.Domain.Entities
         }
 
         /// <summary>
-        /// Updates all active monsters AI and spatial grid coordinates.
+        /// Spawns a specific archetype around the player.
+        /// </summary>
+        public MonsterEntity SpawnDefinitionAroundPlayer(
+            Vector2D playerPosition,
+            float spawnRadius,
+            float angleRadians,
+            MonsterDefinition def,
+            float hpMultiplier = 1.0f)
+        {
+            float posX = playerPosition.X + (float)Math.Cos(angleRadians) * spawnRadius;
+            float posY = playerPosition.Y + (float)Math.Sin(angleRadians) * spawnRadius;
+            return SpawnByDefinition(def, new Vector2D(posX, posY), hpMultiplier);
+        }
+
+        /// <summary>
+        /// Spawns a Boss monster at a specific offset from the player.
+        /// </summary>
+        public MonsterEntity SpawnBoss(Vector2D playerPosition, string bossName, float hp, float speed, float damage, int exp = 50, int gold = 100)
+        {
+            var def = MonsterDefinition.CreateBoss(bossName, hp, speed, damage, exp, gold);
+            float posX = playerPosition.X + 8.0f;
+            float posY = playerPosition.Y + 8.0f;
+            return SpawnByDefinition(def, new Vector2D(posX, posY));
+        }
+
+        /// <summary>
+        /// Updates all active monsters AI, attacks the player if in contact, and updates spatial grid.
+        /// </summary>
+        public void Update(PlayerEntity player, float deltaTime)
+        {
+            if (player == null) return;
+
+            for (int i = _activeMonsters.Count - 1; i >= 0; i--)
+            {
+                var monster = _activeMonsters[i];
+                if (!monster.IsActive || monster.IsDead)
+                {
+                    DespawnMonster(monster, i);
+                    continue;
+                }
+
+                monster.UpdateAI(player, deltaTime);
+
+                // Handle ranged skeleton attacks
+                if (monster.HasPendingRangedAttack)
+                {
+                    monster.ConsumePendingAttack();
+                    if (!player.IsDead)
+                    {
+                        player.TakeDamage(monster.ContactDamage * 0.8f);
+                    }
+                }
+
+                _monsterGrid.UpdatePosition(monster);
+            }
+        }
+
+        /// <summary>
+        /// Updates all active monsters AI and spatial grid coordinates (Vector2D target overload).
         /// </summary>
         public void Update(Vector2D playerPosition, float deltaTime)
         {
@@ -100,7 +185,7 @@ namespace HappyShoot.Domain.Entities
 
         private void OnMonsterDied(MonsterDiedEvent evt)
         {
-            // Handled during update or explicit check
+            // Cleaned up on next update loop or explicit call
         }
 
         private void DespawnMonster(MonsterEntity monster, int index)
@@ -110,9 +195,6 @@ namespace HappyShoot.Domain.Entities
             _monsterPool.Despawn(monster);
         }
 
-        /// <summary>
-        /// Despawns all active monsters and returns them to the pool.
-        /// </summary>
         public void DespawnAll()
         {
             for (int i = _activeMonsters.Count - 1; i >= 0; i--)

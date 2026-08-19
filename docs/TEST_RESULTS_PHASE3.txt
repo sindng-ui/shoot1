@@ -1,0 +1,134 @@
+=================================================
+  HappyShoot Domain Unit Test Suite Runner - Phase 3
+  4 Weapons, 6 Passives & 3 Skill Evolutions
+=================================================
+
+[Fixture] HappyShoot.Domain.Tests.Waves.WaveTimelineTests
+   [PASS] Timeline_StartsAtZero_AndProgressesWithDelta
+   [PASS] Timeline_At180Seconds_TriggersEliteBoss
+   [PASS] Timeline_At480Seconds_TriggersMidBoss
+   [PASS] Timeline_At900Seconds_TriggersFinalBossAndCompletesRun
+
+[Fixture] HappyShoot.Domain.Tests.UI.DamageTextTests
+   [PASS] MonsterDamagedEvent_SpawnsDamageText
+   [PASS] Update_FloatsTextUpwardsAndDespawnsAfterLifetime
+
+[Fixture] HappyShoot.Domain.Tests.Time.TimeProviderTests
+   [PASS] InitialState_TimeAndDeltaTime_ShouldBeZero
+   [PASS] Tick_AdvancesTimeAndDeltaTimeCorrectly
+   [PASS] Tick_WithTimeScale_ScalesTimeCorrectly
+   [PASS] Tick_WithNegativeDelta_ThrowsException
+   [PASS] Reset_ResetsTimeToTarget
+
+[Fixture] HappyShoot.Domain.Tests.Spatial.SpatialGridTests
+   [PASS] RegisterAndQueryRadius_FindsEntityWithinRange
+   [PASS] UpdatePosition_MovesEntityBetweenCellsCorrectly
+   [PASS] TryGetClosest_ReturnsNearestActiveEntity
+   [PASS] Unregister_RemovesEntityFromQueries
+
+[Fixture] HappyShoot.Domain.Tests.Skills.OrbitingBladesTests
+   [PASS] Execute_DamagesMonstersInOrbitalPath
+   [PASS] GetBladePosition_ReturnsCorrectCoordinates
+
+[Fixture] HappyShoot.Domain.Tests.Skills.SkillCompositionTests
+   [PASS] CompositeSkill_FiresWhenCooldownReadyAndTargetFound
+   [PASS] CompositeSkill_DoesNotFire_WhenNoTargetInRange
+   [PASS] CompositeSkill_LevelUp_CapsAtMaxLevel
+
+[Fixture] HappyShoot.Domain.Tests.Skills.SkillEvolutionTests
+   [PASS] GetAvailableEvolutions_ReturnsEmpty_WhenSkillNotMaxLevel
+   [PASS] GetAvailableEvolutions_ReturnsEmpty_WhenPassiveMissing
+   [PASS] EvolveSkill_ReplacesBaseSkillWithEvolvedSkill_WhenConditionsMet
+   [PASS] RollRewards_PrioritizesEvolutionOption_WhenConditionSatisfied
+
+[Fixture] HappyShoot.Domain.Tests.Session.GameSessionTests
+   [PASS] InitialState_IsNone_AndStatsAreDefault
+   [PASS] StartGame_TransitionsToPlaying_AndPublishesEvent
+   [PASS] PauseAndResume_TransitionsCorrectly
+   [PASS] TogglePause_AlternatesBetweenPlayingAndPaused
+   [PASS] Update_WhilePlaying_AccumulatesTimeAndComputesMinSec
+   [PASS] Update_WhenPausedOrGameOver_DoesNotAccumulateTime
+   [PASS] Update_PeriodicallyPublishes_SurvivalTimeUpdatedEvent
+   [PASS] OnMonsterDied_IncrementsKillCount_AndPublishesEvent
+   [PASS] AddGold_IncrementsGold_AndPublishesEvent
+   [PASS] OnPlayerDied_AutomaticallySetsGameOver
+   [PASS] OnLevelUp_UpdatesPlayerLevel
+   [PASS] ResetSession_ClearsAllData_AndResetsToPlaying
+   [PASS] SetVictory_TransitionsCorrectly_UnlessGameOver
+
+[Fixture] HappyShoot.Domain.Tests.Projectiles.ProjectileTests
+   [PASS] LaunchProjectile_HitsMonsterAndDealsDamage
+   [PASS] PiercingProjectile_PiercesMultipleMonsters
+
+[Fixture] HappyShoot.Domain.Tests.Pool.ObjectPoolTests
+   [PASS] Prewarm_InstantiatesExpectedCount
+   [PASS] Spawn_ReturnsItemAndCallsOnSpawn
+   [PASS] Despawn_ReturnsItemToPoolAndCallsOnDespawn
+   [PASS] ReusingSpawnedItem_PreservesReferenceAndIncrementsLifecycle
+   [PASS] MaxCapacity_ThrowsWhenExceeded
+
+[Fixture] HappyShoot.Domain.Tests.Monsters.MonsterVarietyTests
+   [PASS] Archetypes_HaveDistinctAttributes
+   [PASS] SkeletonRangedAI_MaintainsDistanceAndTriggersAttack
+   [PASS] BossMonster_FiresBossSpawned_HealthUpdated_AndDiedEvents
+   [PASS] SpawnDefinitionAroundPlayer_CalculatesCoordinatesCorrectly
+
+[Fixture] HappyShoot.Domain.Tests.Meta.MetaSaveDataTests
+   [PASS] ApplyUpgrades_AugmentsBaseStatsCorrectly
+
+[Fixture] HappyShoot.Domain.Tests.Meta.MetaShopTests
+   [PASS] PurchaseUpgrade_Succeeds_WhenGoldIsSufficient
+   [PASS] PurchaseUpgrade_Fails_WhenGoldIsInsufficient
+   [PASS] RefundAll_RestoresTotalInvestedGold_AndResetsLevels
+
+[Fixture] HappyShoot.Domain.Tests.Leveling.LevelSystemTests
+   [PASS] AddExp_TriggersLevelUp_WhenThresholdMet
+   [PASS] AddExp_MultiLevelUp_CarriesOverOverflowExp
+
+[Fixture] HappyShoot.Domain.Tests.Leveling.PassiveItemsTests
+   [PASS] ApplyPassive_IncreasesPlayerPassiveLevelAndAugmentsStats
+   [PASS] MaxLevelPassive_IsExcludedFromCandidatePool
+
+[Fixture] HappyShoot.Domain.Tests.Leveling.SkillRewardTests
+   [PASS] RollRewards_OffersUpgradeForExistingSkills_AndNewForUnowned
+   [PASS] ApplyReward_EquipsNewSkillToPlayer
+   [PASS] ApplyReward_UpgradesExistingSkillLevel
+
+[Fixture] HappyShoot.Domain.Tests.Gems.ExpGemTests
+   [PASS] MonsterDiedEvent_SpawnsGemAutomatically
+   [PASS] Gem_AttractsTowardsPlayer_WhenInPickupRadius
+   [PASS] Gem_Collected_TriggersExpCallbackAndDespawns
+
+[Fixture] HappyShoot.Domain.Tests.Events.EventBusTests
+   [PASS] Publish_InvokesSubscribedHandler
+   [PASS] Unsubscribe_StopsReceivingEvents
+
+[Fixture] HappyShoot.Domain.Tests.Entities.CharacterClassTests
+   [PASS] CreateWarrior_HasBonusHpAndArmorAndMeleeSkill
+   [PASS] CreateRanger_HasBonusSpeedAndCritAndBowSkill
+   [PASS] CreateWizard_HasCooldownReductionAndExplosionSkill
+
+[Fixture] HappyShoot.Domain.Tests.Entities.MonsterEntityTests
+   [PASS] UpdateAI_MovesTowardTargetPlayer
+   [PASS] TakeDamage_Lethal_FiresMonsterDiedEvent
+   [PASS] DespawnAndReinitialize_ResetsStatsCorrectly
+
+[Fixture] HappyShoot.Domain.Tests.Entities.MonsterSpawnerTests
+   [PASS] SpawnMonster_RegistersInGridAndActiveList
+   [PASS] Update_MovesAllMonstersTowardPlayer
+   [PASS] Update_AutomaticallyDespawnsDeadMonsters
+
+[Fixture] HappyShoot.Domain.Tests.Entities.PlayerEntityTests
+   [PASS] Move_UpdatesPositionAndPublishesEvent
+   [PASS] TakeDamage_WithArmor_ReducesDamageMitigated
+   [PASS] TakeDamage_Lethal_KillsPlayerAndFiresDiedEvent
+   [PASS] Heal_IncreasesHealth_CappedAtMaxHealth
+
+[Fixture] HappyShoot.Domain.Tests.Chests.TreasureChestTests
+   [PASS] SpawnChest_CreatesActiveChestAndPublishesEvent
+   [PASS] Update_WhenPlayerApproaches_OpensChestAndAppliesRewards
+   [PASS] BossDiedEvent_AutomaticallySpawnsTreasureChest
+
+=================================================
+  Test Summary: Total: 80 | Passed: 80 | Failed: 0 (100% SUCCESS)
+=================================================
