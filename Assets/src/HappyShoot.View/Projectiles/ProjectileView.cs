@@ -14,20 +14,27 @@ namespace HappyShoot.View.Projectiles
     {
         private ProjectileEntity _entity;
         private SpriteRenderer _spriteRenderer;
+        private Transform _transform;
 
         private void Awake()
         {
+            _transform = transform;
             _spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
         public void Bind(ProjectileEntity entity)
         {
             _entity = entity;
-            transform.position = new Vector3(entity.Position.X, entity.Position.Y, 0f);
+            _transform.position = new Vector3(entity.Position.X, entity.Position.Y, 0f);
 
-            // Rotate towards direction
+            // Set rotation towards projectile direction
             float angle = Mathf.Atan2(entity.Direction.Y, entity.Direction.X) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.Euler(0f, 0f, angle);
+            _transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+            if (_spriteRenderer != null)
+            {
+                _spriteRenderer.color = entity.Damage >= 40f ? Color.cyan : (entity.RemainingPierce > 1 ? new Color(1f, 0.6f, 0.2f) : Color.yellow);
+            }
 
             gameObject.SetActive(true);
         }
@@ -40,25 +47,50 @@ namespace HappyShoot.View.Projectiles
                 return;
             }
 
-            transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, 0f);
+            _transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, 0f);
         }
     }
 
     /// <summary>
-    /// Unity MonoBehaviour that synchronizes ProjectileManager domain updates and views.
+    /// Synchronizes ProjectileManager with Unity scene view pool using 128 prewarmed zero-allocation pool.
     /// </summary>
     public class ProjectileManagerView : MonoBehaviour
     {
         [SerializeField] private GameObject _projectilePrefab;
 
+        private const int MaxPoolCapacity = 128;
         private ProjectileManager _domainManager;
-        private readonly List<ProjectileView> _viewPool = new List<ProjectileView>(128);
+        private readonly List<ProjectileView> _viewPool = new List<ProjectileView>(MaxPoolCapacity);
 
         public ProjectileManager DomainManager => _domainManager;
 
         private void Awake()
         {
-            _domainManager = new ProjectileManager(initialCapacity: 64);
+            _domainManager = new ProjectileManager(initialCapacity: MaxPoolCapacity);
+            _domainManager.OnProjectileSpawned += SpawnProjectileView;
+            PrewarmViewPool(MaxPoolCapacity);
+        }
+
+        private void PrewarmViewPool(int count)
+        {
+            if (_viewPool.Count > 0) return;
+
+            var squareSprite = Utils.SpriteHelper.GetOrCreateSquareSprite();
+
+            for (int i = 0; i < count; i++)
+            {
+                var go = new GameObject($"ProjectileView_{i + 1}");
+                go.transform.SetParent(transform, false);
+                go.transform.localScale = new Vector3(0.4f, 0.15f, 1f);
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = squareSprite;
+                sr.color = Color.yellow;
+                sr.sortingOrder = 4;
+
+                var view = go.AddComponent<ProjectileView>();
+                go.SetActive(false);
+                _viewPool.Add(view);
+            }
         }
 
         public void UpdateProjectiles(float deltaTime, SpatialGrid2D<MonsterEntity> monsterGrid)
@@ -67,52 +99,40 @@ namespace HappyShoot.View.Projectiles
 
             _domainManager.Update(deltaTime, monsterGrid);
 
-            // Synchronize active views
-            var activeDomainProjectiles = _domainManager.ActiveProjectiles;
-            for (int i = 0; i < activeDomainProjectiles.Count; i++)
-            {
-                GetOrCreateView(activeDomainProjectiles[i]);
-            }
-
             for (int i = 0; i < _viewPool.Count; i++)
             {
-                if (_viewPool[i].gameObject.activeSelf)
+                var view = _viewPool[i];
+                if (view.gameObject.activeSelf)
                 {
-                    _viewPool[i].UpdateView();
+                    view.UpdateView();
                 }
             }
         }
 
-        private ProjectileView GetOrCreateView(ProjectileEntity entity)
+        public void SpawnProjectileView(ProjectileEntity entity)
         {
             for (int i = 0; i < _viewPool.Count; i++)
             {
                 if (!_viewPool[i].gameObject.activeSelf)
                 {
                     _viewPool[i].Bind(entity);
-                    return _viewPool[i];
+                    return;
                 }
             }
 
-            GameObject go;
-            if (_projectilePrefab != null)
+            if (_viewPool.Count < MaxPoolCapacity)
             {
-                go = Instantiate(_projectilePrefab, transform);
-            }
-            else
-            {
-                go = new GameObject($"ProjectileView_{_viewPool.Count + 1}");
-                go.transform.SetParent(transform);
+                var go = new GameObject($"ProjectileView_{_viewPool.Count + 1}");
+                go.transform.SetParent(transform, false);
                 go.transform.localScale = new Vector3(0.4f, 0.15f, 1f);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = Utils.SpriteHelper.GetOrCreateSquareSprite();
-                sr.color = Color.yellow; // Default yellow bullet/arrow
-            }
+                sr.sortingOrder = 4;
 
-            var view = go.GetComponent<ProjectileView>() ?? go.AddComponent<ProjectileView>();
-            view.Bind(entity);
-            _viewPool.Add(view);
-            return view;
+                var view = go.AddComponent<ProjectileView>();
+                view.Bind(entity);
+                _viewPool.Add(view);
+            }
         }
     }
 }

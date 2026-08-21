@@ -18,8 +18,9 @@ namespace HappyShoot.Domain.Projectiles
 
         public IReadOnlyList<ProjectileEntity> ActiveProjectiles => _activeProjectiles;
         public int ActiveCount => _activeProjectiles.Count;
+        public event Action<ProjectileEntity> OnProjectileSpawned;
 
-        public ProjectileManager(int initialCapacity = 64)
+        public ProjectileManager(int initialCapacity = 128)
         {
             _pool = new ObjectPool<ProjectileEntity>(() => new ProjectileEntity(), initialCapacity: initialCapacity);
         }
@@ -47,6 +48,7 @@ namespace HappyShoot.Domain.Projectiles
             );
 
             _activeProjectiles.Add(projectile);
+            OnProjectileSpawned?.Invoke(projectile);
             return projectile;
         }
 

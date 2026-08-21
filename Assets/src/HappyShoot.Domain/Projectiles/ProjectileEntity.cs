@@ -13,7 +13,7 @@ namespace HappyShoot.Domain.Projectiles
     {
         public int Id { get; private set; }
         public Vector2D Position { get; private set; }
-        public float Radius { get; set; } = 0.25f;
+        public float Radius { get; set; } = 0.35f;
 
         public bool IsActive { get; private set; }
         public Vector2D Direction { get; private set; }
@@ -43,7 +43,8 @@ namespace HappyShoot.Domain.Projectiles
             Direction = direction.Normalized;
             Speed = speed;
             Damage = damage;
-            RemainingPierce = Math.Max(1, pierceCount);
+            // pierceCount represents pierce count: total hits = pierceCount + 1 (e.g. 3 pierces = 4 hits)
+            RemainingPierce = Math.Max(1, pierceCount + 1);
             RemainingLifetime = Math.Max(0.1f, lifetime);
             _hitMonsterIds.Clear();
             IsActive = true;
@@ -87,12 +88,16 @@ namespace HappyShoot.Domain.Projectiles
                     if (monster.IsActive && !monster.IsDead && _hitMonsterIds.Add(monster.Id))
                     {
                         monster.TakeDamage(Damage);
-                        RemainingPierce--;
 
-                        if (RemainingPierce <= 0)
+                        // Infinite pierce if RemainingPierce >= 900
+                        if (RemainingPierce < 900)
                         {
-                            IsActive = false;
-                            break;
+                            RemainingPierce--;
+                            if (RemainingPierce <= 0)
+                            {
+                                IsActive = false;
+                                break;
+                            }
                         }
                     }
                 }

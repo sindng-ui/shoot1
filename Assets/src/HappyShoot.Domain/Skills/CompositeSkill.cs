@@ -47,6 +47,11 @@ namespace HappyShoot.Domain.Skills
             if (Level < MaxLevel)
             {
                 Level++;
+                if (Effect is ILevelableEffect levelable)
+                {
+                    levelable.OnLevelUp(Level);
+                }
+                Range += 0.85f;
             }
         }
 

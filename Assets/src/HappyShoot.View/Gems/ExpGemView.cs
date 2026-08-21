@@ -15,16 +15,18 @@ namespace HappyShoot.View.Gems
     {
         private ExpGemEntity _entity;
         private SpriteRenderer _spriteRenderer;
+        private Transform _transform;
 
         private void Awake()
         {
+            _transform = transform;
             _spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
         public void Bind(ExpGemEntity entity)
         {
             _entity = entity;
-            transform.position = new Vector3(entity.Position.X, entity.Position.Y, 0f);
+            _transform.position = new Vector3(entity.Position.X, entity.Position.Y, 0f);
 
             if (_spriteRenderer.sprite == null)
             {
@@ -47,27 +49,51 @@ namespace HappyShoot.View.Gems
                 return;
             }
 
-            transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, 0f);
+            _transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, 0f);
         }
     }
 
     /// <summary>
-    /// Synchronizes experience gem spawning and collection with the Unity scene.
+    /// Synchronizes experience gem spawning and collection with the Unity scene using 512 prewarmed zero-allocation pool.
     /// </summary>
     public class GemManagerView : MonoBehaviour
     {
         [SerializeField] private PlayerView _playerView;
         [SerializeField] private GameObject _gemPrefab;
 
+        private const int MaxPoolCapacity = 512;
         private GemManager _domainManager;
-        private readonly List<ExpGemView> _viewPool = new List<ExpGemView>(256);
+        private readonly List<ExpGemView> _viewPool = new List<ExpGemView>(MaxPoolCapacity);
 
         public GemManager DomainManager => _domainManager;
 
         public void Initialize(EventBus eventBus, PlayerView playerView = null)
         {
             _playerView = playerView;
-            _domainManager = new GemManager(eventBus, initialCapacity: 64);
+            _domainManager = new GemManager(eventBus, initialCapacity: MaxPoolCapacity);
+            _domainManager.OnGemSpawned += SpawnGemView;
+            PrewarmViewPool(MaxPoolCapacity);
+        }
+
+        private void PrewarmViewPool(int count)
+        {
+            if (_viewPool.Count > 0) return;
+
+            var gemSprite = Utils.SpriteHelper.GetOrCreateGemSprite();
+
+            for (int i = 0; i < count; i++)
+            {
+                var go = new GameObject($"GemView_{i + 1}");
+                go.transform.SetParent(transform, false);
+                go.transform.localScale = Vector3.one * 0.70f;
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = gemSprite;
+                sr.sortingOrder = 3;
+
+                var view = go.AddComponent<ExpGemView>();
+                go.SetActive(false);
+                _viewPool.Add(view);
+            }
         }
 
         public void SetPlayerView(PlayerView playerView)
@@ -85,52 +111,40 @@ namespace HappyShoot.View.Gems
 
             _domainManager.Update(playerPos, pickupRadius, Time.deltaTime);
 
-            // Synchronize active gems with views
-            var activeGems = _domainManager.ActiveGems;
-            for (int i = 0; i < activeGems.Count; i++)
-            {
-                GetOrCreateView(activeGems[i]);
-            }
-
             for (int i = 0; i < _viewPool.Count; i++)
             {
-                if (_viewPool[i].gameObject.activeSelf)
+                var view = _viewPool[i];
+                if (view.gameObject.activeSelf)
                 {
-                    _viewPool[i].UpdateView();
+                    view.UpdateView();
                 }
             }
         }
 
-        private ExpGemView GetOrCreateView(ExpGemEntity entity)
+        public void SpawnGemView(ExpGemEntity entity)
         {
             for (int i = 0; i < _viewPool.Count; i++)
             {
                 if (!_viewPool[i].gameObject.activeSelf)
                 {
                     _viewPool[i].Bind(entity);
-                    return _viewPool[i];
+                    return;
                 }
             }
 
-            GameObject go;
-            if (_gemPrefab != null)
+            if (_viewPool.Count < MaxPoolCapacity)
             {
-                go = Instantiate(_gemPrefab, transform);
-            }
-            else
-            {
-                go = new GameObject($"GemView_{_viewPool.Count + 1}");
-                go.transform.SetParent(transform);
-                go.transform.localScale = Vector3.one * 1.0f;
+                var go = new GameObject($"GemView_{_viewPool.Count + 1}");
+                go.transform.SetParent(transform, false);
+                go.transform.localScale = Vector3.one * 0.70f;
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = Utils.SpriteHelper.GetOrCreateGemSprite();
-                sr.color = Color.white;
-            }
+                sr.sortingOrder = 3;
 
-            var view = go.GetComponent<ExpGemView>() ?? go.AddComponent<ExpGemView>();
-            view.Bind(entity);
-            _viewPool.Add(view);
-            return view;
+                var view = go.AddComponent<ExpGemView>();
+                view.Bind(entity);
+                _viewPool.Add(view);
+            }
         }
     }
 }

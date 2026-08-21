@@ -37,8 +37,16 @@ namespace HappyShoot.View.Chests
             for (int i = 0; i < activeChests.Count; i++)
             {
                 var chest = activeChests[i];
-                var view = GetOrCreateView(chest);
-                view.UpdateView();
+                GetOrCreateView(chest);
+            }
+
+            // Update all views in pool so opened/despawned chests are immediately hidden
+            for (int i = 0; i < _viewPool.Count; i++)
+            {
+                if (_viewPool[i].gameObject.activeSelf)
+                {
+                    _viewPool[i].UpdateView();
+                }
             }
         }
 

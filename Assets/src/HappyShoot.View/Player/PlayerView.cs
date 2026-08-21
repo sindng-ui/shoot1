@@ -49,6 +49,10 @@ namespace HappyShoot.View.Player
         private float _slashBaseAngle;
         private const float SlashDuration = 0.18f;
 
+        private Projectiles.OrbitingBladeView _orbitingBladeView;
+        private int _cachedOrbitalLevel = -1;
+        private float _cachedOrbitalArea = -1f;
+
         private Vector3 _lastPos;
         private float _walkBobTimer;
 
@@ -103,20 +107,53 @@ namespace HappyShoot.View.Player
             _slashVisualSr.sortingOrder = 3;
             _slashPivotGo.SetActive(false);
 
+            // Create Orbiting Blades visual container
+            var orbitGo = new GameObject("OrbitingBladesVisual");
+            orbitGo.transform.SetParent(transform, false);
+            orbitGo.transform.localPosition = Vector3.zero;
+            _orbitingBladeView = orbitGo.AddComponent<Projectiles.OrbitingBladeView>();
+            _orbitingBladeView.Initialize(transform, bladeCount: 2, orbitRadius: 2.0f);
+            orbitGo.SetActive(false);
+
             // Initialize domain event bus and player entity
             _eventBus = new EventBus();
             Vector2D startPos = new Vector2D(transform.position.x, transform.position.y);
             _entity = PlayerClassFactory.CreatePlayer(1, _classType, startPos, _eventBus);
+            ApplyClassVisuals();
 
             // Subscribe to domain events
             _eventBus.Subscribe<PlayerMovedEvent>(OnPlayerMoved);
             _eventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
             _eventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
+            _eventBus.Subscribe<PlayerSlashExecutedEvent>(OnPlayerSlashExecuted);
 
             _lastPos = transform.position;
         }
 
-        private float _slashCooldownTimer;
+        public void SetClassType(CharacterClassType classType)
+        {
+            _classType = classType;
+            Vector2D currentPos = _entity != null ? _entity.Position : new Vector2D(transform.position.x, transform.position.y);
+            _entity = PlayerClassFactory.CreatePlayer(1, _classType, currentPos, _eventBus);
+            ApplyClassVisuals();
+        }
+
+        private void ApplyClassVisuals()
+        {
+            if (_bodySr != null)
+            {
+                _bodySr.sprite = (_classType == CharacterClassType.Ranger)
+                    ? Utils.SpriteHelper.GetOrCreateRangerSprite()
+                    : Utils.SpriteHelper.GetOrCreateWarriorSprite();
+            }
+
+            if (_swordSr != null)
+            {
+                _swordSr.sprite = (_classType == CharacterClassType.Ranger)
+                    ? Utils.SpriteHelper.GetOrCreateBowSprite()
+                    : Utils.SpriteHelper.GetOrCreateSwordSprite();
+            }
+        }
 
         private void Update()
         {
@@ -130,6 +167,21 @@ namespace HappyShoot.View.Player
                 if (_flashTimer <= 0f && _bodySr != null)
                 {
                     _bodySr.color = _originalColor;
+                }
+            }
+
+            // Calculate aim direction towards mouse cursor
+            if (Camera.main != null)
+            {
+                Vector3 mouseScreenPos = UnityEngine.InputSystem.Mouse.current != null 
+                    ? (Vector3)UnityEngine.InputSystem.Mouse.current.position.ReadValue()
+                    : Input.mousePosition;
+                mouseScreenPos.z = -Camera.main.transform.position.z;
+                Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
+                Vector2 dir = new Vector2(mouseWorldPos.x - transform.position.x, mouseWorldPos.y - transform.position.y);
+                if (dir.sqrMagnitude > 0.001f)
+                {
+                    _entity.AimDirection = new Vector2D(dir.normalized.x, dir.normalized.y);
                 }
             }
 
@@ -224,31 +276,93 @@ namespace HappyShoot.View.Player
                 }
             }
 
-            _slashCooldownTimer -= Time.deltaTime;
-            if (_slashCooldownTimer <= 0f && _entity.Skills.Count > 0 && monsterGrid != null && _slashPivotGo != null)
-            {
-                _slashCooldownTimer = 1.0f; // Attack interval
-
-                // Find closest monster to aim slash swing
-                if (monsterGrid.TryGetClosest(_entity.Position, 8.0f, out var target))
-                {
-                    Vector2D dir = target.Position - _entity.Position;
-                    _slashBaseAngle = Mathf.Atan2(dir.Y, dir.X) * Mathf.Rad2Deg;
-                }
-                else
-                {
-                    bool isFlipped = _bodySr != null && _bodySr.flipX;
-                    _slashBaseAngle = isFlipped ? 180f : 0f;
-                }
-
-                _slashVisualTimer = SlashDuration;
-                _slashPivotGo.SetActive(true);
-            }
-
             // Update projectile views if present
             if (_projectileManagerView != null && _spawnerView != null)
             {
                 _projectileManagerView.UpdateProjectiles(Time.deltaTime, _spawnerView.MonsterGrid);
+            }
+
+            // Synchronize Orbiting Blades visibility and blade count with domain skill state
+            UpdateOrbitalBladesVisual();
+        }
+
+        private void UpdateOrbitalBladesVisual()
+        {
+            if (_entity == null || _orbitingBladeView == null) return;
+
+            HappyShoot.Domain.Skills.ISkill orbitalSkill = null;
+            var skills = _entity.Skills;
+            for (int i = 0; i < skills.Count; i++)
+            {
+                if (skills[i].Id == "orbital")
+                {
+                    orbitalSkill = skills[i];
+                    break;
+                }
+            }
+
+            if (orbitalSkill != null)
+            {
+                if (!_orbitingBladeView.gameObject.activeSelf)
+                {
+                    _orbitingBladeView.gameObject.SetActive(true);
+                }
+
+                int currentLevel = orbitalSkill.Level;
+                float currentArea = _entity.Stats.AreaMultiplier;
+
+                if (_cachedOrbitalLevel != currentLevel || Mathf.Abs(_cachedOrbitalArea - currentArea) > 0.01f)
+                {
+                    _cachedOrbitalLevel = currentLevel;
+                    _cachedOrbitalArea = currentArea;
+                    int bladeCount = 2 + (currentLevel - 1);
+                    float radius = 2.0f * currentArea;
+                    _orbitingBladeView.SetBlades(bladeCount, radius);
+                }
+            }
+            else
+            {
+                if (_orbitingBladeView.gameObject.activeSelf)
+                {
+                    _orbitingBladeView.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private void OnPlayerSlashExecuted(PlayerSlashExecutedEvent evt)
+        {
+            _slashBaseAngle = evt.DirectionAngleDegrees;
+            _slashVisualTimer = SlashDuration;
+            if (_slashPivotGo != null)
+            {
+                _slashPivotGo.SetActive(true);
+                float initialAngle = _slashBaseAngle - 60f;
+                _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
+                if (_swordGo != null && _swordGo.transform.parent != null)
+                {
+                    _swordGo.transform.parent.rotation = Quaternion.Euler(0f, 0f, initialAngle);
+                }
+
+                // Dynamic scale of the slash arc visual based on slash skill level & Area multiplier
+                int slashLevel = 1;
+                if (_entity != null)
+                {
+                    var skills = _entity.Skills;
+                    for (int i = 0; i < skills.Count; i++)
+                    {
+                        if (skills[i].Id == "slash") { slashLevel = skills[i].Level; break; }
+                    }
+                }
+                float areaMult = _entity != null ? _entity.Stats.AreaMultiplier : 1.0f;
+                float arcScale = (2.5f + 0.85f * (slashLevel - 1)) * areaMult;
+                if (_slashVisualSr != null)
+                {
+                    _slashVisualSr.transform.localScale = Vector3.one * arcScale;
+                    _slashVisualSr.transform.localPosition = new Vector3(arcScale * 0.35f, 0f, 0f);
+                    Color c = _slashVisualSr.color;
+                    c.a = 0.95f;
+                    _slashVisualSr.color = c;
+                }
             }
         }
 

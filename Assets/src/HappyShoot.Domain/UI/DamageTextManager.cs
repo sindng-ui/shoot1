@@ -18,6 +18,7 @@ namespace HappyShoot.Domain.UI
 
         public IReadOnlyList<DamageTextEntity> ActiveTexts => _activeTexts;
         public int ActiveCount => _activeTexts.Count;
+        public event Action<DamageTextEntity> OnTextSpawned;
 
         public DamageTextManager(EventBus eventBus = null, int initialCapacity = 32)
         {
@@ -42,6 +43,7 @@ namespace HappyShoot.Domain.UI
             var textEntity = _pool.Spawn();
             textEntity.Initialize(++_idCounter, position, damage, isCritical);
             _activeTexts.Add(textEntity);
+            OnTextSpawned?.Invoke(textEntity);
             return textEntity;
         }
 

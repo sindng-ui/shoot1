@@ -16,6 +16,14 @@ namespace HappyShoot.Domain.Skills.Targeters
 
             targetPositionsBuffer.Clear();
 
+            // If manual aiming is enabled in GameSettings, target in the AimDirection
+            if (!Settings.GameSettings.AutoTargeting)
+            {
+                Vector2D aimDir = context.AimDirection.SqrMagnitude > 1e-4f ? context.AimDirection.Normalized : Vector2D.Right;
+                targetPositionsBuffer.Add(context.CasterPosition + aimDir * Math.Max(1.0f, range));
+                return true;
+            }
+
             if (context.TargetGrid == null)
             {
                 return false;

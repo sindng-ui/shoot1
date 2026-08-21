@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -94,9 +95,30 @@ namespace HappyShoot.View.UI
 
         public void OnRetryClicked()
         {
+            Debug.Log("[GameOverResultUiView] OnRetryClicked! Reloading active scene...");
             Time.timeScale = 1f;
-            Scene currentScene = SceneManager.GetActiveScene();
-            SceneManager.LoadScene(currentScene.buildIndex);
+
+            try
+            {
+                var currentScene = SceneManager.GetActiveScene();
+                if (currentScene.buildIndex >= 0)
+                {
+                    SceneManager.LoadScene(currentScene.buildIndex);
+                }
+                else if (!string.IsNullOrEmpty(currentScene.name))
+                {
+                    SceneManager.LoadScene(currentScene.name);
+                }
+                else
+                {
+                    SceneManager.LoadScene(0);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[GameOverResultUiView] Scene load failed, fallback to reload: {ex.Message}");
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            }
         }
 
         public void OnOpenShopClicked()
@@ -111,11 +133,32 @@ namespace HappyShoot.View.UI
         {
             if (_panelRoot != null) return;
 
+            // Ensure EventSystem with InputSystemUIInputModule
+            var eventSystem = FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>();
+            if (eventSystem == null)
+            {
+                var eventSystemGo = new GameObject("EventSystem");
+                eventSystemGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                eventSystemGo.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            }
+            else
+            {
+                var legacy = eventSystem.GetComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+                if (legacy != null) DestroyImmediate(legacy);
+                if (eventSystem.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>() == null)
+                {
+                    eventSystem.gameObject.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+                }
+            }
+
             var canvasGo = new GameObject("GameOverCanvas");
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
             // Dark red-tinted backdrop
@@ -138,17 +181,17 @@ namespace HappyShoot.View.UI
             dialogGo.AddComponent<Image>().color = new Color(0.18f, 0.12f, 0.15f, 0.98f);
 
             // Title
-            CreateText(dialogGo.transform, "Title", "💀 YOU DIED 💀", 32, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -44f), new Vector2(360f, 50f), new Color(1f, 0.3f, 0.3f, 1f));
+            CreateText(dialogGo.transform, "Title", "💀 게임 오버 💀", 32, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -44f), new Vector2(360f, 50f), new Color(1f, 0.3f, 0.3f, 1f));
 
             // Stats items
-            _survivalTimeText = CreateText(dialogGo.transform, "TimeText", "⏱️ Survived: 00:00", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 70f), new Vector2(340f, 32f), Color.white);
-            _killCountText = CreateText(dialogGo.transform, "KillsText", "💀 Enemies Defeated: 0", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(340f, 32f), Color.white);
-            _levelReachedText = CreateText(dialogGo.transform, "LevelText", "🌟 Reached Level: Lv.1", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -10f), new Vector2(340f, 32f), Color.white);
-            _goldEarnedText = CreateText(dialogGo.transform, "GoldText", "💰 Gold Collected: +0", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -50f), new Vector2(340f, 32f), new Color(1f, 0.85f, 0.3f, 1f));
+            _survivalTimeText = CreateText(dialogGo.transform, "TimeText", "⏱️ 생존 시간: 00:00", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 70f), new Vector2(340f, 32f), Color.white);
+            _killCountText = CreateText(dialogGo.transform, "KillsText", "💀 처치한 적: 0 마리", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(340f, 32f), Color.white);
+            _levelReachedText = CreateText(dialogGo.transform, "LevelText", "🌟 달성 레벨: Lv.1", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -10f), new Vector2(340f, 32f), Color.white);
+            _goldEarnedText = CreateText(dialogGo.transform, "GoldText", "💰 획득한 골드: +0 G", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -50f), new Vector2(340f, 32f), new Color(1f, 0.85f, 0.3f, 1f));
 
             // Buttons: Power Up Shop & Retry
-            _openShopButton = CreateButton(dialogGo.transform, "ShopBtn", "🏛️ POWER UP SHOP", new Vector2(0f, -115f), new Color(0.85f, 0.65f, 0.15f, 1f), OnOpenShopClicked);
-            _retryButton = CreateButton(dialogGo.transform, "RetryBtn", "🔄 PLAY AGAIN", new Vector2(0f, -180f), new Color(0.2f, 0.7f, 0.4f, 1f), OnRetryClicked);
+            _openShopButton = CreateButton(dialogGo.transform, "ShopBtn", "🏛️ 영구 강화 상점", new Vector2(0f, -115f), new Color(0.85f, 0.65f, 0.15f, 1f), OnOpenShopClicked);
+            _retryButton = CreateButton(dialogGo.transform, "RetryBtn", "🔄 다시 도전하기", new Vector2(0f, -180f), new Color(0.2f, 0.7f, 0.4f, 1f), OnRetryClicked);
         }
 
         private Button CreateButton(Transform parent, string name, string label, Vector2 anchoredPos, Color btnColor, UnityEngine.Events.UnityAction onClick)
@@ -163,6 +206,7 @@ namespace HappyShoot.View.UI
             rt.sizeDelta = new Vector2(280f, 50f);
 
             var img = btnGo.AddComponent<Image>();
+            img.sprite = Utils.SpriteHelper.GetOrCreateWhiteSprite();
             img.color = btnColor;
 
             var btn = btnGo.AddComponent<Button>();
@@ -190,7 +234,8 @@ namespace HappyShoot.View.UI
             txt.fontStyle = FontStyle.Bold;
             txt.alignment = alignment;
             txt.color = color;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.raycastTarget = false;
+            txt.font = Utils.FontHelper.GetKoreanFont();
             return txt;
         }
     }

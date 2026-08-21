@@ -90,7 +90,10 @@ namespace HappyShoot.View.Chests
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 80;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
             // Dark golden translucent backdrop
@@ -138,6 +141,7 @@ namespace HappyShoot.View.Chests
             rt.sizeDelta = new Vector2(280f, 52f);
 
             var img = btnGo.AddComponent<Image>();
+            img.sprite = Utils.SpriteHelper.GetOrCreateWhiteSprite();
             img.color = btnColor;
 
             var btn = btnGo.AddComponent<Button>();
@@ -165,7 +169,7 @@ namespace HappyShoot.View.Chests
             txt.fontStyle = FontStyle.Bold;
             txt.alignment = alignment;
             txt.color = color;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.font = Utils.FontHelper.GetKoreanFont();
             return txt;
         }
     }

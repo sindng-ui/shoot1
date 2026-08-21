@@ -147,7 +147,10 @@ namespace HappyShoot.View.Shop
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 95;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
             _panelRoot = new GameObject("MetaShopPanel");
@@ -225,13 +228,14 @@ namespace HappyShoot.View.Shop
             rt.sizeDelta = sizeDelta;
 
             var img = btnGo.AddComponent<Image>();
+            img.sprite = Utils.SpriteHelper.GetOrCreateWhiteSprite();
             img.color = btnColor;
 
             var btn = btnGo.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(onClick);
 
-            CreateText(btnGo.transform, "Label", label, 14, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            CreateText(btnGo.transform, "Label", label, 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
 
             return btn;
         }
@@ -252,7 +256,7 @@ namespace HappyShoot.View.Shop
             txt.fontStyle = FontStyle.Bold;
             txt.alignment = alignment;
             txt.color = color;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.font = Utils.FontHelper.GetKoreanFont();
             return txt;
         }
 

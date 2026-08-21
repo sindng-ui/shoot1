@@ -107,7 +107,13 @@ namespace HappyShoot.View.UI
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 20;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
+
             canvasGo.AddComponent<GraphicRaycaster>();
 
             _panelRoot = new GameObject("BossBarRoot");
@@ -116,14 +122,14 @@ namespace HappyShoot.View.UI
             rootRt.anchorMin = new Vector2(0.5f, 1f);
             rootRt.anchorMax = new Vector2(0.5f, 1f);
             rootRt.pivot = new Vector2(0.5f, 1f);
-            rootRt.anchoredPosition = new Vector2(0f, -80f);
-            rootRt.sizeDelta = new Vector2(520f, 60f);
+            rootRt.anchoredPosition = new Vector2(0f, -54f);
+            rootRt.sizeDelta = new Vector2(580f, 50f);
 
             // Boss Name Text
-            _bossNameText = CreateText(_panelRoot.transform, "BossName", "💀 BOSS NAME 💀", 20, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, 0f), new Vector2(400f, 26f), new Color(1f, 0.3f, 0.35f, 1f));
+            _bossNameText = CreateText(_panelRoot.transform, "BossName", "💀 BOSS NAME 💀", 18, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, 0f), new Vector2(400f, 24f), new Color(1f, 0.35f, 0.35f, 1f));
 
             // Bar Background
-            var bgGo = CreateUiPanel(_panelRoot.transform, "BossHpBg", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 4f), new Vector2(480f, 26f), new Color(0.12f, 0.05f, 0.08f, 0.9f));
+            var bgGo = CreateUiPanel(_panelRoot.transform, "BossHpBg", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 2f), new Vector2(540f, 22f), new Color(0.12f, 0.05f, 0.08f, 0.9f));
             var fillGo = CreateUiPanel(bgGo.transform, "BossHpFill", new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 0.5f), Vector2.zero, Vector2.zero, new Color(0.9f, 0.15f, 0.25f, 1f));
 
             _healthSlider = bgGo.AddComponent<Slider>();
@@ -133,7 +139,7 @@ namespace HappyShoot.View.UI
             _healthSlider.maxValue = 1f;
             _healthSlider.value = 1f;
 
-            _healthText = CreateText(bgGo.transform, "HpText", "1000 / 1000", 14, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(200f, 20f), Color.white);
+            _healthText = CreateText(bgGo.transform, "HpText", "1000 / 1000", 13, TextAnchor.MiddleCenter, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(200f, 18f), Color.white);
         }
 
         private GameObject CreateUiPanel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta, Color color)
@@ -147,6 +153,7 @@ namespace HappyShoot.View.UI
             rt.anchoredPosition = anchoredPos;
             rt.sizeDelta = sizeDelta;
             var img = go.AddComponent<Image>();
+            img.sprite = Utils.SpriteHelper.GetOrCreateWhiteSprite();
             img.color = color;
             return go;
         }
@@ -167,7 +174,7 @@ namespace HappyShoot.View.UI
             txt.fontStyle = FontStyle.Bold;
             txt.alignment = alignment;
             txt.color = color;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.font = Utils.FontHelper.GetKoreanFont();
             return txt;
         }
     }

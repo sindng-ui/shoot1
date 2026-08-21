@@ -27,10 +27,10 @@ namespace HappyShoot.Domain.Tests.Leveling
                 () => new CompositeSkill("slash", "Greatsword Slash", new CooldownTrigger(1f), new ClosestEnemyTargeter(), new GreatswordSlashEffect()));
 
             _rewardManager.RegisterSkill("fireball", "Fireball", "Launches explosive fireball",
-                () => new CompositeSkill("fireball", "Fireball", new CooldownTrigger(1f), new ClosestEnemyTargeter(), new ArcaneExplosionEffect()));
+                () => new CompositeSkill("fireball", "Fireball", new CooldownTrigger(1f), new ClosestEnemyTargeter(), new GroundStompEffect()));
 
             _rewardManager.RegisterSkill("thunder", "Lightning Strike", "Strikes random enemy",
-                () => new CompositeSkill("thunder", "Lightning Strike", new CooldownTrigger(1.5f), new ClosestEnemyTargeter(), new ArcaneExplosionEffect()));
+                () => new CompositeSkill("thunder", "Lightning Strike", new CooldownTrigger(1.5f), new ClosestEnemyTargeter(), new GroundStompEffect()));
 
             _rewardManager.RegisterPassive("passive_hp", "Vitality", "+20 HP", 5, (p, lv) => p.Heal(20f));
         }

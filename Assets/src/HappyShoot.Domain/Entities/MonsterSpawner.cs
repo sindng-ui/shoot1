@@ -150,16 +150,6 @@ namespace HappyShoot.Domain.Entities
 
                 monster.UpdateAI(player, deltaTime);
 
-                // Handle ranged skeleton attacks
-                if (monster.HasPendingRangedAttack)
-                {
-                    monster.ConsumePendingAttack();
-                    if (!player.IsDead)
-                    {
-                        player.TakeDamage(monster.ContactDamage * 0.8f);
-                    }
-                }
-
                 _monsterGrid.UpdatePosition(monster);
             }
         }

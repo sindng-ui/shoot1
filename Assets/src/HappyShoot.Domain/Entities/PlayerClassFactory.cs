@@ -50,7 +50,7 @@ namespace HappyShoot.Domain.Entities
                         new CooldownTrigger(1.2f),
                         new ClosestEnemyTargeter(),
                         new Skills.Effects.GreatswordSlashEffect(baseDamage: 35f, radius: 2.5f),
-                        range: 2.5f
+                        range: 2.8f
                     );
                     break;
 
@@ -74,7 +74,7 @@ namespace HappyShoot.Domain.Entities
                         "bow", "Piercing Bow",
                         new CooldownTrigger(0.8f),
                         new ClosestEnemyTargeter(),
-                        new Skills.Effects.PiercingArrowEffect(baseDamage: 22f, speed: 15f, pierceCount: 3),
+                        new Skills.Effects.PiercingArrowEffect(baseDamage: 22f, speed: 16f, pierceCount: 999),
                         range: 12.0f
                     );
                     break;
@@ -97,16 +97,17 @@ namespace HappyShoot.Domain.Entities
                         pickupRadius: 3.0f
                     );
                     startingSkill = new CompositeSkill(
-                        "explosion", "Arcane Explosion",
-                        new CooldownTrigger(1.5f),
+                        "ground_stomp", "지면 강타",
+                        new CooldownTrigger(1.4f),
                         new ClosestEnemyTargeter(),
-                        new Skills.Effects.ArcaneExplosionEffect(baseDamage: 40f, explosionRadius: 2.0f),
-                        range: 8.0f
+                        new Skills.Effects.GroundStompEffect(baseDamage: 25f, stompRadius: 1.5f),
+                        range: 1.8f
                     );
                     break;
             }
 
             var player = new PlayerEntity(id, stats, startPosition, eventBus);
+            player.ClassType = classType;
             player.AddSkill(startingSkill);
             return player;
         }

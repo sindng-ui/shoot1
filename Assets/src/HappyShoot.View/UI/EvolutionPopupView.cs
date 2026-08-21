@@ -67,7 +67,10 @@ namespace HappyShoot.View.UI
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 90;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
             _popupRoot = new GameObject("EvolutionBanner");
@@ -80,10 +83,11 @@ namespace HappyShoot.View.UI
             bannerRt.sizeDelta = new Vector2(500f, 100f);
 
             var img = _popupRoot.AddComponent<Image>();
+            img.sprite = Utils.SpriteHelper.GetOrCreateWhiteSprite();
             img.color = new Color(0.12f, 0.08f, 0.25f, 0.95f);
 
-            _evolvedTitleText = CreateText(_popupRoot.transform, "Title", "⚡ WEAPON EVOLVED ⚡", 20, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -25f), new Vector2(480f, 30f), new Color(1f, 0.9f, 0.2f, 1f));
-            _evolvedDescriptionText = CreateText(_popupRoot.transform, "Desc", "Synthesized into supreme weapon!", 14, TextAnchor.MiddleCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 25f), new Vector2(480f, 25f), Color.white);
+            _evolvedTitleText = CreateText(_popupRoot.transform, "Title", "⚡ 궁극 무기 진화 완료 ⚡", 20, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -25f), new Vector2(480f, 30f), new Color(1f, 0.9f, 0.2f, 1f));
+            _evolvedDescriptionText = CreateText(_popupRoot.transform, "Desc", "최고 등급의 궁극 무기로 각성했습니다!", 15, TextAnchor.MiddleCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 25f), new Vector2(480f, 25f), Color.white);
         }
 
         private Text CreateText(Transform parent, string name, string defaultText, int fontSize, TextAnchor alignment, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta, Color color)
@@ -102,7 +106,7 @@ namespace HappyShoot.View.UI
             txt.fontStyle = FontStyle.Bold;
             txt.alignment = alignment;
             txt.color = color;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.font = Utils.FontHelper.GetKoreanFont();
             return txt;
         }
     }

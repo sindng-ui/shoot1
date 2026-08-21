@@ -16,29 +16,30 @@ namespace HappyShoot.View.Monsters
 
         private MonsterEntity _entity;
         private SpriteRenderer _spriteRenderer;
+        private Transform _transform;
         private Color _originalColor;
         private float _flashTimer;
 
         public MonsterEntity Entity => _entity;
 
         private float _animTimer;
+        private float _baseScale = 1.4f;
 
         private void Awake()
         {
+            _transform = transform;
             _spriteRenderer = GetComponent<SpriteRenderer>();
             _spriteRenderer.sprite = Utils.SpriteHelper.GetOrCreateSlimeSprite();
             _spriteRenderer.color = Color.white;
-            transform.localScale = Vector3.one * 1.4f;
+            _transform.localScale = Vector3.one * 1.4f;
             _originalColor = Color.white;
             _animTimer = Random.Range(0f, 10f);
         }
 
-        private float _baseScale = 1.4f;
-
         public void Bind(MonsterEntity entity)
         {
             _entity = entity;
-            transform.position = new Vector3(entity.Position.X, entity.Position.Y, 0f);
+            _transform.position = new Vector3(entity.Position.X, entity.Position.Y, 0f);
 
             if (_spriteRenderer != null)
             {
@@ -69,6 +70,7 @@ namespace HappyShoot.View.Monsters
                 _spriteRenderer.color = Color.white;
             }
 
+            _transform.localScale = Vector3.one * _baseScale;
             gameObject.SetActive(true);
         }
 
@@ -80,13 +82,15 @@ namespace HappyShoot.View.Monsters
                 return;
             }
 
-            transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, 0f);
+            _transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, 0f);
 
-            // Type-based idle bounce
-            float speedMult = _entity.Type == MonsterType.Bat ? 16f : (_entity.Type == MonsterType.Golem ? 4f : 8f);
-            _animTimer += Time.deltaTime * speedMult;
-            float squash = Mathf.Sin(_animTimer) * 0.10f;
-            transform.localScale = new Vector3(_baseScale * (1f + squash), _baseScale * (1f - squash), 1f);
+            // Boss & Golem squash animation only (keeps 500+ regular mob updates ultra lightweight)
+            if (_entity.Type == MonsterType.Boss || _entity.Type == MonsterType.Golem)
+            {
+                _animTimer += Time.deltaTime * 6f;
+                float squash = Mathf.Sin(_animTimer) * 0.08f;
+                _transform.localScale = new Vector3(_baseScale * (1f + squash), _baseScale * (1f - squash), 1f);
+            }
 
             if (_flashTimer > 0f)
             {

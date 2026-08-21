@@ -87,6 +87,7 @@ namespace HappyShoot.Domain.Entities
             AttackInterval = attackInterval;
             AttackTimer = 0f;
             HasPendingRangedAttack = false;
+            Velocity = Vector2D.Zero;
             IsActive = true;
 
             if (IsBoss)
@@ -167,6 +168,8 @@ namespace HappyShoot.Domain.Entities
             }
         }
 
+        public Vector2D Velocity { get; set; }
+
         /// <summary>
         /// Updates AI movement (melee chase vs ranged kite) and attack timers.
         /// </summary>
@@ -180,14 +183,15 @@ namespace HappyShoot.Domain.Entities
             if (IsRanged)
             {
                 float prefDistSqr = PreferredDistance * PreferredDistance;
-                // If too far, close in. If too close, back away slightly.
                 if (distSqr > prefDistSqr + 0.5f)
                 {
-                    Position += diff.Normalized * (MoveSpeed * deltaTime);
+                    float invDist = 1.0f / (float)Math.Sqrt(distSqr);
+                    Position += new Vector2D(diff.X * invDist * (MoveSpeed * deltaTime), diff.Y * invDist * (MoveSpeed * deltaTime));
                 }
                 else if (distSqr < prefDistSqr - 1.0f && distSqr > 0.01f)
                 {
-                    Position -= diff.Normalized * (MoveSpeed * 0.7f * deltaTime);
+                    float invDist = 1.0f / (float)Math.Sqrt(distSqr);
+                    Position -= new Vector2D(diff.X * invDist * (MoveSpeed * 0.7f * deltaTime), diff.Y * invDist * (MoveSpeed * 0.7f * deltaTime));
                 }
 
                 // Tick ranged shoot timer
@@ -200,8 +204,22 @@ namespace HappyShoot.Domain.Entities
             }
             else
             {
-                // Standard melee chase
-                if (distSqr > 0.0001f)
+                // Bat: Fast flying with steering inertia (smooth curve turning)
+                if (Type == MonsterType.Bat && distSqr > 0.0001f)
+                {
+                    float invDist = 1.0f / (float)Math.Sqrt(distSqr);
+                    Vector2D desiredDir = new Vector2D(diff.X * invDist, diff.Y * invDist);
+                    Vector2D currentDir = Velocity.SqrMagnitude > 0.001f ? Velocity.Normalized : desiredDir;
+
+                    float steerSpeed = 2.56f; // Turning speed (20% higher inertia)
+                    float t = Math.Min(1.0f, steerSpeed * deltaTime);
+                    Vector2D newDir = (currentDir + (desiredDir - currentDir) * t).Normalized;
+
+                    Velocity = newDir * MoveSpeed;
+                    Position += Velocity * deltaTime;
+                }
+                // Standard melee chase (Slime, Golem, Boss)
+                else if (distSqr > 0.0001f)
                 {
                     float dist = (float)Math.Sqrt(distSqr);
                     float step = MoveSpeed * deltaTime;
@@ -211,7 +229,8 @@ namespace HappyShoot.Domain.Entities
                     }
                     else
                     {
-                        Position += (diff / dist) * step;
+                        float invDist = 1.0f / dist;
+                        Position += new Vector2D(diff.X * invDist * step, diff.Y * invDist * step);
                     }
                 }
             }

@@ -75,8 +75,8 @@ namespace HappyShoot.Domain.Leveling
     /// </summary>
     public class SkillRewardManager
     {
-        private readonly Dictionary<string, (string title, string description, Func<ISkill> factory)> _allSkills
-            = new Dictionary<string, (string, string, Func<ISkill>)>();
+        private readonly Dictionary<string, (string title, string description, Func<ISkill> factory, CharacterClassType[] allowedClasses)> _allSkills
+            = new Dictionary<string, (string, string, Func<ISkill>, CharacterClassType[])>();
 
         private readonly Dictionary<string, PassiveDefinition> _allPassives
             = new Dictionary<string, PassiveDefinition>();
@@ -90,9 +90,9 @@ namespace HappyShoot.Domain.Leveling
             _random = seed.HasValue ? new Random(seed.Value) : new Random();
         }
 
-        public void RegisterSkill(string id, string title, string description, Func<ISkill> factory)
+        public void RegisterSkill(string id, string title, string description, Func<ISkill> factory, CharacterClassType[] allowedClasses = null)
         {
-            _allSkills[id] = (title, description, factory);
+            _allSkills[id] = (title, description, factory, allowedClasses);
         }
 
         public void RegisterPassive(string id, string title, string description, int maxLevel, Action<PlayerEntity, int> applyLevel)
@@ -119,8 +119,8 @@ namespace HappyShoot.Domain.Leveling
                     var evo = readyEvolutions[i];
                     result.Add(new SkillRewardOption(
                         id: evo.EvolvedSkillId,
-                        title: $"✨ [EVOLVE] {evo.EvolvedSkillName}",
-                        description: $"Combines {evo.BaseSkillId} with {evo.RequiredPassiveId} into supreme weapon!",
+                        title: $"✨ [진화] {evo.EvolvedSkillName}",
+                        description: $"{evo.BaseSkillId} + {evo.RequiredPassiveId} 합성! 궁극 무기로 진화합니다.",
                         category: RewardCategory.EvolveSkill,
                         currentLevel: 8,
                         nextLevel: 9,
@@ -136,18 +136,27 @@ namespace HappyShoot.Domain.Leveling
 
             var pool = new List<SkillRewardOption>();
 
-            // 2. Evaluate active skills
+            // 2. Evaluate active skills with Class Restrictions
             foreach (var kvp in _allSkills)
             {
                 string skillId = kvp.Key;
                 var info = kvp.Value;
+
+                // Filter out skills not allowed for this player's class
+                if (info.allowedClasses != null && info.allowedClasses.Length > 0)
+                {
+                    if (!info.allowedClasses.Contains(player.ClassType))
+                    {
+                        continue;
+                    }
+                }
 
                 var existingSkill = player.Skills.FirstOrDefault(s => s.Id == skillId);
                 if (existingSkill == null)
                 {
                     pool.Add(new SkillRewardOption(
                         id: skillId,
-                        title: $"🗡️ [New] {info.title}",
+                        title: $"🗡️ {info.title}",
                         description: info.description,
                         category: RewardCategory.NewActiveSkill,
                         currentLevel: 0,
@@ -159,8 +168,8 @@ namespace HappyShoot.Domain.Leveling
                 {
                     pool.Add(new SkillRewardOption(
                         id: skillId,
-                        title: $"🗡️ [Lv.{existingSkill.Level + 1}] {info.title}",
-                        description: $"Enhances {info.title} to level {existingSkill.Level + 1}",
+                        title: $"🗡️ {info.title} (Lv.{existingSkill.Level + 1})",
+                        description: $"{info.title}의 위력과 성능을 Lv.{existingSkill.Level + 1}(으)로 강화합니다.",
                         category: RewardCategory.UpgradeActiveSkill,
                         currentLevel: existingSkill.Level,
                         nextLevel: existingSkill.Level + 1,
@@ -180,7 +189,7 @@ namespace HappyShoot.Domain.Leveling
                 {
                     pool.Add(new SkillRewardOption(
                         id: passiveId,
-                        title: $"🛡️ [New] {def.Title}",
+                        title: $"🛡️ {def.Title}",
                         description: def.Description,
                         category: RewardCategory.NewPassive,
                         currentLevel: 0,
@@ -196,8 +205,8 @@ namespace HappyShoot.Domain.Leveling
                 {
                     pool.Add(new SkillRewardOption(
                         id: passiveId,
-                        title: $"🛡️ [Lv.{currentLevel + 1}] {def.Title}",
-                        description: $"{def.Description} (Level {currentLevel + 1})",
+                        title: $"🛡️ {def.Title} (Lv.{currentLevel + 1})",
+                        description: $"{def.Description} (현재 효과 강화)",
                         category: RewardCategory.UpgradePassive,
                         currentLevel: currentLevel,
                         nextLevel: currentLevel + 1,

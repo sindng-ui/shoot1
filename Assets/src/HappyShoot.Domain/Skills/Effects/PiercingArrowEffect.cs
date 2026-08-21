@@ -4,19 +4,33 @@ using HappyShoot.Domain.Spatial;
 namespace HappyShoot.Domain.Skills.Effects
 {
     /// <summary>
-    /// Ranger: Fires high-speed piercing arrows toward targets.
+    /// Ranger: Fires high-speed piercing arrows that pierce infinitely through all enemies across the entire screen.
+    /// Base: Infinite Pierce (999), 22 base damage, 16m/s speed.
+    /// Leveling: +7 damage and +1m/s speed per level.
     /// </summary>
-    public class PiercingArrowEffect : ISkillEffect
+    public class PiercingArrowEffect : ISkillEffect, ILevelableEffect
     {
         public float BaseDamage { get; set; }
         public float Speed { get; set; }
         public int PierceCount { get; set; }
 
-        public PiercingArrowEffect(float baseDamage = 20f, float speed = 14f, int pierceCount = 3)
+        private readonly float _initialBaseDamage;
+        private readonly float _initialSpeed;
+
+        public PiercingArrowEffect(float baseDamage = 22f, float speed = 16f, int pierceCount = 999)
         {
             BaseDamage = baseDamage;
             Speed = speed;
             PierceCount = pierceCount;
+            _initialBaseDamage = baseDamage;
+            _initialSpeed = speed;
+        }
+
+        public void OnLevelUp(int newLevel)
+        {
+            PierceCount = 999;
+            BaseDamage = _initialBaseDamage + 7f * (newLevel - 1);
+            Speed = _initialSpeed + 1.0f * (newLevel - 1);
         }
 
         public void ApplyEffect(SkillContext context, IList<Vector2D> targetPositions)

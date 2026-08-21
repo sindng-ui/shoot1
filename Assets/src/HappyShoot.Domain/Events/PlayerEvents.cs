@@ -55,4 +55,48 @@ namespace HappyShoot.Domain.Events
             Position = position;
         }
     }
+
+    public readonly struct PlayerSlashExecutedEvent : IDomainEvent
+    {
+        public readonly int PlayerId;
+        public readonly Vector2D CenterPosition;
+        public readonly float DirectionAngleDegrees;
+        public readonly float Radius;
+        public readonly float ArcAngleDegrees;
+
+        public PlayerSlashExecutedEvent(int playerId, Vector2D centerPosition, float directionAngleDegrees, float radius, float arcAngleDegrees = 150f)
+        {
+            PlayerId = playerId;
+            CenterPosition = centerPosition;
+            DirectionAngleDegrees = directionAngleDegrees;
+            Radius = radius;
+            ArcAngleDegrees = arcAngleDegrees;
+        }
+    }
+
+    public readonly struct GroundStompExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D CenterPosition;
+        public readonly float Radius;
+
+        public GroundStompExecutedEvent(Vector2D centerPosition, float radius)
+        {
+            CenterPosition = centerPosition;
+            Radius = radius;
+        }
+    }
+
+    public readonly struct ArrowRainExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D CenterPosition;
+        public readonly float Radius;
+        public readonly float Duration;
+
+        public ArrowRainExecutedEvent(Vector2D centerPosition, float radius, float duration = 1.0f)
+        {
+            CenterPosition = centerPosition;
+            Radius = radius;
+            Duration = duration;
+        }
+    }
 }

@@ -62,6 +62,7 @@ namespace HappyShoot.View.UI
         public void Initialize(EventBus eventBus)
         {
             _domainManager = new DamageTextManager(eventBus, initialCapacity: 32);
+            _domainManager.OnTextSpawned += SpawnTextView;
         }
 
         private void Update()
@@ -70,40 +71,39 @@ namespace HappyShoot.View.UI
 
             _domainManager.Update(Time.deltaTime);
 
-            var activeTexts = _domainManager.ActiveTexts;
-            for (int i = 0; i < activeTexts.Count; i++)
-            {
-                GetOrCreateView(activeTexts[i]);
-            }
-
             for (int i = 0; i < _viewPool.Count; i++)
             {
-                if (_viewPool[i].gameObject.activeSelf)
+                var view = _viewPool[i];
+                if (view.gameObject.activeSelf)
                 {
-                    _viewPool[i].UpdateView();
+                    view.UpdateView();
                 }
             }
         }
 
-        private DamageTextView GetOrCreateView(DamageTextEntity entity)
+        public void SpawnTextView(DamageTextEntity entity)
         {
+            if (!HappyShoot.Domain.Settings.GameSettings.ShowDamageText) return;
+
             for (int i = 0; i < _viewPool.Count; i++)
             {
                 if (!_viewPool[i].gameObject.activeSelf)
                 {
                     _viewPool[i].Bind(entity);
-                    return _viewPool[i];
+                    return;
                 }
             }
 
-            var go = new GameObject($"DamageText_{_viewPool.Count + 1}");
-            go.transform.SetParent(transform);
-            go.transform.localScale = Vector3.one * 0.1f;
+            if (_viewPool.Count < 32)
+            {
+                var go = new GameObject($"DamageText_{_viewPool.Count + 1}");
+                go.transform.SetParent(transform);
+                go.transform.localScale = Vector3.one * 0.1f;
 
-            var view = go.AddComponent<DamageTextView>();
-            view.Bind(entity);
-            _viewPool.Add(view);
-            return view;
+                var view = go.AddComponent<DamageTextView>();
+                view.Bind(entity);
+                _viewPool.Add(view);
+            }
         }
     }
 }

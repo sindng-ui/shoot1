@@ -8,10 +8,168 @@ namespace HappyShoot.View.Utils
     public static class SpriteHelper
     {
         private static Sprite _warriorSprite;
+        private static Sprite _rangerSprite;
         private static Sprite _swordSprite;
+        private static Sprite _bowSprite;
         private static Sprite _slimeSprite;
         private static Sprite _gemSprite;
         private static Sprite _slashArcSprite;
+        private static Sprite _whiteSprite;
+
+        /// <summary>
+        /// 2x2 solid pure white sprite for UI panels and card backgrounds.
+        /// </summary>
+        public static Sprite GetOrCreateWhiteSprite()
+        {
+            if (_whiteSprite != null) return _whiteSprite;
+            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            Color[] pixels = new Color[] { Color.white, Color.white, Color.white, Color.white };
+            tex.SetPixels(pixels);
+            tex.Apply();
+            _whiteSprite = Sprite.Create(tex, new Rect(0, 0, 2, 2), new Vector2(0.5f, 0.5f), 2);
+            return _whiteSprite;
+        }
+
+        /// <summary>
+        /// 32x32 Chibi Swift Ranger Hunter with forest green hood, leather armor, quiver, and keen eyes.
+        /// </summary>
+        public static Sprite GetOrCreateRangerSprite(int size = 32)
+        {
+            if (_rangerSprite != null) return _rangerSprite;
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            Color[] pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+            Color hoodLight = new Color(0.25f, 0.80f, 0.40f);
+            Color hoodMid = new Color(0.12f, 0.55f, 0.25f);
+            Color hoodDark = new Color(0.06f, 0.32f, 0.14f);
+            Color leatherLight = new Color(0.65f, 0.42f, 0.22f);
+            Color leatherDark = new Color(0.38f, 0.22f, 0.10f);
+            Color eyeGlow = new Color(1.0f, 0.90f, 0.30f);
+            Color featherRed = new Color(0.95f, 0.25f, 0.25f);
+            Color quiverGold = new Color(0.95f, 0.75f, 0.20f);
+
+            int cx = size / 2;
+            int cy = size / 2;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    int dx = x - cx;
+                    int dy = y - cy;
+
+                    // 1. Quiver with arrows on back
+                    if (dx >= 4 && dx <= 8 && dy >= -4 && dy <= 7)
+                    {
+                        pixels[y * size + x] = (dy >= 4) ? featherRed : ((dx == 4 || dx == 8) ? quiverGold : leatherDark);
+                    }
+
+                    // 2. Forest Cloak / Cape
+                    if (Mathf.Abs(dx) <= 7 && dy >= -10 && dy <= -2)
+                    {
+                        pixels[y * size + x] = (Mathf.Abs(dx) == 7 || dy == -10) ? hoodDark : hoodMid;
+                    }
+
+                    // 3. Leather Tunic Body & Belt
+                    if (Mathf.Abs(dx) <= 5 && dy >= -8 && dy <= 0)
+                    {
+                        if (dy == -4) pixels[y * size + x] = quiverGold; // Belt
+                        else if (Mathf.Abs(dx) <= 4) pixels[y * size + x] = (dy > -4) ? leatherLight : leatherDark;
+                        else pixels[y * size + x] = leatherDark;
+                    }
+
+                    // 4. Ranger Green Hood (Head)
+                    if (Mathf.Abs(dx) <= 6 && dy >= 0 && dy <= 10)
+                    {
+                        // Hood peak at top
+                        if (dy >= 8 && Mathf.Abs(dx) > (10 - dy) + 1) continue;
+
+                        if (Mathf.Abs(dx) == 6 || dy == 10 || (dy >= 8 && Mathf.Abs(dx) == (10 - dy) + 1))
+                        {
+                            pixels[y * size + x] = hoodDark;
+                        }
+                        else if (dx >= -4 && dx <= 4 && dy >= 2 && dy <= 6)
+                        {
+                            // Shadowed face area inside hood
+                            pixels[y * size + x] = new Color(0.10f, 0.12f, 0.14f);
+                            // Keen golden eyes
+                            if (dy == 4 && (dx == -2 || dx == 2))
+                            {
+                                pixels[y * size + x] = eyeGlow;
+                            }
+                        }
+                        else
+                        {
+                            pixels[y * size + x] = (dy >= 7 || dx < 0) ? hoodLight : hoodMid;
+                        }
+                    }
+
+                    // 5. Feather on hood side
+                    if (dx >= -8 && dx <= -5 && dy >= 8 && dy <= 12)
+                    {
+                        if (dy - 8 == -(dx + 5)) pixels[y * size + x] = featherRed;
+                    }
+
+                    // 6. Leather Boots
+                    if (Mathf.Abs(dx) >= 2 && Mathf.Abs(dx) <= 4 && dy >= -12 && dy <= -9)
+                    {
+                        pixels[y * size + x] = leatherDark;
+                    }
+                }
+            }
+
+            tex.SetPixels(pixels);
+            tex.Apply();
+            _rangerSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+            return _rangerSprite;
+        }
+
+        /// <summary>
+        /// 32x32 Curved Recurve Wooden Bow with golden tips and strung grip.
+        /// </summary>
+        public static Sprite GetOrCreateBowSprite(int size = 32)
+        {
+            if (_bowSprite != null) return _bowSprite;
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            Color[] pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+            Color woodLight = new Color(0.72f, 0.48f, 0.25f);
+            Color woodMid = new Color(0.48f, 0.28f, 0.12f);
+            Color gold = new Color(0.95f, 0.80f, 0.20f);
+            Color stringCol = new Color(0.90f, 0.92f, 0.95f, 0.85f);
+            Color grip = new Color(0.20f, 0.75f, 0.35f);
+
+            int cx = size / 2;
+            int cy = size / 2;
+
+            for (int y = 4; y < size - 4; y++)
+            {
+                int dy = y - cy;
+                int curveX = cx + (int)(Mathf.Sqrt(Mathf.Max(0, 100 - dy * dy * 0.7f)) * 0.6f);
+
+                // Wood bow limb
+                if (curveX < size - 1 && curveX >= 0)
+                {
+                    pixels[y * size + curveX] = (Mathf.Abs(dy) >= 9) ? gold : ((Mathf.Abs(dy) <= 2) ? grip : woodLight);
+                    if (curveX - 1 >= 0) pixels[y * size + (curveX - 1)] = woodMid;
+                }
+
+                // Bowstring
+                pixels[y * size + (cx - 2)] = stringCol;
+            }
+
+            tex.SetPixels(pixels);
+            tex.Apply();
+            _bowSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+            return _bowSprite;
+        }
 
         /// <summary>
         /// 32x32 Chibi Armored Warrior Knight with steel helmet, visor slit, shoulder pads, and red cape.
@@ -191,9 +349,9 @@ namespace HappyShoot.View.Utils
             Color[] pixels = new Color[size * size];
             for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
 
-            Color gemBright = new Color(0.60f, 1.0f, 0.70f);
-            Color gemMid = new Color(0.20f, 0.85f, 0.35f);
-            Color gemDark = new Color(0.08f, 0.50f, 0.18f);
+            Color gemBright = new Color(1.0f, 1.0f, 0.70f, 1.0f);
+            Color gemMid = new Color(1.0f, 0.85f, 0.10f, 1.0f);
+            Color gemDark = new Color(0.80f, 0.45f, 0.05f, 1.0f);
 
             int center = size / 2;
             for (int y = 0; y < size; y++)
@@ -219,43 +377,10 @@ namespace HappyShoot.View.Utils
 
         /// <summary>
         /// 48x48 Golden Sweeping Sword Slash Wave Arc.
-        /// </summary>
-        public static Sprite GetOrCreateSlashArcSprite(int size = 48)
-        {
-            if (_slashArcSprite != null) return _slashArcSprite;
-
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            texture.filterMode = FilterMode.Bilinear;
-            float radius = size * 0.48f;
-            float innerRadius = size * 0.28f;
-            Vector2 center = new Vector2(size * 0.15f, size * 0.5f);
-
-            Color[] pixels = new Color[size * size];
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    Vector2 pos = new Vector2(x + 0.5f, y + 0.5f);
-                    float dist = Vector2.Distance(pos, center);
-                    float angle = Mathf.Atan2(pos.y - center.y, pos.x - center.x) * Mathf.Rad2Deg;
-
-                    if (dist >= innerRadius && dist <= radius && angle >= -60f && angle <= 60f)
-                    {
-                        float edgeFade = Mathf.Sin((angle + 60f) / 120f * Mathf.PI);
-                        pixels[y * size + x] = new Color(1f, 0.95f, 0.35f, edgeFade * 0.95f);
-                    }
-                    else
-                    {
-                        pixels[y * size + x] = Color.clear;
-                    }
-                }
-            }
-
-            texture.SetPixels(pixels);
-            texture.Apply();
-            _slashArcSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.15f, 0.5f), size);
-            return _slashArcSprite;
-        }
+        // Forwarding helpers for skill sprites to SkillSpriteHelper
+        public static Sprite GetOrCreateSlashArcSprite(int size = 64) => SkillSpriteHelper.GetOrCreateSlashArcSprite(size);
+        public static Sprite GetOrCreateBoneSprite() => SkillSpriteHelper.GetOrCreateBoneSprite();
+        public static Sprite GetOrCreateGroundStompSprite() => SkillSpriteHelper.GetOrCreateGroundStompSprite();
 
         // Forwarding helpers for monsters and chests to MonsterSpriteHelper
         public static Sprite GetOrCreateBatSprite(int size = 24) => MonsterSpriteHelper.GetOrCreateBatSprite(size);

@@ -20,8 +20,9 @@ namespace HappyShoot.Domain.Gems
         public int ActiveCount => _activeGems.Count;
 
         public event Action<int> OnExpCollected;
+        public event Action<ExpGemEntity> OnGemSpawned;
 
-        public GemManager(EventBus eventBus = null, int initialCapacity = 64)
+        public GemManager(EventBus eventBus = null, int initialCapacity = 512)
         {
             _eventBus = eventBus;
             _pool = new ObjectPool<ExpGemEntity>(() => new ExpGemEntity(), initialCapacity: initialCapacity);
@@ -45,6 +46,7 @@ namespace HappyShoot.Domain.Gems
             var gem = _pool.Spawn();
             gem.Initialize(++_idCounter, position, expValue);
             _activeGems.Add(gem);
+            OnGemSpawned?.Invoke(gem);
             return gem;
         }
 

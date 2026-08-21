@@ -104,8 +104,19 @@ namespace HappyShoot.View.UI
         public void OnRestartClicked()
         {
             Time.timeScale = 1f;
-            Scene currentScene = SceneManager.GetActiveScene();
-            SceneManager.LoadScene(currentScene.buildIndex);
+            var currentScene = SceneManager.GetActiveScene();
+            if (!string.IsNullOrEmpty(currentScene.name))
+            {
+                SceneManager.LoadScene(currentScene.name);
+            }
+            else if (currentScene.buildIndex >= 0)
+            {
+                SceneManager.LoadScene(currentScene.buildIndex);
+            }
+            else
+            {
+                SceneManager.LoadScene(0);
+            }
         }
 
         public void OnQuitClicked()
@@ -118,15 +129,33 @@ namespace HappyShoot.View.UI
 #endif
         }
 
+        private SettingsDialogUiView _settingsDialog;
+
+        public void SetSettingsDialog(SettingsDialogUiView dialog)
+        {
+            _settingsDialog = dialog;
+        }
+
         private void EnsureUiElements()
         {
             if (_panelRoot != null) return;
+
+            // Ensure EventSystem exists in scene
+            if (FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+            {
+                var eventSystemGo = new GameObject("EventSystem");
+                eventSystemGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                eventSystemGo.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            }
 
             var canvasGo = new GameObject("PauseMenuCanvas");
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 50;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
             // Dark backdrop
@@ -145,17 +174,18 @@ namespace HappyShoot.View.UI
             var dialogRt = dialogGo.AddComponent<RectTransform>();
             dialogRt.anchorMin = new Vector2(0.5f, 0.5f);
             dialogRt.anchorMax = new Vector2(0.5f, 0.5f);
-            dialogRt.sizeDelta = new Vector2(360f, 380f);
+            dialogRt.sizeDelta = new Vector2(380f, 440f);
             var dialogImg = dialogGo.AddComponent<Image>();
             dialogImg.color = new Color(0.12f, 0.15f, 0.22f, 0.95f);
 
             // Title
-            CreateText(dialogGo.transform, "Title", "⏸️ GAME PAUSED", 26, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f), new Vector2(300f, 40f), Color.white);
+            CreateText(dialogGo.transform, "Title", "⏸️ 게임 일시정지", 26, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f), new Vector2(300f, 40f), Color.white);
 
             // Buttons
-            _resumeButton = CreateButton(dialogGo.transform, "ResumeBtn", "▶ RESUME", new Vector2(0f, 30f), new Color(0.2f, 0.6f, 0.9f, 1f), OnResumeClicked);
-            _restartButton = CreateButton(dialogGo.transform, "RestartBtn", "🔄 RESTART", new Vector2(0f, -40f), new Color(0.3f, 0.7f, 0.4f, 1f), OnRestartClicked);
-            _quitButton = CreateButton(dialogGo.transform, "QuitBtn", "🚪 QUIT", new Vector2(0f, -110f), new Color(0.85f, 0.25f, 0.25f, 1f), OnQuitClicked);
+            _resumeButton = CreateButton(dialogGo.transform, "ResumeBtn", "▶ 계속하기", new Vector2(0f, 55f), new Color(0.2f, 0.6f, 0.9f, 1f), OnResumeClicked);
+            CreateButton(dialogGo.transform, "SettingsBtn", "⚙️ 환경 설정", new Vector2(0f, -10f), new Color(0.32f, 0.42f, 0.60f, 1f), () => _settingsDialog?.Show());
+            _restartButton = CreateButton(dialogGo.transform, "RestartBtn", "🔄 다시 시작", new Vector2(0f, -75f), new Color(0.3f, 0.7f, 0.4f, 1f), OnRestartClicked);
+            _quitButton = CreateButton(dialogGo.transform, "QuitBtn", "🚪 게임 종료", new Vector2(0f, -140f), new Color(0.85f, 0.25f, 0.25f, 1f), OnQuitClicked);
         }
 
         private Button CreateButton(Transform parent, string name, string label, Vector2 anchoredPos, Color btnColor, UnityEngine.Events.UnityAction onClick)
@@ -170,6 +200,7 @@ namespace HappyShoot.View.UI
             rt.sizeDelta = new Vector2(240f, 50f);
 
             var img = btnGo.AddComponent<Image>();
+            img.sprite = Utils.SpriteHelper.GetOrCreateWhiteSprite();
             img.color = btnColor;
 
             var btn = btnGo.AddComponent<Button>();
@@ -197,7 +228,8 @@ namespace HappyShoot.View.UI
             txt.fontStyle = FontStyle.Bold;
             txt.alignment = alignment;
             txt.color = color;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.raycastTarget = false;
+            txt.font = Utils.FontHelper.GetKoreanFont();
             return txt;
         }
     }

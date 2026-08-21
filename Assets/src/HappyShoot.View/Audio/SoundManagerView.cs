@@ -92,10 +92,37 @@ namespace HappyShoot.View.Audio
                 if (_bgmSource != null) _bgmSource.volume = 0.1f;
             });
             _eventBus.Subscribe<GameStateChangedEvent>(OnGameStateChanged);
+
+            Domain.Settings.GameSettings.OnSettingsChanged += ApplySettingsVolume;
+        }
+
+        private void OnDestroy()
+        {
+            Domain.Settings.GameSettings.OnSettingsChanged -= ApplySettingsVolume;
+        }
+
+        private void ApplySettingsVolume()
+        {
+            if (_bgmSource != null)
+            {
+                _bgmSource.volume = Domain.Settings.GameSettings.IsMuted 
+                    ? 0f 
+                    : (Domain.Settings.GameSettings.BgmVolume * 0.35f);
+            }
         }
 
         public void PlaySfx(SoundEffectType type, float volume = 1.0f, float debounceSeconds = DefaultDebounceTime)
         {
+            if (Domain.Settings.GameSettings.IsMuted || Domain.Settings.GameSettings.SfxVolume <= 0.001f)
+            {
+                return;
+            }
+
+            if (type == SoundEffectType.MonsterHit || type == SoundEffectType.PlayerHurt)
+            {
+                debounceSeconds = 0.06f; // Higher debounce for mass combat hits
+            }
+
             float now = Time.unscaledTime;
             if (_lastPlayTimes.TryGetValue(type, out float lastTime) && (now - lastTime < debounceSeconds))
             {
@@ -109,7 +136,7 @@ namespace HappyShoot.View.Audio
                 _currentSourceIndex = (_currentSourceIndex + 1) % SfxPoolSize;
 
                 src.clip = clip;
-                src.volume = Mathf.Clamp01(volume);
+                src.volume = Mathf.Clamp01(volume * Domain.Settings.GameSettings.SfxVolume);
                 src.Play();
             }
         }
@@ -120,7 +147,7 @@ namespace HappyShoot.View.Audio
 
             var bgmClip = ProceduralAudioHelper.CreateRetroBgmTrack();
             _bgmSource.clip = bgmClip;
-            _bgmSource.volume = 0.30f;
+            ApplySettingsVolume();
             _bgmSource.Play();
         }
 

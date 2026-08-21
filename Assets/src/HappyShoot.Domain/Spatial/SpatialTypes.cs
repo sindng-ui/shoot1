@@ -52,6 +52,8 @@ namespace HappyShoot.Domain.Spatial
             return dx * dx + dy * dy;
         }
 
+        public static float Dot(Vector2D a, Vector2D b) => a.X * b.X + a.Y * b.Y;
+
         public static Vector2D operator +(Vector2D a, Vector2D b) => new Vector2D(a.X + b.X, a.Y + b.Y);
         public static Vector2D operator -(Vector2D a, Vector2D b) => new Vector2D(a.X - b.X, a.Y - b.Y);
         public static Vector2D operator *(Vector2D a, float d) => new Vector2D(a.X * d, a.Y * d);

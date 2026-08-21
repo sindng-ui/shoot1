@@ -12,6 +12,8 @@ namespace HappyShoot.Domain.Entities
     public class PlayerEntity : ISpatialEntity
     {
         public int Id { get; }
+        public CharacterClassType ClassType { get; set; } = CharacterClassType.Warrior;
+        public Vector2D AimDirection { get; set; } = Vector2D.Right;
         public Vector2D Position { get; private set; }
         public float Radius { get; set; } = 0.5f;
         public bool IsActive => !IsDead;
@@ -44,7 +46,8 @@ namespace HappyShoot.Domain.Entities
                 CasterPosition = startPosition,
                 BaseDamage = 10f,
                 AreaMultiplier = stats.AreaMultiplier,
-                SpeedMultiplier = stats.ProjectileSpeedMultiplier
+                SpeedMultiplier = stats.ProjectileSpeedMultiplier,
+                EventBus = eventBus
             };
         }
 
@@ -174,6 +177,7 @@ namespace HappyShoot.Domain.Entities
 
             // Update skill context
             _skillContext.CasterPosition = Position;
+            _skillContext.AimDirection = AimDirection;
             _skillContext.AreaMultiplier = Stats.AreaMultiplier;
             _skillContext.SpeedMultiplier = Stats.ProjectileSpeedMultiplier;
             _skillContext.TargetGrid = enemyGrid;

@@ -56,7 +56,7 @@ namespace HappyShoot.Domain.Entities
             MonsterType.Slime, "Slime", baseMaxHealth: 30f, baseMoveSpeed: 2.5f, baseDamage: 8f, radius: 0.4f, expValue: 1, goldValue: 1);
 
         public static MonsterDefinition Bat => new MonsterDefinition(
-            MonsterType.Bat, "Bat", baseMaxHealth: 15f, baseMoveSpeed: 4.5f, baseDamage: 5f, radius: 0.3f, expValue: 1, goldValue: 1);
+            MonsterType.Bat, "Bat", baseMaxHealth: 15f, baseMoveSpeed: 4.05f, baseDamage: 5f, radius: 0.3f, expValue: 1, goldValue: 1);
 
         public static MonsterDefinition Skeleton => new MonsterDefinition(
             MonsterType.Skeleton, "Skeleton", baseMaxHealth: 45f, baseMoveSpeed: 1.8f, baseDamage: 12f, radius: 0.45f, expValue: 2, goldValue: 2, isRanged: true, preferredDistance: 4.5f, attackInterval: 2.0f);

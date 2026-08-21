@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Spatial;
 
 namespace HappyShoot.Domain.Skills
@@ -13,8 +14,10 @@ namespace HappyShoot.Domain.Skills
         public float BaseDamage { get; set; }
         public float AreaMultiplier { get; set; } = 1.0f;
         public float SpeedMultiplier { get; set; } = 1.0f;
+        public Vector2D AimDirection { get; set; } = Vector2D.Right;
         public ISpatialGrid2D TargetGrid { get; set; }
         public Projectiles.ProjectileManager ProjectileManager { get; set; }
+        public EventBus EventBus { get; set; }
     }
 
     /// <summary>
@@ -41,6 +44,14 @@ namespace HappyShoot.Domain.Skills
     public interface ISkillEffect
     {
         void ApplyEffect(SkillContext context, IList<Vector2D> targetPositions);
+    }
+
+    /// <summary>
+    /// Optional interface for skill effects that scale custom stats (radius, arc, count) on level up.
+    /// </summary>
+    public interface ILevelableEffect
+    {
+        void OnLevelUp(int newLevel);
     }
 
     /// <summary>
