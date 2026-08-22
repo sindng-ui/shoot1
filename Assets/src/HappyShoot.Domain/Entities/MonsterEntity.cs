@@ -26,6 +26,21 @@ namespace HappyShoot.Domain.Entities
         public int GoldValue { get; private set; }
         public bool IsDead => CurrentHealth <= 0f;
 
+        // Status Effects
+        public bool IsChilled => ChillTimer > 0f;
+        public float ChillTimer { get; private set; }
+        public float ChillSlowFactor { get; private set; }
+
+        public bool IsBurning => BurnTimer > 0f;
+        public float BurnTimer { get; private set; }
+        private float _burnTickTimer;
+        public float BurnDamagePerTick { get; private set; }
+
+        public bool IsShocked => ShockTimer > 0f;
+        public float ShockTimer { get; private set; }
+        private float _shockTickTimer;
+        public float ShockDamagePerTick { get; private set; }
+
         // Ranged / Special attack state
         public bool IsRanged { get; private set; }
         public float PreferredDistance { get; private set; }
@@ -88,6 +103,14 @@ namespace HappyShoot.Domain.Entities
             AttackTimer = 0f;
             HasPendingRangedAttack = false;
             Velocity = Vector2D.Zero;
+            ChillTimer = 0f;
+            ChillSlowFactor = 0f;
+            BurnTimer = 0f;
+            _burnTickTimer = 0f;
+            BurnDamagePerTick = 0f;
+            ShockTimer = 0f;
+            _shockTickTimer = 0f;
+            ShockDamagePerTick = 0f;
             IsActive = true;
 
             if (IsBoss)
@@ -137,6 +160,68 @@ namespace HappyShoot.Domain.Entities
         public float ContactAttackInterval { get; set; } = 0.5f;
 
         /// <summary>
+        /// Applies Chill (Slow) debuff to the monster.
+        /// </summary>
+        public void ApplyChill(float duration, float slowFactor = 0.40f)
+        {
+            ChillTimer = Math.Max(ChillTimer, duration);
+            ChillSlowFactor = slowFactor;
+        }
+
+        /// <summary>
+        /// Applies Burn (Fire DoT) to the monster for duration (default 7s, ticks every 0.5s).
+        /// </summary>
+        public void ApplyBurn(float duration = 7.0f, float damagePerTick = 4.0f)
+        {
+            BurnTimer = Math.Max(BurnTimer, duration);
+            BurnDamagePerTick = Math.Max(BurnDamagePerTick, damagePerTick);
+        }
+
+        /// <summary>
+        /// Applies Shock (Electric DoT) to the monster for duration (default 7s, ticks every 0.7s).
+        /// </summary>
+        public void ApplyShock(float duration = 7.0f, float damagePerTick = 5.0f)
+        {
+            ShockTimer = Math.Max(ShockTimer, duration);
+            ShockDamagePerTick = Math.Max(ShockDamagePerTick, damagePerTick);
+        }
+
+        /// <summary>
+        /// Updates active status effects (Chill, Burn, Shock DoT ticks).
+        /// </summary>
+        public void UpdateStatusEffects(float deltaTime)
+        {
+            if (!IsActive || IsDead || deltaTime <= 0f) return;
+
+            if (ChillTimer > 0f)
+            {
+                ChillTimer -= deltaTime;
+            }
+
+            if (BurnTimer > 0f)
+            {
+                BurnTimer -= deltaTime;
+                _burnTickTimer += deltaTime;
+                if (_burnTickTimer >= 0.5f)
+                {
+                    _burnTickTimer = 0f;
+                    TakeDamage(BurnDamagePerTick);
+                }
+            }
+
+            if (ShockTimer > 0f)
+            {
+                ShockTimer -= deltaTime;
+                _shockTickTimer += deltaTime;
+                if (_shockTickTimer >= 0.7f)
+                {
+                    _shockTickTimer = 0f;
+                    TakeDamage(ShockDamagePerTick);
+                }
+            }
+        }
+
+        /// <summary>
         /// Updates AI movement and applies contact damage to the player if within range.
         /// </summary>
         public void UpdateAI(PlayerEntity player, float deltaTime)
@@ -177,6 +262,11 @@ namespace HappyShoot.Domain.Entities
         {
             if (!IsActive || IsDead || deltaTime <= 0f) return;
 
+            UpdateStatusEffects(deltaTime);
+            if (IsDead) return;
+
+            float effectiveMoveSpeed = MoveSpeed * (IsChilled ? Math.Max(0.1f, 1f - ChillSlowFactor) : 1f);
+
             Vector2D diff = targetPosition - Position;
             float distSqr = diff.SqrMagnitude;
 
@@ -186,12 +276,12 @@ namespace HappyShoot.Domain.Entities
                 if (distSqr > prefDistSqr + 0.5f)
                 {
                     float invDist = 1.0f / (float)Math.Sqrt(distSqr);
-                    Position += new Vector2D(diff.X * invDist * (MoveSpeed * deltaTime), diff.Y * invDist * (MoveSpeed * deltaTime));
+                    Position += new Vector2D(diff.X * invDist * (effectiveMoveSpeed * deltaTime), diff.Y * invDist * (effectiveMoveSpeed * deltaTime));
                 }
                 else if (distSqr < prefDistSqr - 1.0f && distSqr > 0.01f)
                 {
                     float invDist = 1.0f / (float)Math.Sqrt(distSqr);
-                    Position -= new Vector2D(diff.X * invDist * (MoveSpeed * 0.7f * deltaTime), diff.Y * invDist * (MoveSpeed * 0.7f * deltaTime));
+                    Position -= new Vector2D(diff.X * invDist * (effectiveMoveSpeed * 0.7f * deltaTime), diff.Y * invDist * (effectiveMoveSpeed * 0.7f * deltaTime));
                 }
 
                 // Tick ranged shoot timer
@@ -215,14 +305,14 @@ namespace HappyShoot.Domain.Entities
                     float t = Math.Min(1.0f, steerSpeed * deltaTime);
                     Vector2D newDir = (currentDir + (desiredDir - currentDir) * t).Normalized;
 
-                    Velocity = newDir * MoveSpeed;
+                    Velocity = newDir * effectiveMoveSpeed;
                     Position += Velocity * deltaTime;
                 }
                 // Standard melee chase (Slime, Golem, Boss)
                 else if (distSqr > 0.0001f)
                 {
                     float dist = (float)Math.Sqrt(distSqr);
-                    float step = MoveSpeed * deltaTime;
+                    float step = effectiveMoveSpeed * deltaTime;
                     if (step >= dist)
                     {
                         Position = targetPosition;
@@ -242,12 +332,13 @@ namespace HappyShoot.Domain.Entities
         }
 
         /// <summary>
-        /// Applies damage to the monster and triggers events (regular & boss).
+        /// Applies damage to the monster and triggers events (regular, boss, ice shatter).
         /// </summary>
         public void TakeDamage(float damage)
         {
             if (!IsActive || IsDead || damage <= 0f) return;
 
+            bool wasChilled = IsChilled;
             CurrentHealth = Math.Max(0f, CurrentHealth - damage);
             _eventBus?.Publish(new MonsterDamagedEvent(Id, damage, CurrentHealth, MaxHealth, Position));
 
@@ -259,6 +350,11 @@ namespace HappyShoot.Domain.Entities
             if (CurrentHealth <= 0f)
             {
                 _eventBus?.Publish(new MonsterDiedEvent(Id, Position, ExpValue, GoldValue));
+
+                if (wasChilled)
+                {
+                    _eventBus?.Publish(new MonsterShatteredEvent(Id, Position, Radius * 2.5f));
+                }
 
                 if (IsBoss)
                 {

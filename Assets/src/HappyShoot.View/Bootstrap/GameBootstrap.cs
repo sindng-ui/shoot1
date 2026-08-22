@@ -130,6 +130,14 @@ namespace HappyShoot.View.Bootstrap
             var arrowRainView = arrowRainGo.AddComponent<Projectiles.ArrowRainManagerView>();
             arrowRainView.Initialize(playerView.EventBus);
 
+            var magicSkillGo = new GameObject("MagicSkillManager");
+            var magicSkillView = magicSkillGo.AddComponent<Projectiles.MagicSkillManagerView>();
+            magicSkillView.Initialize(playerView.EventBus);
+
+            var meteorStrikeGo = new GameObject("MeteorStrikeManager");
+            var meteorStrikeView = meteorStrikeGo.AddComponent<Projectiles.MeteorStrikeManagerView>();
+            meteorStrikeView.Initialize(playerView.EventBus);
+
             var gemGo = new GameObject("GemManager");
             var gemManagerView = gemGo.AddComponent<GemManagerView>();
             gemManagerView.Initialize(playerView.EventBus, playerView);
@@ -268,6 +276,19 @@ namespace HappyShoot.View.Bootstrap
                 () => new CompositeSkill("arrow_rain", "화살 비", new CooldownTrigger(2.2f), new ClosestEnemyTargeter(), new ArrowRainEffect(24f, 2.2f), range: 9.0f),
                 new[] { CharacterClassType.Ranger });
 
+            // Wizard Exclusive Skills
+            rewardManager.RegisterSkill("fireball", "화염구", "대상 적을 향해 날아가 충돌 시 반경 내의 적들에게 광역 스플래시 폭발 마법 피해를 입힘",
+                () => new CompositeSkill("fireball", "화염구", new CooldownTrigger(1.2f), new ClosestEnemyTargeter(), new FireballEffect(35f, 1.6f, 14f), range: 9.0f),
+                new[] { CharacterClassType.Wizard });
+
+            rewardManager.RegisterSkill("frost_nova", "서리 폭발", "플레이어 주변 360도 전방위로 차가운 냉기 파동을 즉시 방출하여 주변 적들을 일제 타격",
+                () => new CompositeSkill("frost_nova", "서리 폭발", new CooldownTrigger(1.8f), new ClosestEnemyTargeter(), new FrostNovaEffect(28f, 2.8f), range: 3.0f),
+                new[] { CharacterClassType.Wizard });
+
+            rewardManager.RegisterSkill("chain_lightning", "연쇄 번개", "가장 가까운 적을 감전시킨 뒤 주변의 적들에게 최대 4회 전이되며 연속 타격",
+                () => new CompositeSkill("chain_lightning", "연쇄 번개", new CooldownTrigger(1.5f), new ClosestEnemyTargeter(), new ChainLightningEffect(30f, 4, 4.0f), range: 7.0f),
+                new[] { CharacterClassType.Wizard });
+
             // Shared Skills
             rewardManager.RegisterSkill("orbital", "오비탈 블레이드", "플레이어 주위를 원형으로 고속 회전하며 접근하는 적들을 갈아버리는 보호형 무기",
                 () => new CompositeSkill("orbital", "오비탈 블레이드", new CooldownTrigger(0.3f), new ClosestEnemyTargeter(), new OrbitingBladesEffect(25f, 2.0f, 4.0f, 2)));
@@ -310,6 +331,18 @@ namespace HappyShoot.View.Bootstrap
                 var s = p.Stats;
                 p.Stats = new CharacterStats(100f + 30f * lv, 1.5f * lv, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             });
+
+            rewardManager.RegisterPassive("passive_ignition", "발화의 불꽃", "화염 마법 공격 시 적을 7초간 불태우며 공격력 +10% 증가", 5, (p, lv) =>
+            {
+                var s = p.Stats;
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier * (1.0f + 0.10f * lv), s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+            });
+
+            rewardManager.RegisterPassive("passive_overcharge", "과전류의 핵", "전기 마법 공격 시 적을 7초간 감전시키며 쿨타임 -6% 추가 감소", 5, (p, lv) =>
+            {
+                var s = p.Stats;
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction + 0.06f * lv, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+            });
         }
 
         private void RegisterAllEvolutions(SkillEvolutionManager evolutionManager)
@@ -323,7 +356,7 @@ namespace HappyShoot.View.Bootstrap
                 () => new CompositeSkill("storm_bow", "폭풍의 활", new CooldownTrigger(0.6f), new ClosestEnemyTargeter(), new StormArrowEffect(30f, 18f, 8))));
 
             evolutionManager.RegisterRecipe(new SkillEvolutionRecipe(
-                "explosion", "passive_rune", "meteor_strike", "메테오 스트라이크",
+                "fireball", "passive_rune", "meteor_strike", "메테오 스트라이크",
                 () => new CompositeSkill("meteor_strike", "메테오 스트라이크", new CooldownTrigger(1.2f), new ClosestEnemyTargeter(), new MeteorStrikeEffect(90f, 4.0f))));
         }
     }

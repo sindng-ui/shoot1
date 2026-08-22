@@ -36,6 +36,13 @@ namespace HappyShoot.View.Utils
             int cx = size / 2;
             int cy = size / 2;
 
+            if (rewardId == "fireball" || rewardId == "frost_nova" || rewardId == "chain_lightning" || rewardId == "passive_ignition" || rewardId == "passive_overcharge")
+            {
+                var magicIcon = WizardSpriteHelper.GetOrCreateMagicIcon(rewardId, size);
+                _iconCache[rewardId] = magicIcon;
+                return magicIcon;
+            }
+
             switch (rewardId)
             {
                 case "slash":

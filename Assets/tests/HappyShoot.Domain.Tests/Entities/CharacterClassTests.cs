@@ -37,7 +37,7 @@ namespace HappyShoot.Domain.Tests.Entities
             Assert.That(wizard.Stats.CooldownReduction, Is.EqualTo(0.15f));
             Assert.That(wizard.Stats.AreaMultiplier, Is.EqualTo(1.2f));
             Assert.That(wizard.Skills.Count, Is.EqualTo(1));
-            Assert.That(wizard.Skills[0].Id, Is.EqualTo("explosion"));
+            Assert.That(wizard.Skills[0].Id, Is.EqualTo("fireball"));
         }
     }
 }

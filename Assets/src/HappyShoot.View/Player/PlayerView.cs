@@ -142,16 +142,22 @@ namespace HappyShoot.View.Player
         {
             if (_bodySr != null)
             {
-                _bodySr.sprite = (_classType == CharacterClassType.Ranger)
-                    ? Utils.SpriteHelper.GetOrCreateRangerSprite()
-                    : Utils.SpriteHelper.GetOrCreateWarriorSprite();
+                if (_classType == CharacterClassType.Wizard)
+                    _bodySr.sprite = Utils.WizardSpriteHelper.GetOrCreateWizardSprite();
+                else if (_classType == CharacterClassType.Ranger)
+                    _bodySr.sprite = Utils.SpriteHelper.GetOrCreateRangerSprite();
+                else
+                    _bodySr.sprite = Utils.SpriteHelper.GetOrCreateWarriorSprite();
             }
 
             if (_swordSr != null)
             {
-                _swordSr.sprite = (_classType == CharacterClassType.Ranger)
-                    ? Utils.SpriteHelper.GetOrCreateBowSprite()
-                    : Utils.SpriteHelper.GetOrCreateSwordSprite();
+                if (_classType == CharacterClassType.Wizard)
+                    _swordSr.sprite = Utils.WizardSpriteHelper.GetOrCreateStaffSprite();
+                else if (_classType == CharacterClassType.Ranger)
+                    _swordSr.sprite = Utils.SpriteHelper.GetOrCreateBowSprite();
+                else
+                    _swordSr.sprite = Utils.SpriteHelper.GetOrCreateSwordSprite();
             }
         }
 

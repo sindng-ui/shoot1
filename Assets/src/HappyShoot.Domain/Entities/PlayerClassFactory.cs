@@ -81,9 +81,9 @@ namespace HappyShoot.Domain.Entities
 
                 case CharacterClassType.Wizard:
                 default:
-                    // Wizard: -15% Cooldown (CDR 0.15), +20% Area (1.2), Arcane Explosion
+                    // Wizard: -15% Cooldown (CDR 0.15), +20% Area (1.2), +25% AP (1.25), Fireball Blast
                     stats = new CharacterStats(
-                        maxHealth: 80f,
+                        maxHealth: 85f,
                         healthRegen: 0f,
                         moveSpeed: 5.0f,
                         attackPowerMultiplier: 1.25f,
@@ -97,11 +97,11 @@ namespace HappyShoot.Domain.Entities
                         pickupRadius: 3.0f
                     );
                     startingSkill = new CompositeSkill(
-                        "ground_stomp", "지면 강타",
-                        new CooldownTrigger(1.4f),
+                        "fireball", "화염구",
+                        new CooldownTrigger(1.2f),
                         new ClosestEnemyTargeter(),
-                        new Skills.Effects.GroundStompEffect(baseDamage: 25f, stompRadius: 1.5f),
-                        range: 1.8f
+                        new Skills.Effects.FireballEffect(baseDamage: 35f, radius: 1.6f, speed: 14f),
+                        range: 9.0f
                     );
                     break;
             }

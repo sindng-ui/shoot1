@@ -97,8 +97,34 @@ namespace HappyShoot.View.Monsters
                 _flashTimer -= Time.deltaTime;
                 if (_flashTimer <= 0f && _spriteRenderer != null)
                 {
-                    _spriteRenderer.color = _originalColor;
+                    UpdateStatusTint();
                 }
+            }
+            else
+            {
+                UpdateStatusTint();
+            }
+        }
+
+        private void UpdateStatusTint()
+        {
+            if (_spriteRenderer == null || _entity == null) return;
+
+            if (_entity.IsChilled)
+            {
+                _spriteRenderer.color = new Color(0.45f, 0.85f, 1.0f); // Icy blue tint
+            }
+            else if (_entity.IsBurning)
+            {
+                _spriteRenderer.color = new Color(1.0f, 0.55f, 0.35f); // Burning flame tint
+            }
+            else if (_entity.IsShocked)
+            {
+                _spriteRenderer.color = new Color(1.0f, 0.95f, 0.45f); // Electric yellow tint
+            }
+            else
+            {
+                _spriteRenderer.color = _originalColor;
             }
         }
 

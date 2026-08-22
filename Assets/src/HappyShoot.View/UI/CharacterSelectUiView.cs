@@ -90,7 +90,7 @@ namespace HappyShoot.View.UI
             CreateText(_panelRoot.transform, "Title", "⚔️ 출격할 영웅을 선택하세요 ⚔️", 36, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -80f), new Vector2(800f, 60f), new Color(1f, 0.88f, 0.35f, 1f));
             CreateText(_panelRoot.transform, "Subtitle", "각 영웅은 고유한 능력치와 전용 무기를 보유하고 있습니다", 18, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -135f), new Vector2(800f, 30f), new Color(0.75f, 0.82f, 0.90f, 0.8f));
 
-            // Card Container
+            // Card Container (Expanded to accommodate 3 Heroes)
             var cardsContainer = new GameObject("CardsContainer");
             cardsContainer.transform.SetParent(_panelRoot.transform, false);
             var containerRt = cardsContainer.AddComponent<RectTransform>();
@@ -98,7 +98,7 @@ namespace HappyShoot.View.UI
             containerRt.anchorMax = new Vector2(0.5f, 0.5f);
             containerRt.pivot = new Vector2(0.5f, 0.5f);
             containerRt.anchoredPosition = new Vector2(0f, -20f);
-            containerRt.sizeDelta = new Vector2(800f, 520f);
+            containerRt.sizeDelta = new Vector2(1180f, 520f);
 
             // Card 1: Warrior
             CreateCharacterCard(
@@ -110,7 +110,7 @@ namespace HappyShoot.View.UI
                 weaponDesc: "🗡️ 시작 스킬: [대검 베기]\n전방 150도 광역 근접 물리 베기",
                 accentColor: new Color(0.95f, 0.35f, 0.35f, 1f),
                 btnColor: new Color(0.85f, 0.25f, 0.25f, 1f),
-                anchoredPos: new Vector2(-200f, 0f),
+                anchoredPos: new Vector2(-380f, 0f),
                 classType: CharacterClassType.Warrior
             );
 
@@ -124,8 +124,22 @@ namespace HappyShoot.View.UI
                 weaponDesc: "🏹 시작 스킬: [관통 화살]\n적들을 관통하는 고속 원거리 사격",
                 accentColor: new Color(0.25f, 0.85f, 0.45f, 1f),
                 btnColor: new Color(0.18f, 0.70f, 0.35f, 1f),
-                anchoredPos: new Vector2(200f, 0f),
+                anchoredPos: new Vector2(0f, 0f),
                 classType: CharacterClassType.Ranger
+            );
+
+            // Card 3: Wizard
+            CreateCharacterCard(
+                parent: cardsContainer.transform,
+                name: "WizardCard",
+                title: "🧙 마법사 (Wizard)",
+                heroSprite: WizardSpriteHelper.GetOrCreateWizardSprite(),
+                statsDesc: "⚡ 쿨타임 감소: -15%\n🔮 스킬 범위: +20% (광역 특화)\n✨ 공격력: +25%",
+                weaponDesc: "🔥 시작 스킬: [화염구]\n충돌 시 주변을 불태우는 폭발성 화염 마법",
+                accentColor: new Color(0.70f, 0.40f, 1.0f, 1f),
+                btnColor: new Color(0.55f, 0.25f, 0.85f, 1f),
+                anchoredPos: new Vector2(380f, 0f),
+                classType: CharacterClassType.Wizard
             );
 
             // Bottom Settings Button (Clear text button for easy user access)

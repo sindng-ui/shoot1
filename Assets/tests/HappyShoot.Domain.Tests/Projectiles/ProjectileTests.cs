@@ -26,13 +26,13 @@ namespace HappyShoot.Domain.Tests.Projectiles
             // Spawn monster at (5, 0)
             var monster = _spawner.SpawnMonster("Slime", maxHealth: 50f, moveSpeed: 0f, contactDamage: 5f, expValue: 1, goldValue: 1, new Vector2D(5f, 0f));
 
-            // Launch projectile from (0, 0) to Right at speed 10, damage 25, pierce 1
+            // Launch non-piercing projectile (pierceCount: 0 -> 1 hit)
             _projectileManager.LaunchProjectile(
                 origin: new Vector2D(0f, 0f),
                 direction: Vector2D.Right,
                 speed: 10f,
                 damage: 25f,
-                pierceCount: 1,
+                pierceCount: 0,
                 lifetime: 2f
             );
 
@@ -40,7 +40,7 @@ namespace HappyShoot.Domain.Tests.Projectiles
             _projectileManager.Update(deltaTime: 0.5f, _monsterGrid);
 
             Assert.That(monster.CurrentHealth, Is.EqualTo(25f));
-            Assert.That(_projectileManager.ActiveCount, Is.EqualTo(0)); // Expired due to pierce consumed
+            Assert.That(_projectileManager.ActiveCount, Is.EqualTo(0)); // Expired due to single hit consumed
         }
 
         [Test]
@@ -50,13 +50,13 @@ namespace HappyShoot.Domain.Tests.Projectiles
             var m1 = _spawner.SpawnMonster("Slime1", 50f, 0f, 5f, 1, 1, new Vector2D(3f, 0f));
             var m2 = _spawner.SpawnMonster("Slime2", 50f, 0f, 5f, 1, 1, new Vector2D(6f, 0f));
 
-            // Launch projectile with PierceCount = 2, speed 10
+            // Launch projectile with PierceCount = 1 (1 pierce = 2 hits), speed 10
             _projectileManager.LaunchProjectile(
                 origin: new Vector2D(0f, 0f),
                 direction: Vector2D.Right,
                 speed: 10f,
                 damage: 20f,
-                pierceCount: 2,
+                pierceCount: 1,
                 lifetime: 2f
             );
 
@@ -69,7 +69,7 @@ namespace HappyShoot.Domain.Tests.Projectiles
             // Tick 2: reaches 6.0 units (hits m2 exactly at (6, 0))
             _projectileManager.Update(deltaTime: 0.3f, _monsterGrid);
             Assert.That(m2.CurrentHealth, Is.EqualTo(30f));
-            Assert.That(_projectileManager.ActiveCount, Is.EqualTo(0)); // All 2 pierces consumed
+            Assert.That(_projectileManager.ActiveCount, Is.EqualTo(0)); // All 2 hits consumed
         }
     }
 }
