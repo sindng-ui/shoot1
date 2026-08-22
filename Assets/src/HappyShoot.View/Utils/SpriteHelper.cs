@@ -375,8 +375,40 @@ namespace HappyShoot.View.Utils
             return _gemSprite;
         }
 
+        private static Sprite _blobShadowSprite;
+
         /// <summary>
-        /// 48x48 Golden Sweeping Sword Slash Wave Arc.
+        /// 32x16 Soft Gaussian-falloff translucent black elliptical Blob Shadow for 2.5D fake depth.
+        /// </summary>
+        public static Sprite GetOrCreateBlobShadowSprite(int width = 32, int height = 16)
+        {
+            if (_blobShadowSprite != null) return _blobShadowSprite;
+
+            var tex = new Texture2D(width, height, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+            float cx = width * 0.5f, cy = height * 0.5f;
+            Color[] pixels = new Color[width * height];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float nx = (x - cx) / cx, ny = (y - cy) / cy;
+                    float distSq = nx * nx + ny * ny;
+                    if (distSq <= 1.0f)
+                    {
+                        float alpha = Mathf.Pow(1.0f - Mathf.Sqrt(distSq), 1.4f) * 0.45f;
+                        pixels[y * width + x] = new Color(0f, 0f, 0f, alpha);
+                    }
+                    else pixels[y * width + x] = Color.clear;
+                }
+            }
+
+            tex.SetPixels(pixels);
+            tex.Apply();
+            _blobShadowSprite = Sprite.Create(tex, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), 16);
+            return _blobShadowSprite;
+        }
+
         // Forwarding helpers for skill sprites to SkillSpriteHelper
         public static Sprite GetOrCreateSlashArcSprite(int size = 64) => SkillSpriteHelper.GetOrCreateSlashArcSprite(size);
         public static Sprite GetOrCreateBoneSprite() => SkillSpriteHelper.GetOrCreateBoneSprite();
@@ -386,7 +418,10 @@ namespace HappyShoot.View.Utils
         public static Sprite GetOrCreateBatSprite(int size = 24) => MonsterSpriteHelper.GetOrCreateBatSprite(size);
         public static Sprite GetOrCreateSkeletonSprite(int size = 28) => MonsterSpriteHelper.GetOrCreateSkeletonSprite(size);
         public static Sprite GetOrCreateGolemSprite(int size = 32) => MonsterSpriteHelper.GetOrCreateGolemSprite(size);
-        public static Sprite GetOrCreateBossSprite(int size = 48) => MonsterSpriteHelper.GetOrCreateBossSprite(size);
+        public static Sprite GetOrCreateBossSprite(int size = 56) => MonsterSpriteHelper.GetOrCreateBossSprite(size);
+        public static Sprite GetOrCreateFireImpSprite(int size = 28) => MonsterSpriteHelper.GetOrCreateFireImpSprite(size);
+        public static Sprite GetOrCreateToxicSpiderSprite(int size = 32) => MonsterSpriteHelper.GetOrCreateToxicSpiderSprite(size);
+        public static Sprite GetOrCreateDarkKnightSprite(int size = 38) => MonsterSpriteHelper.GetOrCreateDarkKnightSprite(size);
         public static Sprite GetOrCreateChestSprite(int size = 24) => MonsterSpriteHelper.GetOrCreateChestSprite(size);
 
         public static Sprite GetOrCreateCircleSprite(int size = 32) => GetOrCreateWarriorSprite(size);

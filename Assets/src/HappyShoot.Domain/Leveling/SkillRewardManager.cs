@@ -83,6 +83,12 @@ namespace HappyShoot.Domain.Leveling
 
         private readonly SkillEvolutionManager _evolutionManager;
         private readonly Random _random;
+        private int _totalRollCount = 0;
+
+        public IReadOnlyDictionary<string, (string title, string description, Func<ISkill> factory, CharacterClassType[] allowedClasses)> AllSkills => _allSkills;
+        public IReadOnlyDictionary<string, PassiveDefinition> AllPassives => _allPassives;
+        public SkillEvolutionManager EvolutionManager => _evolutionManager;
+        public Action<ISkill, int> SkillLevelHook { get; set; }
 
         public SkillRewardManager(SkillEvolutionManager evolutionManager = null, int? seed = null)
         {
@@ -101,12 +107,76 @@ namespace HappyShoot.Domain.Leveling
         }
 
         /// <summary>
+        /// Grants or levels up a skill directly on the player entity (Used by Dev Mode / Debug tools).
+        /// </summary>
+        public bool GrantOrLevelUpSkillDirectly(PlayerEntity player, string skillId)
+        {
+            if (player == null || string.IsNullOrEmpty(skillId)) return false;
+
+            var existing = player.GetSkill(skillId);
+            if (existing != null)
+            {
+                if (!existing.IsMaxLevel)
+                {
+                    existing.LevelUp();
+                    SkillLevelHook?.Invoke(existing, existing.Level);
+                    return true;
+                }
+                return false;
+            }
+
+            if (_allSkills.TryGetValue(skillId, out var info) && info.factory != null)
+            {
+                var skill = info.factory.Invoke();
+                SkillLevelHook?.Invoke(skill, 1);
+                player.AddSkill(skill);
+                return true;
+            }
+
+            // Check if it's an evolved skill
+            if (_evolutionManager != null)
+            {
+                for (int i = 0; i < _evolutionManager.Recipes.Count; i++)
+                {
+                    var recipe = _evolutionManager.Recipes[i];
+                    if (recipe.EvolvedSkillId == skillId && recipe.EvolvedSkillFactory != null)
+                    {
+                        var evolvedSkill = recipe.EvolvedSkillFactory.Invoke();
+                        SkillLevelHook?.Invoke(evolvedSkill, 1);
+                        player.AddSkill(evolvedSkill);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Grants or upgrades a passive item directly on the player entity (Used by Dev Mode / Debug tools).
+        /// </summary>
+        public bool GrantOrUpgradePassiveDirectly(PlayerEntity player, string passiveId)
+        {
+            if (player == null || string.IsNullOrEmpty(passiveId)) return false;
+
+            if (_allPassives.TryGetValue(passiveId, out var def))
+            {
+                int newLv = player.AddOrUpgradePassive(def.Id, def.MaxLevel);
+                def.ApplyLevel(player, newLv);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Rolls a list of reward options (usually 3) for the player upon leveling up.
         /// Evolutions are prioritized first if conditions are met.
         /// </summary>
         public List<SkillRewardOption> RollRewards(PlayerEntity player, int count = 3)
         {
             if (player == null) throw new ArgumentNullException(nameof(player));
+            _totalRollCount++;
 
             var result = new List<SkillRewardOption>();
 
@@ -173,7 +243,11 @@ namespace HappyShoot.Domain.Leveling
                         category: RewardCategory.UpgradeActiveSkill,
                         currentLevel: existingSkill.Level,
                         nextLevel: existingSkill.Level + 1,
-                        customApplier: p => existingSkill.LevelUp()
+                        customApplier: p =>
+                        {
+                            existingSkill.LevelUp();
+                            SkillLevelHook?.Invoke(existingSkill, existingSkill.Level);
+                        }
                     ));
                 }
             }
@@ -219,9 +293,27 @@ namespace HappyShoot.Domain.Leveling
                 }
             }
 
-            // Shuffle remaining candidates and fill up to count
-            var shuffled = pool.OrderBy(_ => _random.Next()).Take(count - result.Count);
-            result.AddRange(shuffled);
+            // 4. Guarantee at least 1 Active Skill in the first 3 rolls (or when player has few skills)
+            bool isEarlyRoll = _totalRollCount <= 3 || player.Skills.Count <= 1;
+            var activeOptions = pool.Where(o => o.Category == RewardCategory.NewActiveSkill || o.Category == RewardCategory.UpgradeActiveSkill).ToList();
+            var passiveOptions = pool.Where(o => o.Category == RewardCategory.NewPassive || o.Category == RewardCategory.UpgradePassive).ToList();
+
+            if (isEarlyRoll && activeOptions.Count > 0 && !result.Any(r => r.Category == RewardCategory.NewActiveSkill || r.Category == RewardCategory.UpgradeActiveSkill))
+            {
+                // Force pick at least one random active skill
+                int pickIdx = _random.Next(activeOptions.Count);
+                var guaranteedActive = activeOptions[pickIdx];
+                result.Add(guaranteedActive);
+                activeOptions.RemoveAt(pickIdx);
+            }
+
+            // Pool together remaining candidates and fill up to count
+            var remainingPool = activeOptions.Concat(passiveOptions).OrderBy(_ => _random.Next()).ToList();
+            int needed = count - result.Count;
+            if (needed > 0)
+            {
+                result.AddRange(remainingPool.Take(needed));
+            }
 
             return result;
         }
@@ -239,7 +331,9 @@ namespace HappyShoot.Domain.Leveling
             }
             else if (selectedOption.Category == RewardCategory.NewActiveSkill && selectedOption.SkillFactory != null)
             {
-                player.AddSkill(selectedOption.SkillFactory.Invoke());
+                var skill = selectedOption.SkillFactory.Invoke();
+                SkillLevelHook?.Invoke(skill, 1);
+                player.AddSkill(skill);
             }
             else if (selectedOption.CustomApplier != null)
             {

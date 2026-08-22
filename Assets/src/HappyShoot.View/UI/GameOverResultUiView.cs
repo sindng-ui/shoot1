@@ -36,6 +36,11 @@ namespace HappyShoot.View.UI
             _shopManager = shopManager;
             _shopView = shopView;
 
+            if (_shopView != null)
+            {
+                _shopView.OnShopClosed += OnShopClosed;
+            }
+
             EnsureUiElements();
 
             if (_eventBus != null)
@@ -46,6 +51,25 @@ namespace HappyShoot.View.UI
             if (_panelRoot != null)
             {
                 _panelRoot.SetActive(false);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_shopView != null)
+            {
+                _shopView.OnShopClosed -= OnShopClosed;
+            }
+        }
+
+        private void OnShopClosed()
+        {
+            if (_gameSession != null && _gameSession.IsGameOver)
+            {
+                if (_panelRoot != null)
+                {
+                    _panelRoot.SetActive(true);
+                }
             }
         }
 
@@ -90,6 +114,7 @@ namespace HappyShoot.View.UI
                 }
             }
 
+            Utils.HitStopManager.Instance?.CancelHitStop();
             Time.timeScale = 0f;
         }
 
@@ -125,6 +150,10 @@ namespace HappyShoot.View.UI
         {
             if (_shopView != null)
             {
+                if (_panelRoot != null)
+                {
+                    _panelRoot.SetActive(false);
+                }
                 _shopView.ShowShop();
             }
         }

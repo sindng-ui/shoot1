@@ -15,7 +15,7 @@ namespace HappyShoot.Domain.Skills.Effects
 
         private readonly List<ISpatialEntity> _hitBuffer = new List<ISpatialEntity>(64);
 
-        public MeteorStrikeEffect(float baseDamage = 120f, float explosionRadius = 6.0f)
+        public MeteorStrikeEffect(float baseDamage = 120f, float explosionRadius = 3.0f)
         {
             BaseDamage = baseDamage;
             ExplosionRadius = explosionRadius;

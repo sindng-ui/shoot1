@@ -7,30 +7,37 @@ namespace HappyShoot.Domain.Skills.Effects
 {
     /// <summary>
     /// Wizard exclusive skill: Releases an instant 360-degree freezing wave around the caster.
-    /// Base: 28 damage, 2.8m full circle radius.
-    /// Leveling: +8 damage, +0.3m radius per level.
+    /// Leveling dramatically expands freezing radius (2.8m -> 5.2m screen-spanning wave) and chill duration (3.5s -> 6.5s).
+    /// Strictly modular and under 500 lines.
     /// </summary>
     public class FrostNovaEffect : ISkillEffect, ILevelableEffect
     {
         public float BaseDamage { get; set; }
         public float Radius { get; set; }
+        public float ChillDuration { get; set; }
 
         private readonly float _initialDamage;
         private readonly float _initialRadius;
-        private readonly List<ISpatialEntity> _hitBuffer = new List<ISpatialEntity>(32);
+        private readonly float _initialChillDuration;
+        private readonly List<ISpatialEntity> _hitBuffer = new List<ISpatialEntity>(64);
 
-        public FrostNovaEffect(float baseDamage = 28f, float radius = 2.8f)
+        public FrostNovaEffect(float baseDamage = 28f, float radius = 2.8f, float chillDuration = 3.5f)
         {
             BaseDamage = baseDamage;
             Radius = radius;
+            ChillDuration = chillDuration;
+
             _initialDamage = baseDamage;
             _initialRadius = radius;
+            _initialChillDuration = chillDuration;
         }
 
         public void OnLevelUp(int newLevel)
         {
-            BaseDamage = _initialDamage + 8f * (newLevel - 1);
-            Radius = _initialRadius + 0.3f * (newLevel - 1);
+            // Lv.1: 2.8m, 3.5s -> Lv.5: 5.2m, 6.5s chill wave
+            BaseDamage = _initialDamage + 8.5f * (newLevel - 1); // 28 -> 62 dmg
+            Radius = _initialRadius + 0.60f * (newLevel - 1);    // 2.8m -> 5.2m
+            ChillDuration = _initialChillDuration + 0.75f * (newLevel - 1); // 3.5s -> 6.5s
         }
 
         public void ApplyEffect(SkillContext context, IList<Vector2D> targetPositions)
@@ -43,14 +50,14 @@ namespace HappyShoot.Domain.Skills.Effects
 
             // Audio & Events
             context.EventBus?.Publish(new FrostNovaExecutedEvent(center, effectiveRadius, effectiveDamage));
-            context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.MagicExplosion, volume: 0.75f));
+            context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.MagicExplosion, volume: 0.85f));
 
             int hitCount = context.TargetGrid.QueryRadiusNonAlloc(center, effectiveRadius, _hitBuffer);
             for (int i = 0; i < hitCount; i++)
             {
                 if (_hitBuffer[i] is MonsterEntity monster && monster.IsActive && !monster.IsDead)
                 {
-                    monster.ApplyChill(duration: 3.5f, slowFactor: 0.40f);
+                    monster.ApplyChill(duration: ChillDuration, slowFactor: 0.45f);
                     monster.TakeDamage(effectiveDamage);
                 }
             }

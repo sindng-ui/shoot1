@@ -438,5 +438,47 @@ namespace HappyShoot.View.Utils
             _iceShardSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
             return _iceShardSprite;
         }
+
+        private static Sprite _targetIndicatorSprite;
+
+        /// <summary>
+        /// 128x128 Clean, crisp circular AOE target indicator with border glow and crosshair markings.
+        /// </summary>
+        public static Sprite GetOrCreateTargetIndicatorSprite(int size = 128)
+        {
+            if (_targetIndicatorSprite != null) return _targetIndicatorSprite;
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+            float center = size * 0.5f, outerRadius = size * 0.48f, innerRadius = size * 0.44f;
+            Color[] pixels = new Color[size * size];
+            Color borderGlow = new Color(1.0f, 0.55f, 0.1f, 0.95f), crosshairCol = new Color(1.0f, 0.85f, 0.3f, 0.95f), innerFill = new Color(1.0f, 0.3f, 0.05f, 0.12f);
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x - center, dy = y - center, dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (dist >= innerRadius && dist <= outerRadius)
+                    {
+                        float ringT = (dist - innerRadius) / (outerRadius - innerRadius);
+                        pixels[y * size + x] = new Color(borderGlow.r, borderGlow.g, borderGlow.b, Mathf.Sin(ringT * Mathf.PI) * borderGlow.a);
+                    }
+                    else if (dist <= outerRadius && (Mathf.Abs(dx) < 1.5f || Mathf.Abs(dy) < 1.5f) && dist >= outerRadius * 0.7f)
+                    {
+                        pixels[y * size + x] = crosshairCol;
+                    }
+                    else if (dist < innerRadius)
+                    {
+                        pixels[y * size + x] = innerFill;
+                    }
+                    else pixels[y * size + x] = Color.clear;
+                }
+            }
+
+            tex.SetPixels(pixels);
+            tex.Apply();
+            _targetIndicatorSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16);
+            return _targetIndicatorSprite;
+        }
     }
 }

@@ -35,5 +35,7 @@ namespace HappyShoot.View.Utils
 
             return _koreanFont;
         }
+
+        public static Font GetSystemDefaultFont() => GetKoreanFont();
     }
 }

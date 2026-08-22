@@ -11,6 +11,7 @@ using HappyShoot.Domain.Skills.Evolution;
 using HappyShoot.Domain.Skills.Targeters;
 using HappyShoot.Domain.Skills.Triggers;
 using HappyShoot.View.Cameras;
+using HappyShoot.View.Config;
 using HappyShoot.View.Gems;
 using HappyShoot.View.Monsters;
 using HappyShoot.View.Player;
@@ -36,6 +37,20 @@ namespace HappyShoot.View.Bootstrap
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoBootIfEmpty()
+        {
+            // Register sceneLoaded callback so restarting or reloading scenes always re-triggers bootstrapping!
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+
+            EnsureBootstrapped();
+        }
+
+        private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            EnsureBootstrapped();
+        }
+
+        private static void EnsureBootstrapped()
         {
             // Upgrade legacy EventSystem if present in scene
             FixLegacyEventSystem();
@@ -109,6 +124,10 @@ namespace HappyShoot.View.Bootstrap
             var overheadHpView = overheadHpGo.AddComponent<PlayerHealthBarView>();
             overheadHpView.Initialize(playerView);
 
+            // Hit-Stop Juice Manager
+            var hitStopGo = new GameObject("HitStopManager");
+            hitStopGo.AddComponent<Utils.HitStopManager>();
+
             // 3. Create Managers
             var spawnerGo = new GameObject("MonsterSpawner");
             var spawnerView = spawnerGo.AddComponent<MonsterSpawnerView>();
@@ -116,6 +135,7 @@ namespace HappyShoot.View.Bootstrap
 
             var projGo = new GameObject("ProjectileManager");
             var projManagerView = projGo.AddComponent<ProjectileManagerView>();
+            projManagerView.Initialize(playerView.EventBus);
 
             var enemyProjGo = new GameObject("EnemyProjectileManager");
             var enemyProjManagerView = enemyProjGo.AddComponent<Projectiles.EnemyProjectileManagerView>();
@@ -128,7 +148,7 @@ namespace HappyShoot.View.Bootstrap
 
             var arrowRainGo = new GameObject("ArrowRainManager");
             var arrowRainView = arrowRainGo.AddComponent<Projectiles.ArrowRainManagerView>();
-            arrowRainView.Initialize(playerView.EventBus);
+            arrowRainView.Initialize(playerView.EventBus, spawnerView);
 
             var magicSkillGo = new GameObject("MagicSkillManager");
             var magicSkillView = magicSkillGo.AddComponent<Projectiles.MagicSkillManagerView>();
@@ -137,6 +157,18 @@ namespace HappyShoot.View.Bootstrap
             var meteorStrikeGo = new GameObject("MeteorStrikeManager");
             var meteorStrikeView = meteorStrikeGo.AddComponent<Projectiles.MeteorStrikeManagerView>();
             meteorStrikeView.Initialize(playerView.EventBus);
+
+            var bloodEaterGo = new GameObject("BloodEaterManager");
+            var bloodEaterView = bloodEaterGo.AddComponent<Projectiles.BloodEaterManagerView>();
+            bloodEaterView.Initialize(playerView.EventBus, playerView.transform);
+
+            var stormBowGo = new GameObject("StormBowManager");
+            var stormBowView = stormBowGo.AddComponent<Projectiles.StormBowManagerView>();
+            stormBowView.Initialize(playerView.EventBus, spawnerView);
+
+            var windGlaiveGo = new GameObject("WindGlaiveManager");
+            var windGlaiveView = windGlaiveGo.AddComponent<Projectiles.WindGlaiveManagerView>();
+            windGlaiveView.Initialize(playerView, playerView.EventBus, spawnerView);
 
             var gemGo = new GameObject("GemManager");
             var gemManagerView = gemGo.AddComponent<GemManagerView>();
@@ -161,6 +193,10 @@ namespace HappyShoot.View.Bootstrap
             RegisterAllEvolutions(evolutionManager);
 
             var rewardManager = new SkillRewardManager(evolutionManager);
+            rewardManager.SkillLevelHook = (skill, lv) =>
+            {
+                SkillConfigRepository.Instance.ApplyConfigToSkillLevel(skill, lv);
+            };
             RegisterAllSkills(rewardManager);
             RegisterAllPassives(rewardManager);
             RewardIconHelper.PreloadIcons();
@@ -168,7 +204,9 @@ namespace HappyShoot.View.Bootstrap
             var levelUiGo = new GameObject("LevelUpUI");
             var levelUiView = levelUiGo.AddComponent<LevelUpUiView>();
 
-            var levelSystem = new LevelSystem(playerView.EventBus);
+            var expCfg = SkillConfigRepository.Instance.GetConfig().Exp;
+            var levelSystem = new LevelSystem(playerView.EventBus, 1, expCfg);
+            gemManagerView.DomainManager.Config = expCfg;
             levelUiView.Initialize(playerView, levelSystem, rewardManager);
 
             // Connect gem magnet collection to level system & audio feedback
@@ -227,14 +265,43 @@ namespace HappyShoot.View.Bootstrap
             gameOverView.Initialize(_gameSession, playerView.EventBus, metaShopManager, metaShopView);
 
             // 6. Character Select Screen (Warrior vs Ranger)
+            // 7. Developer Skill Selector & Cheat Console UI
+            var devConsoleGo = new GameObject("DevSkillSelectorUI");
+            var devConsoleView = devConsoleGo.AddComponent<DevSkillSelectorUiView>();
+            devConsoleView.Initialize(playerView, rewardManager, levelSystem, _gameSession, spawnerView);
+            devConsoleView.Hide(); // Hidden until Dev Mode is enabled
+
+            // 7-2. Skill Tuning Sandbox UI
+            var skillTuningGo = new GameObject("SkillTuningUI");
+            var skillTuningView = skillTuningGo.AddComponent<SkillTuningUiView>();
+            skillTuningView.Initialize(playerView, rewardManager, spawnerView, levelSystem, gemManagerView.DomainManager);
+            skillTuningView.Hide();
+
+            // 8. Character Select Screen (Warrior vs Ranger vs Wizard & Dev Mode & Skill Test Mode)
             var charSelectGo = new GameObject("CharacterSelectUI");
             var charSelectView = charSelectGo.AddComponent<CharacterSelectUiView>();
             charSelectView.SetSettingsDialog(settingsDialogView);
-            charSelectView.Initialize((selectedClass) =>
+            charSelectView.Initialize((selectedClass, isDevMode, isSkillTestMode) =>
             {
                 _selectedClass = selectedClass;
                 playerView.SetClassType(selectedClass);
-                Debug.Log($"[GameBootstrap] Hero Selected & Ready: {selectedClass}");
+                foreach (var s in playerView.Entity.Skills)
+                {
+                    SkillConfigRepository.Instance.ApplyConfigToSkillLevel(s, s.Level);
+                }
+                Debug.Log($"[GameBootstrap] Hero Selected & Ready: {selectedClass} (DevMode: {isDevMode}, SkillTest: {isSkillTestMode})");
+
+                if (isDevMode)
+                {
+                    devConsoleView.Show();
+                }
+
+                if (isSkillTestMode)
+                {
+                    spawnerView.IsSpawningSuppressed = true;
+                    spawnerView.SpawnTrainingDummies(playerView.Entity.Position, 5);
+                    skillTuningView.Show();
+                }
             });
 
             Debug.Log("[GameBootstrap] Initialization Complete! Press WASD or Arrow Keys to move and survive!");
@@ -252,46 +319,76 @@ namespace HappyShoot.View.Bootstrap
         {
             // Warrior Exclusive Skills
             rewardManager.RegisterSkill("slash", "대검 베기", "전방 150도 궤적의 적들을 시원하게 베어버리는 근접 광역 물리 공격",
-                () => new CompositeSkill("slash", "대검 베기", new CooldownTrigger(1.2f), new ClosestEnemyTargeter(), new GreatswordSlashEffect(35f, 2.5f), range: 2.8f),
+                () => {
+                    var cfg = SkillConfigRepository.Instance.GetConfig();
+                    return new CompositeSkill("slash", "대검 베기", new CooldownTrigger(cfg.Slash.Cooldown), new ClosestEnemyTargeter(), new GreatswordSlashEffect(cfg.Slash.Damage, cfg.Slash.Radius, cfg.Slash.ArcAngle), range: cfg.Slash.Radius + 0.3f);
+                },
                 new[] { CharacterClassType.Warrior });
 
-            rewardManager.RegisterSkill("ground_stomp", "지면 강타", "발로 지면을 강하게 구르고 묵직한 지진 충격파를 일으켜 근처 적들을 타격하는 전사 물리 스킬",
-                () => new CompositeSkill("ground_stomp", "지면 강타", new CooldownTrigger(1.4f), new ClosestEnemyTargeter(), new GroundStompEffect(25f, 1.5f), range: 1.8f),
+            rewardManager.RegisterSkill("ground_stomp", "지면 강타", "발로 지면을 강하게 구르고 묵직한 지진 충격파를 일으켜 근처 적들을 타격 (레벨업 시 범위 및 파편 수 증가)",
+                () => {
+                    var cfg = SkillConfigRepository.Instance.GetConfig();
+                    return new CompositeSkill("ground_stomp", "지면 강타", new CooldownTrigger(cfg.GroundStomp.Cooldown), new ClosestEnemyTargeter(), new GroundStompEffect(cfg.GroundStomp.Damage, cfg.GroundStomp.Radius), range: cfg.GroundStomp.Radius);
+                },
                 new[] { CharacterClassType.Warrior });
 
-            rewardManager.RegisterSkill("whirlwind", "휠윈드", "플레이어 주변 360도 전방위로 회전 검기 충격파를 날려 접근하는 적들을 일제 타격",
-                () => new CompositeSkill("whirlwind", "휠윈드", new CooldownTrigger(1.8f), new ClosestEnemyTargeter(), new WhirlwindEffect(30f, 2.2f), range: 2.5f),
+            rewardManager.RegisterSkill("whirlwind", "휠윈드", "플레이어 주변 360도 전방위로 회전 검기 충격파를 날려 접근하는 적들을 일제 타격 (레벨업 시 범위 대폭 확장)",
+                () => {
+                    var cfg = SkillConfigRepository.Instance.GetConfig();
+                    return new CompositeSkill("whirlwind", "휠윈드", new CooldownTrigger(cfg.Whirlwind.Cooldown), new ClosestEnemyTargeter(), new WhirlwindEffect(cfg.Whirlwind.Damage, cfg.Whirlwind.Radius), range: cfg.Whirlwind.Radius + 0.3f);
+                },
                 new[] { CharacterClassType.Warrior });
 
             // Ranger Exclusive Skills
-            rewardManager.RegisterSkill("bow", "관통 화살", "가장 가까운 적을 향해 고속으로 날아가 화면 끝까지 적들을 무제한 꿰뚫는 원거리 관통 사격",
-                () => new CompositeSkill("bow", "관통 화살", new CooldownTrigger(0.8f), new ClosestEnemyTargeter(), new PiercingArrowEffect(22f, 16f, 999)),
+            rewardManager.RegisterSkill("bow", "관통 화살", "가장 가까운 적을 향해 고속으로 날아가 화면 끝까지 적들을 무제한 꿰뚫는 원거리 관통 사격 (레벨업 시 화살 수 추가)",
+                () => {
+                    var cfg = SkillConfigRepository.Instance.GetConfig();
+                    return new CompositeSkill("bow", "관통 화살", new CooldownTrigger(cfg.Bow.Cooldown), new ClosestEnemyTargeter(), new PiercingArrowEffect(cfg.Bow.Damage, cfg.Bow.Speed, cfg.Bow.ArrowCount, 999, cfg.Bow.SpreadAngle));
+                },
                 new[] { CharacterClassType.Ranger });
 
-            rewardManager.RegisterSkill("multishot", "멀티샷", "전방 부채꼴로 다수의 관통 화살을 일제 발사하여 넓은 범위를 장악하는 속사 사격 (사거리 제한)",
-                () => new CompositeSkill("multishot", "멀티샷", new CooldownTrigger(1.1f), new ClosestEnemyTargeter(), new MultiShotEffect(18f, 16f, 3, 2, 35f, 6.5f), range: 7.0f),
+            rewardManager.RegisterSkill("glaive", "칼바람 글레이브", "전방으로 회전하는 풍인을 던져 적들을 관통하고 되돌아오며 2중 타격하는 사냥꾼의 부메랑 무기 (레벨업 시 글레이브 수 증가)",
+                () => {
+                    var cfg = SkillConfigRepository.Instance.GetConfig();
+                    return new CompositeSkill("glaive", "칼바람 글레이브", new CooldownTrigger(cfg.Glaive.Cooldown), new ClosestEnemyTargeter(), new WindGlaiveEffect(cfg.Glaive.Damage, cfg.Glaive.Distance, cfg.Glaive.Speed, cfg.Glaive.GlaiveCount), range: cfg.Glaive.Distance);
+                },
                 new[] { CharacterClassType.Ranger });
 
-            rewardManager.RegisterSkill("arrow_rain", "화살 비", "적 군집 상공에서 수십 발의 화살이 쏟아져 내려 2.0초 동안 지속적인 광역 물리 피해를 입힘",
-                () => new CompositeSkill("arrow_rain", "화살 비", new CooldownTrigger(2.2f), new ClosestEnemyTargeter(), new ArrowRainEffect(24f, 2.2f), range: 9.0f),
+            rewardManager.RegisterSkill("arrow_rain", "화살 비", "적 군집 상공에서 수십 발의 화살이 쏟아져 지속적인 광역 물리 피해 (레벨업 시 지속시간 및 화살 폭격 수 3배 증가)",
+                () => {
+                    var cfg = SkillConfigRepository.Instance.GetConfig();
+                    return new CompositeSkill("arrow_rain", "화살 비", new CooldownTrigger(cfg.ArrowRain.Cooldown), new ClosestEnemyTargeter(), new ArrowRainEffect(cfg.ArrowRain.Damage, cfg.ArrowRain.Radius, cfg.ArrowRain.Duration, cfg.ArrowRain.ArrowCount), range: 9.0f);
+                },
                 new[] { CharacterClassType.Ranger });
 
             // Wizard Exclusive Skills
-            rewardManager.RegisterSkill("fireball", "화염구", "대상 적을 향해 날아가 충돌 시 반경 내의 적들에게 광역 스플래시 폭발 마법 피해를 입힘",
-                () => new CompositeSkill("fireball", "화염구", new CooldownTrigger(1.2f), new ClosestEnemyTargeter(), new FireballEffect(35f, 1.6f, 14f), range: 9.0f),
+            rewardManager.RegisterSkill("fireball", "화염구", "대상 적을 향해 날아가 충돌 시 광역 폭발 마법 피해 (레벨업 시 최대 3발 동시 발사 & 거대 화염 폭발)",
+                () => {
+                    var cfg = SkillConfigRepository.Instance.GetConfig();
+                    return new CompositeSkill("fireball", "화염구", new CooldownTrigger(cfg.Fireball.Cooldown), new ClosestEnemyTargeter(), new FireballEffect(cfg.Fireball.Damage, cfg.Fireball.Radius, cfg.Fireball.Speed, cfg.Fireball.FireballCount), range: 9.0f);
+                },
                 new[] { CharacterClassType.Wizard });
 
-            rewardManager.RegisterSkill("frost_nova", "서리 폭발", "플레이어 주변 360도 전방위로 차가운 냉기 파동을 즉시 방출하여 주변 적들을 일제 타격",
-                () => new CompositeSkill("frost_nova", "서리 폭발", new CooldownTrigger(1.8f), new ClosestEnemyTargeter(), new FrostNovaEffect(28f, 2.8f), range: 3.0f),
+            rewardManager.RegisterSkill("frost_nova", "서리 폭발", "플레이어 주변으로 차가운 냉기 파동을 방출하여 적들을 일제 타격 (레벨업 시 5.2m 화면 전체 빙결 & 오한 지속시간 대폭 증가)",
+                () => {
+                    var cfg = SkillConfigRepository.Instance.GetConfig();
+                    return new CompositeSkill("frost_nova", "서리 폭발", new CooldownTrigger(cfg.FrostNova.Cooldown), new ClosestEnemyTargeter(), new FrostNovaEffect(cfg.FrostNova.Damage, cfg.FrostNova.Radius, cfg.FrostNova.ChillDuration), range: cfg.FrostNova.Radius);
+                },
                 new[] { CharacterClassType.Wizard });
 
-            rewardManager.RegisterSkill("chain_lightning", "연쇄 번개", "가장 가까운 적을 감전시킨 뒤 주변의 적들에게 최대 4회 전이되며 연속 타격",
-                () => new CompositeSkill("chain_lightning", "연쇄 번개", new CooldownTrigger(1.5f), new ClosestEnemyTargeter(), new ChainLightningEffect(30f, 4, 4.0f), range: 7.0f),
+            rewardManager.RegisterSkill("chain_lightning", "연쇄 번개", "가장 가까운 적을 감전시킨 뒤 주변 적들에게 연속 전이 (레벨업 시 최대 8회 전이 & 사거리 증가)",
+                () => {
+                    var cfg = SkillConfigRepository.Instance.GetConfig();
+                    return new CompositeSkill("chain_lightning", "연쇄 번개", new CooldownTrigger(cfg.ChainLightning.Cooldown), new ClosestEnemyTargeter(), new ChainLightningEffect(cfg.ChainLightning.Damage, cfg.ChainLightning.ChainCount, cfg.ChainLightning.JumpRadius), range: 7.0f);
+                },
                 new[] { CharacterClassType.Wizard });
 
             // Shared Skills
             rewardManager.RegisterSkill("orbital", "오비탈 블레이드", "플레이어 주위를 원형으로 고속 회전하며 접근하는 적들을 갈아버리는 보호형 무기",
-                () => new CompositeSkill("orbital", "오비탈 블레이드", new CooldownTrigger(0.3f), new ClosestEnemyTargeter(), new OrbitingBladesEffect(25f, 2.0f, 4.0f, 2)));
+                () => {
+                    var cfg = SkillConfigRepository.Instance.GetConfig();
+                    return new CompositeSkill("orbital", "오비탈 블레이드", new CooldownTrigger(cfg.Orbital.Cooldown), new SelfTargeter(), new OrbitingBladesEffect(cfg.Orbital.Damage, cfg.Orbital.Radius, cfg.Orbital.RotationSpeed, cfg.Orbital.BladeCount));
+                });
         }
 
         private void RegisterAllPassives(SkillRewardManager rewardManager)
@@ -349,15 +446,15 @@ namespace HappyShoot.View.Bootstrap
         {
             evolutionManager.RegisterRecipe(new SkillEvolutionRecipe(
                 "slash", "passive_fang", "blood_eater", "블러드 이터",
-                () => new CompositeSkill("blood_eater", "블러드 이터", new CooldownTrigger(0.9f), new ClosestEnemyTargeter(), new BloodEaterEffect(55f, 3.5f, 0.08f))));
+                () => new CompositeSkill("blood_eater", "블러드 이터", new CooldownTrigger(0.85f), new ClosestEnemyTargeter(), new BloodEaterEffect(85f, 4.8f, 2.0f))));
 
             evolutionManager.RegisterRecipe(new SkillEvolutionRecipe(
                 "bow", "passive_feather", "storm_bow", "폭풍의 활",
-                () => new CompositeSkill("storm_bow", "폭풍의 활", new CooldownTrigger(0.6f), new ClosestEnemyTargeter(), new StormArrowEffect(30f, 18f, 8))));
+                () => new CompositeSkill("storm_bow", "폭풍의 활", new CooldownTrigger(1.6f), new ClosestEnemyTargeter(), new StormArrowEffect(65f, 45f, 1.6f, 20f, 5, 36f))));
 
             evolutionManager.RegisterRecipe(new SkillEvolutionRecipe(
                 "fireball", "passive_rune", "meteor_strike", "메테오 스트라이크",
-                () => new CompositeSkill("meteor_strike", "메테오 스트라이크", new CooldownTrigger(1.2f), new ClosestEnemyTargeter(), new MeteorStrikeEffect(90f, 4.0f))));
+                () => new CompositeSkill("meteor_strike", "메테오 스트라이크", new CooldownTrigger(1.2f), new ClosestEnemyTargeter(), new MeteorStrikeEffect(120f, 3.0f))));
         }
     }
 }

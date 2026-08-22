@@ -53,6 +53,7 @@ namespace HappyShoot.View.Shop
         private readonly List<(string id, Text descText, Text costText, Button buyBtn)> _cardViews = new List<(string, Text, Text, Button)>();
 
         public MetaShopManager ShopManager => _shopManager;
+        public event System.Action OnShopClosed;
 
         public void Initialize(MetaShopManager shopManager = null)
         {
@@ -83,6 +84,7 @@ namespace HappyShoot.View.Shop
             {
                 _panelRoot.SetActive(false);
             }
+            OnShopClosed?.Invoke();
         }
 
         public void RefreshUI()
@@ -146,7 +148,7 @@ namespace HappyShoot.View.Shop
             var canvasGo = new GameObject("MetaShopCanvas");
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 95;
+            canvas.sortingOrder = 110;
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);

@@ -68,7 +68,8 @@ namespace HappyShoot.View.UI
             // Publish sound event
             _playerView.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.LevelUp));
 
-            // Pause game
+            // Cancel any ongoing Hit-Stop micro-freeze and pause game
+            HitStopManager.Instance?.CancelHitStop();
             Time.timeScale = 0f;
 
             Debug.Log($"[LevelUpUiView] Level Up to Lv.{newLevel}! Showing {_currentOptions.Count} reward cards.");
@@ -377,6 +378,7 @@ namespace HappyShoot.View.UI
                 _panelRoot.SetActive(false);
             }
 
+            HitStopManager.Instance?.CancelHitStop();
             Time.timeScale = 1f;
         }
 

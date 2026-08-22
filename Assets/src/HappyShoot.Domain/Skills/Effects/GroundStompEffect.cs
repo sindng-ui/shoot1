@@ -28,13 +28,9 @@ namespace HappyShoot.Domain.Skills.Effects
 
         public void OnLevelUp(int newLevel)
         {
-            // Level 1: 2.2m, 32 dmg
-            // Level 2: 2.5m (+0.3m), 40 dmg (+8 dmg)
-            // Level 3: 2.8m, 48 dmg
-            // Level 4: 3.1m, 56 dmg
-            // Level 5: 3.4m, 64 dmg
-            StompRadius = _initialRadius + 0.3f * (newLevel - 1);
-            BaseDamage = _initialBaseDamage + 8f * (newLevel - 1);
+            // Level 1: 2.2m, 32 dmg -> Level 5: 4.2m (+0.5m/lv), 68 dmg
+            StompRadius = _initialRadius + 0.50f * (newLevel - 1);
+            BaseDamage = _initialBaseDamage + 9f * (newLevel - 1);
         }
 
         public void ApplyEffect(SkillContext context, IList<Vector2D> targetPositions)

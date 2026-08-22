@@ -1,0 +1,70 @@
+using System;
+
+namespace HappyShoot.Domain.Entities
+{
+    [Serializable]
+    public class MonsterTuningConfigData
+    {
+        public MonsterStatConfig Slime = new MonsterStatConfig(hp: 30f, speed: 2.5f, damage: 8f, exp: 1, gold: 1);
+        public MonsterStatConfig Bat = new MonsterStatConfig(hp: 15f, speed: 4.05f, damage: 5f, exp: 1, gold: 1);
+        public SkeletonStatConfig Skeleton = new SkeletonStatConfig(hp: 45f, speed: 1.8f, damage: 12f, projSpeed: 2.75f, projDamage: 10f, exp: 2, gold: 2);
+        public MonsterStatConfig Golem = new MonsterStatConfig(hp: 160f, speed: 1.2f, damage: 22f, exp: 4, gold: 5);
+        public MonsterStatConfig FireImp = new MonsterStatConfig(hp: 150f, speed: 3.8f, damage: 18f, exp: 5, gold: 6);
+        public MonsterStatConfig ToxicSpider = new MonsterStatConfig(hp: 280f, speed: 2.2f, damage: 20f, exp: 8, gold: 9);
+        public MonsterStatConfig DarkKnight = new MonsterStatConfig(hp: 600f, speed: 1.5f, damage: 35f, exp: 14, gold: 18);
+        public BossStatConfig Boss = new BossStatConfig(hp: 800f, speed: 2.2f, damage: 25f, laserInterval: 8.0f, laserDamage: 25f, exp: 30, gold: 100);
+    }
+
+    [Serializable]
+    public class MonsterStatConfig
+    {
+        public float MaxHealth;
+        public float MoveSpeed;
+        public float ContactDamage;
+        public int ExpValue;
+        public int GoldValue;
+
+        public MonsterStatConfig() { }
+
+        public MonsterStatConfig(float hp, float speed, float damage, int exp, int gold)
+        {
+            MaxHealth = hp;
+            MoveSpeed = speed;
+            ContactDamage = damage;
+            ExpValue = exp;
+            GoldValue = gold;
+        }
+    }
+
+    [Serializable]
+    public class SkeletonStatConfig : MonsterStatConfig
+    {
+        public float ProjectileSpeed;
+        public float ProjectileDamage;
+
+        public SkeletonStatConfig() { }
+
+        public SkeletonStatConfig(float hp, float speed, float damage, float projSpeed, float projDamage, int exp, int gold)
+            : base(hp, speed, damage, exp, gold)
+        {
+            ProjectileSpeed = projSpeed;
+            ProjectileDamage = projDamage;
+        }
+    }
+
+    [Serializable]
+    public class BossStatConfig : MonsterStatConfig
+    {
+        public float LaserInterval;
+        public float LaserDamage;
+
+        public BossStatConfig() { }
+
+        public BossStatConfig(float hp, float speed, float damage, float laserInterval, float laserDamage, int exp, int gold)
+            : base(hp, speed, damage, exp, gold)
+        {
+            LaserInterval = laserInterval;
+            LaserDamage = laserDamage;
+        }
+    }
+}

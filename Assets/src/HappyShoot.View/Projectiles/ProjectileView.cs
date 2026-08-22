@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using HappyShoot.Domain.Entities;
+using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Projectiles;
 using HappyShoot.Domain.Spatial;
 
@@ -8,6 +9,7 @@ namespace HappyShoot.View.Projectiles
 {
     /// <summary>
     /// Unity MonoBehaviour representing a single projectile in the scene.
+    /// Strictly modular and under 500 lines.
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
     public class ProjectileView : MonoBehaviour
@@ -33,7 +35,16 @@ namespace HappyShoot.View.Projectiles
 
             if (_spriteRenderer != null)
             {
-                _spriteRenderer.color = entity.Damage >= 40f ? Color.cyan : (entity.RemainingPierce > 1 ? new Color(1f, 0.6f, 0.2f) : Color.yellow);
+                if (entity.HasExplosionOnHit)
+                {
+                    _spriteRenderer.color = new Color(0.2f, 1.0f, 0.95f, 1.0f); // Glowing Cyan Storm Arrow
+                    _transform.localScale = new Vector3(0.55f, 0.20f, 1f);
+                }
+                else
+                {
+                    _spriteRenderer.color = entity.Damage >= 40f ? Color.cyan : (entity.RemainingPierce > 1 ? new Color(1f, 0.6f, 0.2f) : Color.yellow);
+                    _transform.localScale = new Vector3(0.4f, 0.15f, 1f);
+                }
             }
 
             gameObject.SetActive(true);
@@ -69,6 +80,11 @@ namespace HappyShoot.View.Projectiles
             _domainManager = new ProjectileManager(initialCapacity: MaxPoolCapacity);
             _domainManager.OnProjectileSpawned += SpawnProjectileView;
             PrewarmViewPool(MaxPoolCapacity);
+        }
+
+        public void Initialize(EventBus eventBus)
+        {
+            _domainManager?.SetEventBus(eventBus);
         }
 
         private void PrewarmViewPool(int count)

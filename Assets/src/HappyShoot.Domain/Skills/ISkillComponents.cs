@@ -10,11 +10,15 @@ namespace HappyShoot.Domain.Skills
     public class SkillContext
     {
         public int CasterId { get; set; }
+        public string SkillId { get; set; }
+        public Entities.PlayerEntity CasterEntity { get; set; }
         public Vector2D CasterPosition { get; set; }
         public float BaseDamage { get; set; }
         public float AreaMultiplier { get; set; } = 1.0f;
         public float SpeedMultiplier { get; set; } = 1.0f;
+        public float DeltaTime { get; set; } = 0.016f;
         public Vector2D AimDirection { get; set; } = Vector2D.Right;
+        public Vector2D AimTargetPosition { get; set; } = Vector2D.Zero;
         public ISpatialGrid2D TargetGrid { get; set; }
         public Projectiles.ProjectileManager ProjectileManager { get; set; }
         public EventBus EventBus { get; set; }
@@ -52,6 +56,14 @@ namespace HappyShoot.Domain.Skills
     public interface ILevelableEffect
     {
         void OnLevelUp(int newLevel);
+    }
+
+    /// <summary>
+    /// Optional interface for continuous AoE / over-time skill effects updated per frame.
+    /// </summary>
+    public interface ITickableEffect
+    {
+        void Update(float deltaTime, SkillContext context);
     }
 
     /// <summary>

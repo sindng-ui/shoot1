@@ -13,19 +13,35 @@ namespace HappyShoot.View.UI
     public class CharacterSelectUiView : MonoBehaviour
     {
         private GameObject _panelRoot;
-        private Action<CharacterClassType> _onSelectedCallback;
+        private Action<CharacterClassType, bool, bool> _onSelectedCallback;
         private SettingsDialogUiView _settingsDialog;
+        private bool _isDevMode = false;
+        private bool _isSkillTestMode = false;
+        private Text _devModeBtnText;
+        private Image _devModeBtnImg;
+        private Text _skillTestBtnText;
+        private Image _skillTestBtnImg;
 
         public void SetSettingsDialog(SettingsDialogUiView dialog)
         {
             _settingsDialog = dialog;
         }
 
-        public void Initialize(Action<CharacterClassType> onSelectedCallback)
+        public void Initialize(Action<CharacterClassType, bool, bool> onSelectedCallback)
         {
             _onSelectedCallback = onSelectedCallback;
             EnsureUiElements();
             ShowSelectScreen();
+        }
+
+        public void Initialize(Action<CharacterClassType, bool> onSelectedCallback)
+        {
+            Initialize((classType, isDev, isTest) => onSelectedCallback?.Invoke(classType, isDev));
+        }
+
+        public void Initialize(Action<CharacterClassType> onSelectedCallback)
+        {
+            Initialize((classType, isDev, isTest) => onSelectedCallback?.Invoke(classType));
         }
 
         public void ShowSelectScreen()
@@ -51,7 +67,33 @@ namespace HappyShoot.View.UI
             PlayerPrefs.SetInt("SelectedHeroClass", (int)classType);
             PlayerPrefs.Save();
             HideSelectScreen();
-            _onSelectedCallback?.Invoke(classType);
+            _onSelectedCallback?.Invoke(classType, _isDevMode, _isSkillTestMode);
+        }
+
+        private void ToggleDevMode()
+        {
+            _isDevMode = !_isDevMode;
+            if (_devModeBtnText != null)
+            {
+                _devModeBtnText.text = _isDevMode ? "🛠️ 개발자 모드: ON" : "🛠️ 개발자 모드: OFF";
+            }
+            if (_devModeBtnImg != null)
+            {
+                _devModeBtnImg.color = _isDevMode ? new Color(0.85f, 0.45f, 0.15f, 1f) : new Color(0.25f, 0.28f, 0.35f, 0.95f);
+            }
+        }
+
+        private void ToggleSkillTestMode()
+        {
+            _isSkillTestMode = !_isSkillTestMode;
+            if (_skillTestBtnText != null)
+            {
+                _skillTestBtnText.text = _isSkillTestMode ? "🧪 밸런스 샌드박스: ON" : "🧪 밸런스 샌드박스: OFF";
+            }
+            if (_skillTestBtnImg != null)
+            {
+                _skillTestBtnImg.color = _isSkillTestMode ? new Color(0.20f, 0.75f, 0.45f, 1f) : new Color(0.18f, 0.26f, 0.32f, 0.95f);
+            }
         }
 
         private void EnsureUiElements()
@@ -121,7 +163,7 @@ namespace HappyShoot.View.UI
                 title: "🏹 궁수 (Ranger)",
                 heroSprite: SpriteHelper.GetOrCreateRangerSprite(),
                 statsDesc: "👟 이동 속도: 6.0 (+20%)\n🎯 치명타율: 15% (치명타 특화)\n🏹 투사체 속도: +30%",
-                weaponDesc: "🏹 시작 스킬: [관통 화살]\n적들을 관통하는 고속 원거리 사격",
+                weaponDesc: "🏹 시작 스킬: [관통 화살]\n화면 끝까지 무제한 관통 사격 (레벨업 시 화살 수 추가)",
                 accentColor: new Color(0.25f, 0.85f, 0.45f, 1f),
                 btnColor: new Color(0.18f, 0.70f, 0.35f, 1f),
                 anchoredPos: new Vector2(0f, 0f),
@@ -142,15 +184,55 @@ namespace HappyShoot.View.UI
                 classType: CharacterClassType.Wizard
             );
 
-            // Bottom Settings Button (Clear text button for easy user access)
+            // Bottom Button 1: Dev Mode Toggle (Left)
+            var devBtnGo = new GameObject("BtnToggleDevMode");
+            devBtnGo.transform.SetParent(_panelRoot.transform, false);
+            var devRt = devBtnGo.AddComponent<RectTransform>();
+            devRt.anchorMin = new Vector2(0.5f, 0f);
+            devRt.anchorMax = new Vector2(0.5f, 0f);
+            devRt.pivot = new Vector2(0.5f, 0f);
+            devRt.anchoredPosition = new Vector2(-310f, 35f);
+            devRt.sizeDelta = new Vector2(270f, 52f);
+
+            _devModeBtnImg = devBtnGo.AddComponent<Image>();
+            _devModeBtnImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            _devModeBtnImg.color = new Color(0.25f, 0.28f, 0.35f, 0.95f);
+
+            var devBtn = devBtnGo.AddComponent<Button>();
+            devBtn.targetGraphic = _devModeBtnImg;
+            devBtn.onClick.AddListener(ToggleDevMode);
+
+            _devModeBtnText = CreateText(devBtnGo.transform, "BtnText", "🛠️ 개발자 모드: OFF", 17, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+
+            // Bottom Button 2: Skill Test Mode Toggle (Center)
+            var testBtnGo = new GameObject("BtnToggleSkillTest");
+            testBtnGo.transform.SetParent(_panelRoot.transform, false);
+            var testRt = testBtnGo.AddComponent<RectTransform>();
+            testRt.anchorMin = new Vector2(0.5f, 0f);
+            testRt.anchorMax = new Vector2(0.5f, 0f);
+            testRt.pivot = new Vector2(0.5f, 0f);
+            testRt.anchoredPosition = new Vector2(0f, 35f);
+            testRt.sizeDelta = new Vector2(270f, 52f);
+
+            _skillTestBtnImg = testBtnGo.AddComponent<Image>();
+            _skillTestBtnImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            _skillTestBtnImg.color = new Color(0.18f, 0.26f, 0.32f, 0.95f);
+
+            var testBtn = testBtnGo.AddComponent<Button>();
+            testBtn.targetGraphic = _skillTestBtnImg;
+            testBtn.onClick.AddListener(ToggleSkillTestMode);
+
+            _skillTestBtnText = CreateText(testBtnGo.transform, "BtnText", "🧪 밸런스 샌드박스: OFF", 17, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+
+            // Bottom Button 3: Settings Button (Right)
             var settingsBtnGo = new GameObject("BtnOpenSettings");
             settingsBtnGo.transform.SetParent(_panelRoot.transform, false);
             var settingsRt = settingsBtnGo.AddComponent<RectTransform>();
             settingsRt.anchorMin = new Vector2(0.5f, 0f);
             settingsRt.anchorMax = new Vector2(0.5f, 0f);
             settingsRt.pivot = new Vector2(0.5f, 0f);
-            settingsRt.anchoredPosition = new Vector2(0f, 35f);
-            settingsRt.sizeDelta = new Vector2(300f, 52f);
+            settingsRt.anchoredPosition = new Vector2(310f, 35f);
+            settingsRt.sizeDelta = new Vector2(270f, 52f);
 
             var settingsImg = settingsBtnGo.AddComponent<Image>();
             settingsImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -160,7 +242,7 @@ namespace HappyShoot.View.UI
             settingsBtn.targetGraphic = settingsImg;
             settingsBtn.onClick.AddListener(() => _settingsDialog?.Show());
 
-            CreateText(settingsBtnGo.transform, "BtnText", "⚙️ 게임 환경 설정 (SETTINGS)", 18, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            CreateText(settingsBtnGo.transform, "BtnText", "⚙️ 게임 환경 설정", 17, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
 
             // Version Label (Bottom Right)
             CreateText(_panelRoot.transform, "VersionLabel", HappyShoot.Domain.Common.AppVersion.FullVersionText, 14, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-24f, 20f), new Vector2(300f, 24f), new Color(0.6f, 0.7f, 0.8f, 0.6f));

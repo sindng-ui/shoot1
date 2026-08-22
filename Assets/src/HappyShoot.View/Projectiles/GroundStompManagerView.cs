@@ -105,8 +105,8 @@ namespace HappyShoot.View.Projectiles
 
         public void SpawnStompVisual(Vector2 position, float diameter)
         {
-            // Camera impact shake
-            CameraFollowView.Instance?.TriggerShake(duration: 0.16f, intensity: 0.22f);
+            // Camera impact shake (filtered by ground_stomp shake setting)
+            CameraFollowView.Instance?.TriggerShake("ground_stomp", duration: 0.16f, intensity: 0.22f);
 
             for (int i = 0; i < _pool.Count; i++)
             {

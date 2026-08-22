@@ -1,10 +1,12 @@
 using System;
 using HappyShoot.Domain.Events;
+using HappyShoot.Domain.Skills;
 
 namespace HappyShoot.Domain.Leveling
 {
     /// <summary>
-    /// Manages player level progression, experience thresholds, and level-up event triggers.
+    /// Manages player level progression, dynamic experience thresholds, and level-up event triggers.
+    /// Strictly modular and under 500 lines.
     /// </summary>
     public class LevelSystem
     {
@@ -13,21 +15,26 @@ namespace HappyShoot.Domain.Leveling
         public int RequiredExp => CalculateRequiredExp(Level);
         public float NormalizedProgress => (float)CurrentExp / RequiredExp;
 
+        public ExpConfig Config { get; set; }
+
         private readonly EventBus _eventBus;
 
         public event Action<int> OnLevelUp;
 
-        public LevelSystem(EventBus eventBus = null, int startingLevel = 1)
+        public LevelSystem(EventBus eventBus = null, int startingLevel = 1, ExpConfig config = null)
         {
             _eventBus = eventBus;
             Level = Math.Max(1, startingLevel);
             CurrentExp = 0;
+            Config = config;
         }
 
-        public static int CalculateRequiredExp(int level)
+        public int CalculateRequiredExp(int level)
         {
-            // Survivors curve: 5 + (level * 5) + (level^2 * 2)
-            return 5 + (level * 5) + (level * level * 2);
+            int baseExp = Config != null ? Config.BaseRequiredExp : 4;
+            float growth = Config != null ? Config.ExpGrowthFactor : 0.85f;
+            float calc = (baseExp + (level * 4.0f) + (level * level * 1.5f)) * growth;
+            return Math.Max(1, (int)Math.Round(calc));
         }
 
         /// <summary>

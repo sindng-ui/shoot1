@@ -14,6 +14,7 @@ namespace HappyShoot.Domain.Entities
         public int Id { get; }
         public CharacterClassType ClassType { get; set; } = CharacterClassType.Warrior;
         public Vector2D AimDirection { get; set; } = Vector2D.Right;
+        public Vector2D AimTargetPosition { get; set; } = Vector2D.Zero;
         public Vector2D Position { get; private set; }
         public float Radius { get; set; } = 0.5f;
         public bool IsActive => !IsDead;
@@ -43,6 +44,7 @@ namespace HappyShoot.Domain.Entities
             _skillContext = new SkillContext
             {
                 CasterId = id,
+                CasterEntity = this,
                 CasterPosition = startPosition,
                 BaseDamage = 10f,
                 AreaMultiplier = stats.AreaMultiplier,
@@ -67,12 +69,14 @@ namespace HappyShoot.Domain.Entities
             }
         }
 
+        public bool IsGodMode { get; set; }
+
         /// <summary>
         /// Applies mitigated damage based on Armor and publishes PlayerDamagedEvent or PlayerDiedEvent.
         /// </summary>
         public void TakeDamage(float rawDamage)
         {
-            if (IsDead || rawDamage <= 0f) return;
+            if (IsDead || rawDamage <= 0f || IsGodMode) return;
 
             float damageToApply = Stats.CalculateMitigatedDamage(rawDamage);
             CurrentHealth = Math.Max(0f, CurrentHealth - damageToApply);
@@ -112,6 +116,49 @@ namespace HappyShoot.Domain.Entities
             {
                 _skills.Add(skill);
             }
+        }
+
+        /// <summary>
+        /// Checks if the player currently possesses a skill with the specified ID.
+        /// </summary>
+        public bool HasSkill(string skillId)
+        {
+            if (string.IsNullOrEmpty(skillId)) return false;
+            for (int i = 0; i < _skills.Count; i++)
+            {
+                if (_skills[i].Id == skillId) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Retrieves a skill with the specified ID or null if not equipped.
+        /// </summary>
+        public ISkill GetSkill(string skillId)
+        {
+            if (string.IsNullOrEmpty(skillId)) return null;
+            for (int i = 0; i < _skills.Count; i++)
+            {
+                if (_skills[i].Id == skillId) return _skills[i];
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Unequips / removes a skill from the player.
+        /// </summary>
+        public bool RemoveSkill(string skillId)
+        {
+            if (string.IsNullOrEmpty(skillId)) return false;
+            for (int i = 0; i < _skills.Count; i++)
+            {
+                if (_skills[i].Id == skillId)
+                {
+                    _skills.RemoveAt(i);
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -157,6 +204,12 @@ namespace HappyShoot.Domain.Entities
 
         public bool HasPassive(string passiveId) => _passiveLevels.ContainsKey(passiveId);
 
+        public bool RemovePassive(string passiveId)
+        {
+            if (string.IsNullOrEmpty(passiveId)) return false;
+            return _passiveLevels.Remove(passiveId);
+        }
+
         public int GetPassiveLevel(string passiveId)
         {
             return _passiveLevels.TryGetValue(passiveId, out int level) ? level : 0;
@@ -178,8 +231,10 @@ namespace HappyShoot.Domain.Entities
             // Update skill context
             _skillContext.CasterPosition = Position;
             _skillContext.AimDirection = AimDirection;
+            _skillContext.AimTargetPosition = AimTargetPosition;
             _skillContext.AreaMultiplier = Stats.AreaMultiplier;
             _skillContext.SpeedMultiplier = Stats.ProjectileSpeedMultiplier;
+            _skillContext.DeltaTime = deltaTime;
             _skillContext.TargetGrid = enemyGrid;
             _skillContext.ProjectileManager = projectileManager;
 

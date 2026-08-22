@@ -39,6 +39,7 @@ namespace HappyShoot.View.Player
             _projectileManagerView = projectileManagerView;
         }
 
+        private GameObject _shadowGo;
         private GameObject _bodyVisualGo;
         private SpriteRenderer _bodySr;
         private GameObject _slashPivotGo;
@@ -58,7 +59,16 @@ namespace HappyShoot.View.Player
 
         private void Awake()
         {
-            // Create child BodyVisual to prevent overriding root transform.position
+            // 1. Create 2.5D Blob Shadow at feet
+            _shadowGo = new GameObject("BlobShadow");
+            _shadowGo.transform.SetParent(transform);
+            _shadowGo.transform.localPosition = new Vector3(0f, -0.42f, 0f);
+            _shadowGo.transform.localScale = new Vector3(1.5f, 0.75f, 1f);
+            var shadowSr = _shadowGo.AddComponent<SpriteRenderer>();
+            shadowSr.sprite = Utils.SpriteHelper.GetOrCreateBlobShadowSprite();
+            shadowSr.sortingOrder = -1; // Directly on ground
+
+            // 2. Create child BodyVisual to prevent overriding root transform.position
             _bodyVisualGo = new GameObject("BodyVisual");
             _bodyVisualGo.transform.SetParent(transform);
             _bodyVisualGo.transform.localPosition = Vector3.zero;
@@ -184,6 +194,7 @@ namespace HappyShoot.View.Player
                     : Input.mousePosition;
                 mouseScreenPos.z = -Camera.main.transform.position.z;
                 Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
+                _entity.AimTargetPosition = new Vector2D(mouseWorldPos.x, mouseWorldPos.y);
                 Vector2 dir = new Vector2(mouseWorldPos.x - transform.position.x, mouseWorldPos.y - transform.position.y);
                 if (dir.sqrMagnitude > 0.001f)
                 {
@@ -196,17 +207,30 @@ namespace HappyShoot.View.Player
             ProjectileManager projManager = _projectileManagerView != null ? _projectileManagerView.DomainManager : null;
             _entity.Update(Time.deltaTime, monsterGrid, projManager);
 
-            // Handle walking bobbing & flip direction
+            // Handle Brotato-style walking jelly physics, tilting & 2.5D shadow scale
             Vector3 deltaMove = transform.position - _lastPos;
             _lastPos = transform.position;
+            float moveDist = deltaMove.magnitude;
 
-            if (deltaMove.sqrMagnitude > 0.0001f)
+            if (moveDist > 0.0001f)
             {
-                _walkBobTimer += Time.deltaTime * 12f;
-                float bobOffset = Mathf.Sin(_walkBobTimer) * 0.04f;
+                _walkBobTimer += Time.deltaTime * 16f;
+                float hop = Mathf.Abs(Mathf.Sin(_walkBobTimer)) * 0.12f;
+                float squashY = Mathf.Sin(_walkBobTimer * 2f) * 0.08f;
+                float stretchX = -squashY * 0.5f;
+                float tiltZ = Mathf.Clamp(-deltaMove.x * 35f, -9f, 9f);
+
                 if (_bodyVisualGo != null)
                 {
-                    _bodyVisualGo.transform.localPosition = new Vector3(0f, bobOffset, 0f);
+                    _bodyVisualGo.transform.localPosition = new Vector3(0f, hop, 0f);
+                    _bodyVisualGo.transform.localScale = new Vector3(1.5f * (1f + stretchX), 1.5f * (1f + squashY), 1f);
+                    _bodyVisualGo.transform.localRotation = Quaternion.Euler(0f, 0f, tiltZ);
+                }
+
+                if (_shadowGo != null)
+                {
+                    float shadowScale = 1f - (hop * 0.6f);
+                    _shadowGo.transform.localScale = new Vector3(1.5f * shadowScale, 0.75f * shadowScale, 1f);
                 }
 
                 if (deltaMove.x > 0.001f && _bodySr != null)
@@ -228,9 +252,18 @@ namespace HappyShoot.View.Player
             }
             else
             {
+                // Idle breathing jelly pulse
+                _walkBobTimer += Time.deltaTime * 3.5f;
+                float breatheY = Mathf.Sin(_walkBobTimer) * 0.035f;
                 if (_bodyVisualGo != null)
                 {
                     _bodyVisualGo.transform.localPosition = Vector3.zero;
+                    _bodyVisualGo.transform.localScale = new Vector3(1.5f * (1f - breatheY * 0.5f), 1.5f * (1f + breatheY), 1f);
+                    _bodyVisualGo.transform.localRotation = Quaternion.identity;
+                }
+                if (_shadowGo != null)
+                {
+                    _shadowGo.transform.localScale = new Vector3(1.5f, 0.75f, 1f);
                 }
             }
 
@@ -314,15 +347,14 @@ namespace HappyShoot.View.Player
                     _orbitingBladeView.gameObject.SetActive(true);
                 }
 
-                int currentLevel = orbitalSkill.Level;
-                float currentArea = _entity.Stats.AreaMultiplier;
+                var orbitalEffect = (orbitalSkill as HappyShoot.Domain.Skills.CompositeSkill)?.Effect as HappyShoot.Domain.Skills.Effects.OrbitingBladesEffect;
+                int bladeCount = orbitalEffect != null ? orbitalEffect.BladeCount : (2 + (orbitalSkill.Level - 1));
+                float radius = (orbitalEffect != null ? orbitalEffect.OrbitRadius : 2.0f) * _entity.Stats.AreaMultiplier;
 
-                if (_cachedOrbitalLevel != currentLevel || Mathf.Abs(_cachedOrbitalArea - currentArea) > 0.01f)
+                if (_cachedOrbitalLevel != bladeCount || Mathf.Abs(_cachedOrbitalArea - radius) > 0.01f)
                 {
-                    _cachedOrbitalLevel = currentLevel;
-                    _cachedOrbitalArea = currentArea;
-                    int bladeCount = 2 + (currentLevel - 1);
-                    float radius = 2.0f * currentArea;
+                    _cachedOrbitalLevel = bladeCount;
+                    _cachedOrbitalArea = radius;
                     _orbitingBladeView.SetBlades(bladeCount, radius);
                 }
             }

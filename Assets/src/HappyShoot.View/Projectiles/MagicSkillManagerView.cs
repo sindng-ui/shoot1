@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 using HappyShoot.Domain.Events;
+using HappyShoot.Domain.Spatial;
 using HappyShoot.View.Utils;
 
 namespace HappyShoot.View.Projectiles
 {
     /// <summary>
-    /// Visual Manager for Wizard magic spells:
-    /// - Frost Nova expanding crystalline frost wave
-    /// - Ice Shatter crystalline shard explosion on chilled monster death
-    /// - Chain Lightning dynamic zigzag electric bolts
-    /// - Fireball splash blast explosions
-    /// Uses 100% prewarmed zero-allocation pooling and stays under 500 lines.
+    /// Presentation View managing the visuals and juice for Wizard's magic skills:
+    /// - Chain Lightning: Fractal jagged multi-segment bolts with tapering non-uniform width, electric dual-layer glow, and forked sparks.
+    /// - Frost Nova: Expanding frosty shockwaves and icy shatters.
+    /// - Fireball: Explosive fiery radial blasts.
+    /// Strictly modular and under 500 lines.
     /// </summary>
     public class MagicSkillManagerView : MonoBehaviour
     {
@@ -27,12 +27,14 @@ namespace HappyShoot.View.Projectiles
             public bool IsActive;
         }
 
-        // 2. Chain Lightning Zigzag Segment Visual
+        // 2. Chain Lightning Segment Visual (Dual-layer Tapering & Jagged)
         private class LightningSegment
         {
             public GameObject GameObject;
             public Transform Transform;
             public SpriteRenderer Renderer;
+            public Color BaseColor;
+            public float BaseWidth;
             public float Timer;
             public float Duration;
             public bool IsActive;
@@ -64,7 +66,7 @@ namespace HappyShoot.View.Projectiles
         }
 
         private const int NovaPoolSize = 12;
-        private const int LightningPoolSize = 64;
+        private const int LightningPoolSize = 160; // Expanded for detailed fractal segments & forked branches
         private const int BlastPoolSize = 16;
         private const int ShardPoolSize = 36;
 
@@ -113,14 +115,13 @@ namespace HappyShoot.View.Projectiles
                 });
             }
 
-            // 2. Lightning Pool
+            // 2. Lightning Pool (Supports dual-layer glow + core)
             for (int i = 0; i < LightningPoolSize; i++)
             {
                 var go = new GameObject($"Lightning_{i + 1}");
                 go.transform.SetParent(transform, false);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = whiteSprite;
-                sr.color = new Color(0.9f, 0.98f, 1.0f, 0.95f);
                 sr.sortingOrder = 7;
                 go.SetActive(false);
 
@@ -209,9 +210,9 @@ namespace HappyShoot.View.Projectiles
                     item.Lifetime = Random.Range(0.35f, 0.55f);
 
                     float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-                    float speed = Random.Range(4.5f, 9.0f);
-                    item.Velocity = new Vector2(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed);
-                    item.RotSpeed = Random.Range(-500f, 500f);
+                    float speed = Random.Range(3.5f, 8.0f);
+                    item.Velocity = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed;
+                    item.RotSpeed = Random.Range(-400f, 400f);
 
                     item.Renderer.color = new Color(0.7f, 0.95f, 1.0f, 1.0f);
                     item.GameObject.SetActive(true);
@@ -229,12 +230,12 @@ namespace HappyShoot.View.Projectiles
             for (int t = 0; t < e.TargetPositions.Count; t++)
             {
                 Vector3 currentPos = new Vector3((float)e.TargetPositions[t].X, (float)e.TargetPositions[t].Y, 0f);
-                SpawnZigzagLightning(prevPos, currentPos);
+                SpawnFractalLightning(prevPos, currentPos);
                 prevPos = currentPos;
             }
         }
 
-        private void SpawnZigzagLightning(Vector3 from, Vector3 to)
+        private void SpawnFractalLightning(Vector3 from, Vector3 to)
         {
             Vector3 diff = to - from;
             float totalDist = diff.magnitude;
@@ -243,21 +244,43 @@ namespace HappyShoot.View.Projectiles
             Vector3 dir = diff.normalized;
             Vector3 perp = new Vector3(-dir.y, dir.x, 0f);
 
-            // Create 3-segment zigzag bolt
-            int segments = (totalDist > 3.0f) ? 3 : 2;
+            // 5~8 razor-sharp jagged segments based on distance
+            int segments = Mathf.Clamp(Mathf.RoundToInt(totalDist * 2.8f), 4, 8);
             Vector3 cur = from;
 
             for (int s = 1; s <= segments; s++)
             {
                 float t = (float)s / segments;
-                Vector3 next = (s == segments) ? to : (Vector3.Lerp(from, to, t) + perp * Random.Range(-0.35f, 0.35f));
+                // Jagged electric jitter displacement
+                float jitter = (s == segments) ? 0f : Random.Range(-0.42f, 0.42f) * Mathf.Sin(t * Mathf.PI);
+                Vector3 next = (s == segments) ? to : (Vector3.Lerp(from, to, t) + perp * jitter);
 
-                SpawnSingleSegment(cur, next);
+                // Non-uniform tapering width: thicker at origin (0.22m), razor sharp at target (0.06m)
+                float baseWidth = Mathf.Lerp(0.20f, 0.06f, t) * Random.Range(0.80f, 1.25f);
+
+                // 1. Outer Neon Cyan Glow Aura (Thicker, sortingOrder = 7)
+                SpawnSingleSegment(cur, next, baseWidth * 1.7f, new Color(0.15f, 0.85f, 1.0f, 0.75f), 7);
+
+                // 2. Inner Super-Bright White Core (Crisp & piercing, sortingOrder = 8)
+                SpawnSingleSegment(cur, next, baseWidth * 0.75f, new Color(1.0f, 1.0f, 1.0f, 1.0f), 8);
+
+                // 3. 40% Chance for Micro Forked Spark Branch
+                if (s < segments && Random.value < 0.40f)
+                {
+                    float branchLen = Random.Range(0.35f, 0.70f);
+                    float branchAngle = Random.Range(30f, 70f) * (Random.value > 0.5f ? 1f : -1f) * Mathf.Deg2Rad;
+                    Vector3 branchDir = Quaternion.Euler(0f, 0f, branchAngle * Mathf.Rad2Deg) * dir;
+                    Vector3 branchEnd = cur + branchDir * branchLen;
+
+                    SpawnSingleSegment(cur, branchEnd, baseWidth * 1.0f, new Color(0.3f, 0.9f, 1.0f, 0.8f), 7);
+                    SpawnSingleSegment(cur, branchEnd, baseWidth * 0.45f, Color.white, 8);
+                }
+
                 cur = next;
             }
         }
 
-        private void SpawnSingleSegment(Vector3 from, Vector3 to)
+        private void SpawnSingleSegment(Vector3 from, Vector3 to, float width, Color color, int sortOrder)
         {
             for (int i = 0; i < _lightningPool.Count; i++)
             {
@@ -265,8 +288,10 @@ namespace HappyShoot.View.Projectiles
                 if (!item.IsActive)
                 {
                     item.IsActive = true;
-                    item.Timer = 0.15f;
-                    item.Duration = 0.15f;
+                    item.Timer = 0.14f;
+                    item.Duration = 0.14f;
+                    item.BaseWidth = width;
+                    item.BaseColor = color;
 
                     Vector3 mid = (from + to) * 0.5f;
                     Vector3 diff = to - from;
@@ -275,8 +300,9 @@ namespace HappyShoot.View.Projectiles
 
                     item.Transform.position = mid;
                     item.Transform.rotation = Quaternion.Euler(0f, 0f, angle);
-                    item.Transform.localScale = new Vector3(dist, 0.12f, 1f);
-                    item.Renderer.color = new Color(0.95f, 0.98f, 1.0f, 1.0f);
+                    item.Transform.localScale = new Vector3(dist, width, 1f);
+                    item.Renderer.color = color;
+                    item.Renderer.sortingOrder = sortOrder;
                     item.GameObject.SetActive(true);
                     break;
                 }
@@ -327,7 +353,7 @@ namespace HappyShoot.View.Projectiles
                 }
             }
 
-            // 2. Update Lightning Segments
+            // 2. Update Lightning Segments with Electric Flicker & Fast Fade
             for (int i = 0; i < _lightningPool.Count; i++)
             {
                 var item = _lightningPool[i];
@@ -335,7 +361,11 @@ namespace HappyShoot.View.Projectiles
 
                 item.Timer -= dt;
                 float progress = 1.0f - Mathf.Clamp01(item.Timer / item.Duration);
-                item.Renderer.color = new Color(0.6f, 0.92f, 1.0f, (1.0f - progress));
+                float alpha = (1.0f - progress);
+
+                // Electric flicker jitter
+                float flicker = Random.Range(0.85f, 1.15f);
+                item.Renderer.color = new Color(item.BaseColor.r, item.BaseColor.g, item.BaseColor.b, alpha * item.BaseColor.a * flicker);
 
                 if (item.Timer <= 0f)
                 {

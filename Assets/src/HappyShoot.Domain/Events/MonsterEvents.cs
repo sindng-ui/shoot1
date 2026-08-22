@@ -26,13 +26,16 @@ namespace HappyShoot.Domain.Events
         public readonly Vector2D Position;
         public readonly int ExpValue;
         public readonly int GoldValue;
+        public readonly bool IsBoss;
 
-        public MonsterDiedEvent(int monsterId, Vector2D position, int expValue, int goldValue)
+        public MonsterDiedEvent(int monsterId, Vector2D position, int expValue, int goldValue, bool isBoss = false)
         {
             MonsterId = monsterId;
             Position = position;
             ExpValue = expValue;
             GoldValue = goldValue;
+            IsBoss = isBoss;
         }
     }
 }
+

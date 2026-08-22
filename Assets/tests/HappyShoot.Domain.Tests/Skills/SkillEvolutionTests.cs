@@ -44,7 +44,7 @@ namespace HappyShoot.Domain.Tests.Skills
                 requiredPassiveId: "passive_feather",
                 evolvedSkillId: "storm_bow",
                 evolvedSkillName: "Storm Bow",
-                evolvedSkillFactory: () => new CompositeSkill("storm_bow", "Storm Bow", new CooldownTrigger(0.6f), new ClosestEnemyTargeter(), new StormArrowEffect())
+                evolvedSkillFactory: () => new CompositeSkill("storm_bow", "Storm Bow", new CooldownTrigger(5.0f), new ClosestEnemyTargeter(), new StormArrowEffect())
             ));
 
             _evolutionManager.RegisterRecipe(new SkillEvolutionRecipe(

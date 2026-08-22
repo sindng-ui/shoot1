@@ -6,41 +6,47 @@ using HappyShoot.Domain.Spatial;
 namespace HappyShoot.Domain.Skills.Effects
 {
     /// <summary>
-    /// Ranger exclusive skill: Calls down a concentrated barrage of arrows on a target area over 2.0 seconds.
-    /// Base: 24 damage, 2.2m area radius (+20% expanded).
-    /// Leveling: +5 damage per level, +0.25m radius per level.
+    /// Ranger signature skill: Concentrated continuous arrow barrage over an area.
+    /// Fires dense arrows over dynamic duration (1.5s - 3.5s).
+    /// Each falling arrow deals individual impact damage the exact moment it hits the ground.
+    /// Strictly modular and under 500 lines.
     /// </summary>
     public class ArrowRainEffect : ISkillEffect, ILevelableEffect
     {
         public float BaseDamage { get; set; }
         public float Radius { get; set; }
+        public float Duration { get; set; }
+        public int ArrowCount { get; set; }
 
         private readonly float _initialDamage;
         private readonly float _initialRadius;
-        private readonly List<ISpatialEntity> _hitBuffer = new List<ISpatialEntity>(32);
+        private readonly float _initialDuration;
+        private readonly int _initialArrowCount;
 
-        public ArrowRainEffect(float baseDamage = 24f, float radius = 2.2f)
+        public ArrowRainEffect(float baseDamage = 24f, float radius = 2.0f, float duration = 1.5f, int arrowCount = 20)
         {
             BaseDamage = baseDamage;
             Radius = radius;
+            Duration = duration;
+            ArrowCount = arrowCount;
+
             _initialDamage = baseDamage;
             _initialRadius = radius;
+            _initialDuration = duration;
+            _initialArrowCount = arrowCount;
         }
 
         public void OnLevelUp(int newLevel)
         {
-            // Lv.1: 2.2m, 24 dmg
-            // Lv.2: 2.45m, 29 dmg
-            // Lv.3: 2.7m, 34 dmg
-            // Lv.4: 2.95m, 39 dmg
-            // Lv.5: 3.2m, 44 dmg
-            Radius = _initialRadius + 0.25f * (newLevel - 1);
-            BaseDamage = _initialDamage + 5f * (newLevel - 1);
+            Duration = _initialDuration + 0.5f * (newLevel - 1); // 1.5s -> 3.5s
+            Radius = _initialRadius + 0.45f * (newLevel - 1);    // 2.0m -> 3.8m
+            ArrowCount = _initialArrowCount + 10 * (newLevel - 1); // 20 -> 60 arrows
+            BaseDamage = _initialDamage + 6.5f * (newLevel - 1); // 24 -> 50 dmg
         }
 
         public void ApplyEffect(SkillContext context, IList<Vector2D> targetPositions)
         {
-            if (context?.TargetGrid == null || targetPositions == null || targetPositions.Count == 0)
+            if (context == null || targetPositions == null || targetPositions.Count == 0)
                 return;
 
             float effectiveRadius = Radius * context.AreaMultiplier;
@@ -50,19 +56,9 @@ namespace HappyShoot.Domain.Skills.Effects
             {
                 Vector2D center = targetPositions[t];
 
-                // Play Audio & Dedicated Arrow Rain Visual Event (2.0s continuous rain)
+                // Play Audio & Publish event with center, radius, duration, count, and damage per arrow
                 context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.BowShoot, volume: 0.85f));
-                context.EventBus?.Publish(new ArrowRainExecutedEvent(center, effectiveRadius, 2.0f));
-
-                int hitCount = context.TargetGrid.QueryRadiusNonAlloc(center, effectiveRadius, _hitBuffer);
-
-                for (int i = 0; i < hitCount; i++)
-                {
-                    if (_hitBuffer[i] is MonsterEntity monster && monster.IsActive && !monster.IsDead)
-                    {
-                        monster.TakeDamage(effectiveDamage);
-                    }
-                }
+                context.EventBus?.Publish(new ArrowRainExecutedEvent(center, effectiveRadius, Duration, ArrowCount, effectiveDamage));
             }
         }
     }

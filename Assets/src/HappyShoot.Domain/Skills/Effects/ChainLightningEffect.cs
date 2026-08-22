@@ -33,8 +33,10 @@ namespace HappyShoot.Domain.Skills.Effects
 
         public void OnLevelUp(int newLevel)
         {
-            BaseDamage = _initialDamage + 8f * (newLevel - 1);
-            ChainCount = _initialChains + (newLevel - 1) / 2; // +1 chain at lv3, lv5
+            // Lv.1: 4 chains, 4.0m -> Lv.5: 8 chains, 6.4m jump distance
+            BaseDamage = _initialDamage + 8.5f * (newLevel - 1);
+            ChainCount = _initialChains + 1 * (newLevel - 1); // +1 chain per level (4 -> 8)
+            JumpRadius = 4.0f + 0.60f * (newLevel - 1); // 4.0m -> 6.4m
         }
 
         public void ApplyEffect(SkillContext context, IList<Vector2D> targetPositions)
@@ -44,6 +46,10 @@ namespace HappyShoot.Domain.Skills.Effects
 
             float effectiveDamage = BaseDamage * (context.BaseDamage / 10f);
             float effectiveJumpRadius = JumpRadius * context.AreaMultiplier;
+
+            // Bonus chain jumps from AreaMultiplier (범위 증가 패시브에 따른 연쇄 수 추가 증가)
+            int bonusChains = (int)((context.AreaMultiplier - 1.0f) * 6f + 0.5f);
+            int totalChains = ChainCount + (bonusChains > 0 ? bonusChains : 0);
 
             _hitMonsterIds.Clear();
             _hitPositions.Clear();
@@ -76,7 +82,7 @@ namespace HappyShoot.Domain.Skills.Effects
             }
 
             // Chain to subsequent nearby targets
-            for (int chain = 1; chain < ChainCount; chain++)
+            for (int chain = 1; chain < totalChains; chain++)
             {
                 int nearbyCount = context.TargetGrid.QueryRadiusNonAlloc(currentOrigin, effectiveJumpRadius, _queryBuffer);
                 MonsterEntity closestNext = null;

@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using HappyShoot.Domain.Entities;
+using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Pool;
 using HappyShoot.Domain.Spatial;
 
 namespace HappyShoot.Domain.Projectiles
 {
     /// <summary>
-    /// Pure C# Projectile entity with piercing, collision detection, and zero-allocation pooling.
+    /// Pure C# Projectile entity with piercing, collision detection, mini AoE explosions on hit, and zero-allocation pooling.
+    /// Strictly modular and under 500 lines.
     /// </summary>
     public class ProjectileEntity : ISpatialEntity, IPoolable
     {
@@ -22,7 +24,13 @@ namespace HappyShoot.Domain.Projectiles
         public int RemainingPierce { get; private set; }
         public float RemainingLifetime { get; private set; }
 
+        public float ExplosionRadius { get; private set; }
+        public float ExplosionDamage { get; private set; }
+        public bool HasExplosionOnHit => ExplosionRadius > 0f && ExplosionDamage > 0f;
+
         private readonly HashSet<int> _hitMonsterIds = new HashSet<int>(8);
+        private readonly List<MonsterEntity> _splashBuffer = new List<MonsterEntity>(16);
+        private EventBus _eventBus;
 
         public ProjectileEntity()
         {
@@ -36,16 +44,21 @@ namespace HappyShoot.Domain.Projectiles
             float speed,
             float damage,
             int pierceCount,
-            float lifetime)
+            float lifetime,
+            float explosionRadius = 0f,
+            float explosionDamage = 0f,
+            EventBus eventBus = null)
         {
             Id = id;
             Position = startPosition;
             Direction = direction.Normalized;
             Speed = speed;
             Damage = damage;
-            // pierceCount represents pierce count: total hits = pierceCount + 1 (e.g. 3 pierces = 4 hits)
             RemainingPierce = Math.Max(1, pierceCount + 1);
             RemainingLifetime = Math.Max(0.1f, lifetime);
+            ExplosionRadius = explosionRadius;
+            ExplosionDamage = explosionDamage;
+            _eventBus = eventBus;
             _hitMonsterIds.Clear();
             IsActive = true;
         }
@@ -87,7 +100,25 @@ namespace HappyShoot.Domain.Projectiles
                     var monster = queryBuffer[i];
                     if (monster.IsActive && !monster.IsDead && _hitMonsterIds.Add(monster.Id))
                     {
+                        // 1. Direct Pierce Damage
                         monster.TakeDamage(Damage);
+
+                        // 2. Storm Bow Mini AoE Explosion at hit point!
+                        if (HasExplosionOnHit)
+                        {
+                            _splashBuffer.Clear();
+                            int splashCount = monsterGrid.QueryRadiusNonAlloc(Position, ExplosionRadius, _splashBuffer);
+                            for (int s = 0; s < splashCount; s++)
+                            {
+                                var splashTarget = _splashBuffer[s];
+                                if (splashTarget != null && splashTarget.IsActive && !splashTarget.IsDead && splashTarget.Id != monster.Id)
+                                {
+                                    splashTarget.TakeDamage(ExplosionDamage);
+                                }
+                            }
+
+                            _eventBus?.Publish(new StormArrowHitExplosionEvent(Position, ExplosionRadius));
+                        }
 
                         // Infinite pierce if RemainingPierce >= 900
                         if (RemainingPierce < 900)

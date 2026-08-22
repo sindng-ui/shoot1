@@ -2,11 +2,14 @@ namespace HappyShoot.Domain.Entities
 {
     public enum MonsterType
     {
-        Slime = 0,     // Standard melee (balanced HP, balanced speed)
-        Bat = 1,       // Swarm flyer (low HP, very fast speed)
-        Skeleton = 2,  // Ranged shooter (medium HP, keeps distance, shoots bones)
-        Golem = 3,     // Heavy tank (very high HP, slow speed, high contact damage)
-        Boss = 4       // Epic Boss (massive HP, rush patterns, barrage)
+        Slime = 0,       // Standard melee (balanced HP, balanced speed)
+        Bat = 1,         // Swarm flyer (low HP, very fast speed)
+        Skeleton = 2,    // Ranged shooter (medium HP, keeps distance, shoots bones)
+        Golem = 3,       // Heavy tank (very high HP, slow speed, high contact damage)
+        Boss = 4,        // Epic Boss (massive HP, rush patterns, barrage)
+        FireImp = 5,     // Phase 2 wave 1: fast flame imp (medium HP, fast, aggressive)
+        ToxicSpider = 6, // Phase 2 wave 2: toxic spider (high HP, pack tactics)
+        DarkKnight = 7   // Phase 2 wave 3: armored dark knight (very high HP, slow, lethal)
     }
 
     /// <summary>
@@ -64,9 +67,59 @@ namespace HappyShoot.Domain.Entities
         public static MonsterDefinition Golem => new MonsterDefinition(
             MonsterType.Golem, "Golem", baseMaxHealth: 160f, baseMoveSpeed: 1.2f, baseDamage: 22f, radius: 0.7f, expValue: 4, goldValue: 5);
 
+        // Phase 2 Wave 1: Fast flame imp - medium HP, very fast, aggressive
+        public static MonsterDefinition FireImp => new MonsterDefinition(
+            MonsterType.FireImp, "Fire Imp", baseMaxHealth: 150f, baseMoveSpeed: 3.8f, baseDamage: 18f, radius: 0.38f, expValue: 5, goldValue: 6);
+
+        // Phase 2 Wave 2: Toxic spider - high HP, slower, comes in packs
+        public static MonsterDefinition ToxicSpider => new MonsterDefinition(
+            MonsterType.ToxicSpider, "Toxic Spider", baseMaxHealth: 280f, baseMoveSpeed: 2.2f, baseDamage: 20f, radius: 0.52f, expValue: 8, goldValue: 9);
+
+        // Phase 2 Wave 3: Dark Knight - very high HP, slow and lethal
+        public static MonsterDefinition DarkKnight => new MonsterDefinition(
+            MonsterType.DarkKnight, "Dark Knight", baseMaxHealth: 600f, baseMoveSpeed: 1.5f, baseDamage: 35f, radius: 0.75f, expValue: 14, goldValue: 18);
+
         public static MonsterDefinition CreateBoss(string name, float hp, float speed, float damage, int exp, int gold)
         {
             return new MonsterDefinition(MonsterType.Boss, name, hp, speed, damage, radius: 1.0f, exp, gold, isRanged: false, preferredDistance: 0f, attackInterval: 1.2f);
+        }
+
+        public static MonsterDefinition FromConfig(MonsterType type, MonsterTuningConfigData cfg)
+        {
+            if (cfg == null)
+            {
+                switch (type)
+                {
+                    case MonsterType.Bat: return Bat;
+                    case MonsterType.Skeleton: return Skeleton;
+                    case MonsterType.Golem: return Golem;
+                    case MonsterType.FireImp: return FireImp;
+                    case MonsterType.ToxicSpider: return ToxicSpider;
+                    case MonsterType.DarkKnight: return DarkKnight;
+                    default: return Slime;
+                }
+            }
+
+            switch (type)
+            {
+                case MonsterType.Bat:
+                    return new MonsterDefinition(MonsterType.Bat, "Bat", cfg.Bat.MaxHealth, cfg.Bat.MoveSpeed, cfg.Bat.ContactDamage, 0.3f, cfg.Bat.ExpValue, cfg.Bat.GoldValue);
+                case MonsterType.Skeleton:
+                    return new MonsterDefinition(MonsterType.Skeleton, "Skeleton", cfg.Skeleton.MaxHealth, cfg.Skeleton.MoveSpeed, cfg.Skeleton.ContactDamage, 0.45f, cfg.Skeleton.ExpValue, cfg.Skeleton.GoldValue, isRanged: true, preferredDistance: 4.5f, attackInterval: 2.0f);
+                case MonsterType.Golem:
+                    return new MonsterDefinition(MonsterType.Golem, "Golem", cfg.Golem.MaxHealth, cfg.Golem.MoveSpeed, cfg.Golem.ContactDamage, 0.7f, cfg.Golem.ExpValue, cfg.Golem.GoldValue);
+                case MonsterType.FireImp:
+                    return new MonsterDefinition(MonsterType.FireImp, "Fire Imp", cfg.FireImp.MaxHealth, cfg.FireImp.MoveSpeed, cfg.FireImp.ContactDamage, 0.38f, cfg.FireImp.ExpValue, cfg.FireImp.GoldValue);
+                case MonsterType.ToxicSpider:
+                    return new MonsterDefinition(MonsterType.ToxicSpider, "Toxic Spider", cfg.ToxicSpider.MaxHealth, cfg.ToxicSpider.MoveSpeed, cfg.ToxicSpider.ContactDamage, 0.52f, cfg.ToxicSpider.ExpValue, cfg.ToxicSpider.GoldValue);
+                case MonsterType.DarkKnight:
+                    return new MonsterDefinition(MonsterType.DarkKnight, "Dark Knight", cfg.DarkKnight.MaxHealth, cfg.DarkKnight.MoveSpeed, cfg.DarkKnight.ContactDamage, 0.75f, cfg.DarkKnight.ExpValue, cfg.DarkKnight.GoldValue);
+                case MonsterType.Boss:
+                    return CreateBoss("Goblin King", cfg.Boss.MaxHealth, cfg.Boss.MoveSpeed, cfg.Boss.ContactDamage, cfg.Boss.ExpValue, cfg.Boss.GoldValue);
+                case MonsterType.Slime:
+                default:
+                    return new MonsterDefinition(MonsterType.Slime, "Slime", cfg.Slime.MaxHealth, cfg.Slime.MoveSpeed, cfg.Slime.ContactDamage, 0.4f, cfg.Slime.ExpValue, cfg.Slime.GoldValue);
+            }
         }
     }
 }

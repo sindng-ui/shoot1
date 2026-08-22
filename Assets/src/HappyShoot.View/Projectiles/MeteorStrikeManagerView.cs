@@ -1,19 +1,31 @@
 using System.Collections.Generic;
 using UnityEngine;
 using HappyShoot.Domain.Events;
-using HappyShoot.Domain.Spatial;
 using HappyShoot.View.Cameras;
 using HappyShoot.View.Utils;
 
 namespace HappyShoot.View.Projectiles
 {
     /// <summary>
-    /// Manages the massive visual presentation for Meteor Strike (Evolved Fireball):
-    /// High-speed sky drop, colossal fiery ground explosion, shockwaves, debris, scorch marks, and camera shake.
+    /// Presentation manager for Meteor Strike (Evolved Fireball):
+    /// Crisp circular AOE target indicator with countdown ring, high-speed falling flaming meteor,
+    /// compact & punchy explosion matched 1:1 to damage radius, and comfortable camera shake.
     /// Strictly modular and under 500 lines.
     /// </summary>
     public class MeteorStrikeManagerView : MonoBehaviour
     {
+        private struct ActiveIndicator
+        {
+            public GameObject Root;
+            public SpriteRenderer DecalRenderer;
+            public SpriteRenderer PulseRenderer;
+            public Vector2 Position;
+            public float Radius;
+            public float Elapsed;
+            public float Duration;
+            public bool IsActive;
+        }
+
         private struct ActiveMeteor
         {
             public GameObject Root;
@@ -49,11 +61,13 @@ namespace HappyShoot.View.Projectiles
             public bool IsActive;
         }
 
-        private readonly List<ActiveMeteor> _meteorPool = new List<ActiveMeteor>(8);
-        private readonly List<ActiveBlast> _blastPool = new List<ActiveBlast>(8);
-        private readonly List<MeteorDebris> _debrisPool = new List<MeteorDebris>(32);
+        private readonly List<ActiveIndicator> _indicatorPool = new List<ActiveIndicator>(6);
+        private readonly List<ActiveMeteor> _meteorPool = new List<ActiveMeteor>(6);
+        private readonly List<ActiveBlast> _blastPool = new List<ActiveBlast>(6);
+        private readonly List<MeteorDebris> _debrisPool = new List<MeteorDebris>(24);
 
         private EventBus _eventBus;
+        private Sprite _indicatorSprite;
         private Sprite _meteorSprite;
         private Sprite _flameSprite;
         private Sprite _ringSprite;
@@ -61,6 +75,7 @@ namespace HappyShoot.View.Projectiles
         public void Initialize(EventBus eventBus)
         {
             _eventBus = eventBus;
+            _indicatorSprite = WizardSpriteHelper.GetOrCreateTargetIndicatorSprite(128);
             _meteorSprite = WizardSpriteHelper.GetOrCreateMeteorSprite(48);
             _flameSprite = WizardSpriteHelper.GetOrCreateFireballSprite(32);
             _ringSprite = SkillSpriteHelper.GetOrCreateGroundStompSprite();
@@ -71,7 +86,29 @@ namespace HappyShoot.View.Projectiles
 
         private void PrewarmPools()
         {
-            // 1. Meteor Drop Pool
+            // 1. Target Indicator Decal Pool
+            for (int i = 0; i < 6; i++)
+            {
+                var go = new GameObject($"MeteorIndicator_{i}");
+                go.transform.SetParent(transform, false);
+
+                var decal = new GameObject("Decal");
+                decal.transform.SetParent(go.transform, false);
+                var decalSr = decal.AddComponent<SpriteRenderer>();
+                decalSr.sprite = _indicatorSprite;
+                decalSr.sortingOrder = 5; // On ground
+
+                var pulse = new GameObject("PulseRing");
+                pulse.transform.SetParent(go.transform, false);
+                var pulseSr = pulse.AddComponent<SpriteRenderer>();
+                pulseSr.sprite = _indicatorSprite;
+                pulseSr.sortingOrder = 6;
+
+                go.SetActive(false);
+                _indicatorPool.Add(new ActiveIndicator { Root = go, DecalRenderer = decalSr, PulseRenderer = pulseSr, IsActive = false });
+            }
+
+            // 2. Meteor Drop Pool
             for (int i = 0; i < 6; i++)
             {
                 var go = new GameObject($"MeteorDrop_{i}");
@@ -84,7 +121,7 @@ namespace HappyShoot.View.Projectiles
                 _meteorPool.Add(new ActiveMeteor { Root = go, Renderer = sr, IsActive = false });
             }
 
-            // 2. Blast Pool
+            // 3. Blast Pool
             for (int i = 0; i < 6; i++)
             {
                 var go = new GameObject($"MeteorBlast_{i}");
@@ -106,7 +143,7 @@ namespace HappyShoot.View.Projectiles
                 _blastPool.Add(new ActiveBlast { Root = go, CoreRenderer = coreSr, RingRenderer = ringSr, IsActive = false });
             }
 
-            // 3. Debris Pool
+            // 4. Debris Pool
             for (int i = 0; i < 24; i++)
             {
                 var go = new GameObject($"MeteorDebris_{i}");
@@ -123,9 +160,38 @@ namespace HappyShoot.View.Projectiles
         private void OnMeteorStrikeExecuted(MeteorStrikeExecutedEvent e)
         {
             Vector2 target = new Vector2((float)e.TargetPosition.X, (float)e.TargetPosition.Y);
-            Vector2 skyOrigin = target + new Vector2(-4.0f, 10.0f);
+            Vector2 skyOrigin = target + new Vector2(-3.5f, 9.0f);
+            float radius = e.Radius > 0f ? e.Radius : 3.0f;
+            float dropDuration = 0.38f;
 
-            // Spawn dropping meteor
+            // 1. Spawn Ground Target Indicator (Decal + Convergence Pulse)
+            for (int i = 0; i < _indicatorPool.Count; i++)
+            {
+                var ind = _indicatorPool[i];
+                if (!ind.IsActive)
+                {
+                    ind.IsActive = true;
+                    ind.Position = target;
+                    ind.Radius = radius;
+                    ind.Elapsed = 0f;
+                    ind.Duration = dropDuration;
+
+                    ind.Root.transform.position = target;
+                    // Decal fixed at exact diameter (radius * 2.0f)
+                    ind.DecalRenderer.transform.localScale = Vector3.one * (radius * 2.0f);
+                    ind.DecalRenderer.color = new Color(1.0f, 0.55f, 0.1f, 0.85f);
+
+                    // Pulse ring starts at double size and converges into center
+                    ind.PulseRenderer.transform.localScale = Vector3.one * (radius * 2.5f);
+                    ind.PulseRenderer.color = new Color(1.0f, 0.85f, 0.3f, 0.95f);
+
+                    ind.Root.SetActive(true);
+                    _indicatorPool[i] = ind;
+                    break;
+                }
+            }
+
+            // 2. Spawn Dropping Meteor (Compact & Fast)
             for (int i = 0; i < _meteorPool.Count; i++)
             {
                 var m = _meteorPool[i];
@@ -135,10 +201,10 @@ namespace HappyShoot.View.Projectiles
                     m.StartPos = skyOrigin;
                     m.TargetPos = target;
                     m.Elapsed = 0f;
-                    m.Duration = 0.38f;
-                    m.Radius = Mathf.Max(3.5f, e.Radius);
+                    m.Duration = dropDuration;
+                    m.Radius = radius;
                     m.Root.transform.position = skyOrigin;
-                    m.Root.transform.localScale = Vector3.one * 1.8f;
+                    m.Root.transform.localScale = Vector3.one * 1.15f; // Sleek and compact
                     m.Root.SetActive(true);
                     _meteorPool[i] = m;
                     break;
@@ -148,10 +214,10 @@ namespace HappyShoot.View.Projectiles
 
         private void TriggerGroundExplosion(Vector2 center, float radius)
         {
-            // Camera Shake
-            CameraFollowView.Instance?.TriggerShake(0.35f, 0.45f);
+            // 1. Micro Camera Shake (Comfortable & Crisp, filtered by fireball shake setting)
+            CameraFollowView.Instance?.TriggerShake("fireball", duration: 0.14f, intensity: 0.16f);
 
-            // Spawn Blast
+            // 2. Spawn Blast matching exact damage radius
             for (int i = 0; i < _blastPool.Count; i++)
             {
                 var b = _blastPool[i];
@@ -160,8 +226,8 @@ namespace HappyShoot.View.Projectiles
                     b.IsActive = true;
                     b.Center = center;
                     b.Elapsed = 0f;
-                    b.Duration = 0.65f;
-                    b.TargetScale = radius * 2.2f;
+                    b.Duration = 0.40f;
+                    b.TargetScale = radius * 2.0f; // Exactly 1:1 match with damage hitbox
                     b.Root.transform.position = center;
                     b.Root.SetActive(true);
                     _blastPool[i] = b;
@@ -169,9 +235,9 @@ namespace HappyShoot.View.Projectiles
                 }
             }
 
-            // Spawn 10 fiery debris particles
+            // 3. Spawn 8 fiery debris particles
             int spawnedDebris = 0;
-            for (int i = 0; i < _debrisPool.Count && spawnedDebris < 10; i++)
+            for (int i = 0; i < _debrisPool.Count && spawnedDebris < 8; i++)
             {
                 var d = _debrisPool[i];
                 if (!d.IsActive)
@@ -179,12 +245,12 @@ namespace HappyShoot.View.Projectiles
                     d.IsActive = true;
                     d.Position = center;
                     float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-                    float speed = Random.Range(6.0f, 14.0f);
+                    float speed = Random.Range(5.0f, 10.0f);
                     d.Velocity = new Vector2(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed);
                     d.Elapsed = 0f;
-                    d.Lifetime = Random.Range(0.4f, 0.7f);
+                    d.Lifetime = Random.Range(0.25f, 0.45f);
                     d.Root.transform.position = center;
-                    d.Root.transform.localScale = Vector3.one * Random.Range(0.4f, 0.8f);
+                    d.Root.transform.localScale = Vector3.one * Random.Range(0.35f, 0.65f);
                     d.Renderer.color = new Color(1.0f, 0.7f, 0.2f, 1.0f);
                     d.Root.SetActive(true);
                     _debrisPool[i] = d;
@@ -197,7 +263,34 @@ namespace HappyShoot.View.Projectiles
         {
             float dt = Time.deltaTime;
 
-            // 1. Update Dropping Meteors
+            // 1. Update Target Indicators (Countdown convergence)
+            for (int i = 0; i < _indicatorPool.Count; i++)
+            {
+                var ind = _indicatorPool[i];
+                if (ind.IsActive)
+                {
+                    ind.Elapsed += dt;
+                    float progress = Mathf.Clamp01(ind.Elapsed / ind.Duration);
+
+                    // Pulse ring shrinks from outer to exact boundary
+                    float currentPulseScale = Mathf.Lerp(ind.Radius * 2.4f, ind.Radius * 2.0f, progress);
+                    ind.PulseRenderer.transform.localScale = Vector3.one * currentPulseScale;
+
+                    // Fade in / pulse alpha
+                    float alpha = Mathf.Lerp(0.6f, 1.0f, progress);
+                    ind.DecalRenderer.color = new Color(1.0f, 0.55f, 0.1f, alpha * 0.9f);
+                    ind.PulseRenderer.color = new Color(1.0f, 0.85f, 0.3f, alpha);
+
+                    if (progress >= 1.0f)
+                    {
+                        ind.IsActive = false;
+                        ind.Root.SetActive(false);
+                    }
+                    _indicatorPool[i] = ind;
+                }
+            }
+
+            // 2. Update Dropping Meteors
             for (int i = 0; i < _meteorPool.Count; i++)
             {
                 var m = _meteorPool[i];
@@ -225,7 +318,7 @@ namespace HappyShoot.View.Projectiles
                 }
             }
 
-            // 2. Update Blasts
+            // 3. Update Blasts
             for (int i = 0; i < _blastPool.Count; i++)
             {
                 var b = _blastPool[i];
@@ -235,12 +328,12 @@ namespace HappyShoot.View.Projectiles
                     float progress = Mathf.Clamp01(b.Elapsed / b.Duration);
 
                     // Core expand & fade
-                    float scale = Mathf.Lerp(0.5f, b.TargetScale, Mathf.Sqrt(progress));
+                    float scale = Mathf.Lerp(0.4f, b.TargetScale, Mathf.Sqrt(progress));
                     b.Root.transform.localScale = Vector3.one * scale;
 
                     float alpha = 1.0f - progress;
-                    b.CoreRenderer.color = new Color(1.0f, 0.85f * (1f - progress), 0.2f, alpha * 0.9f);
-                    b.RingRenderer.color = new Color(1.0f, 0.4f, 0.1f, alpha * 0.8f);
+                    b.CoreRenderer.color = new Color(1.0f, 0.8f * (1f - progress), 0.15f, alpha * 0.95f);
+                    b.RingRenderer.color = new Color(1.0f, 0.45f, 0.1f, alpha * 0.85f);
 
                     if (progress >= 1.0f)
                     {
@@ -251,22 +344,23 @@ namespace HappyShoot.View.Projectiles
                 }
             }
 
-            // 3. Update Debris
+            // 4. Update Debris Particles
             for (int i = 0; i < _debrisPool.Count; i++)
             {
                 var d = _debrisPool[i];
                 if (d.IsActive)
                 {
                     d.Elapsed += dt;
+                    float progress = Mathf.Clamp01(d.Elapsed / d.Lifetime);
+
                     d.Position += d.Velocity * dt;
-                    d.Velocity *= Mathf.Pow(0.1f, dt); // Air drag deceleration
+                    d.Velocity = Vector2.Lerp(d.Velocity, Vector2.zero, dt * 5.0f);
                     d.Root.transform.position = d.Position;
 
-                    float t = d.Elapsed / d.Lifetime;
-                    float alpha = 1.0f - t;
-                    d.Renderer.color = new Color(1.0f, 0.6f * (1f - t), 0.1f, alpha);
+                    float alpha = 1.0f - progress;
+                    d.Renderer.color = new Color(1.0f, 0.65f, 0.15f, alpha);
 
-                    if (t >= 1.0f)
+                    if (progress >= 1.0f)
                     {
                         d.IsActive = false;
                         d.Root.SetActive(false);
@@ -274,11 +368,6 @@ namespace HappyShoot.View.Projectiles
                     _debrisPool[i] = d;
                 }
             }
-        }
-
-        private void OnDestroy()
-        {
-            _eventBus?.Unsubscribe<MeteorStrikeExecutedEvent>(OnMeteorStrikeExecuted);
         }
     }
 }

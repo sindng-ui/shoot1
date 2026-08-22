@@ -77,6 +77,7 @@ namespace HappyShoot.View.UI
             {
                 _panelRoot.SetActive(true);
             }
+            Utils.HitStopManager.Instance?.CancelHitStop();
             Time.timeScale = 0f;
         }
 

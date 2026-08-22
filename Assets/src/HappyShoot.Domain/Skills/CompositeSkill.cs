@@ -57,6 +57,15 @@ namespace HappyShoot.Domain.Skills
 
         public void Update(float deltaTime, SkillContext context)
         {
+            if (context != null) context.SkillId = Id;
+
+            // 1. Update continuous / tick-based effects (e.g. Arrow Rain ongoing barrage)
+            if (Effect is ITickableEffect tickable)
+            {
+                tickable.Update(deltaTime, context);
+            }
+
+            // 2. Trigger new skill activations when cooldown/trigger is ready
             if (Trigger.CanTrigger(deltaTime))
             {
                 if (Targeter.TryFindTargets(context, Range, _cachedTargetPositions))

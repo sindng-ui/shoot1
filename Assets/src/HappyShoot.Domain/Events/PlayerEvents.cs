@@ -91,12 +91,98 @@ namespace HappyShoot.Domain.Events
         public readonly Vector2D CenterPosition;
         public readonly float Radius;
         public readonly float Duration;
+        public readonly int ArrowCount;
+        public readonly float DamagePerArrow;
 
-        public ArrowRainExecutedEvent(Vector2D centerPosition, float radius, float duration = 1.0f)
+        public ArrowRainExecutedEvent(Vector2D centerPosition, float radius, float duration = 1.5f, int arrowCount = 32, float damagePerArrow = 25f)
         {
             CenterPosition = centerPosition;
             Radius = radius;
             Duration = duration;
+            ArrowCount = arrowCount;
+            DamagePerArrow = damagePerArrow;
+        }
+    }
+
+    public readonly struct BloodEaterExecutedEvent : IDomainEvent
+    {
+        public readonly int CasterId;
+        public readonly Vector2D CenterPosition;
+        public readonly float Radius;
+        public readonly float Damage;
+        public readonly float HealedAmount;
+
+        public BloodEaterExecutedEvent(int casterId, Vector2D centerPosition, float radius, float damage, float healedAmount)
+        {
+            CasterId = casterId;
+            CenterPosition = centerPosition;
+            Radius = radius;
+            Damage = damage;
+            HealedAmount = healedAmount;
+        }
+    }
+
+    public readonly struct StormArrowHitExplosionEvent : IDomainEvent
+    {
+        public readonly Vector2D Position;
+        public readonly float Radius;
+
+        public StormArrowHitExplosionEvent(Vector2D position, float radius)
+        {
+            Position = position;
+            Radius = radius;
+        }
+    }
+
+    public readonly struct StormBowExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D Origin;
+        public readonly Vector2D TargetDirection;
+        public readonly float ArrowDamage;
+        public readonly float Speed;
+        public readonly int ArrowCount;
+        public readonly float SpreadAngleDeg;
+        public readonly float ExplosionRadius;
+        public readonly float ExplosionDamage;
+
+        public StormBowExecutedEvent(
+            Vector2D origin,
+            Vector2D targetDirection,
+            float arrowDamage,
+            float speed = 20f,
+            int arrowCount = 5,
+            float spreadAngleDeg = 36f,
+            float explosionRadius = 1.6f,
+            float explosionDamage = 45f)
+        {
+            Origin = origin;
+            TargetDirection = targetDirection;
+            ArrowDamage = arrowDamage;
+            Speed = speed;
+            ArrowCount = arrowCount;
+            SpreadAngleDeg = spreadAngleDeg;
+            ExplosionRadius = explosionRadius;
+            ExplosionDamage = explosionDamage;
+        }
+    }
+
+    public readonly struct WindGlaiveExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D Origin;
+        public readonly Vector2D TargetDirection;
+        public readonly float Damage;
+        public readonly float MaxDistance;
+        public readonly float Speed;
+        public readonly int GlaiveCount;
+
+        public WindGlaiveExecutedEvent(Vector2D origin, Vector2D targetDirection, float damage, float maxDistance, float speed, int glaiveCount)
+        {
+            Origin = origin;
+            TargetDirection = targetDirection;
+            Damage = damage;
+            MaxDistance = maxDistance;
+            Speed = speed;
+            GlaiveCount = glaiveCount;
         }
     }
 }

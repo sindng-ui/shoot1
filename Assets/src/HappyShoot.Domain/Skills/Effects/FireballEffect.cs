@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Events;
@@ -6,26 +7,31 @@ using HappyShoot.Domain.Spatial;
 namespace HappyShoot.Domain.Skills.Effects
 {
     /// <summary>
-    /// Wizard exclusive primary skill: Fires an explosive fireball that blasts enemies in a circular area.
-    /// Base: 35 damage, 1.6m blast radius, 14m/s flight speed.
-    /// Leveling: +10 damage, +0.2m blast radius per level.
+    /// Wizard exclusive primary skill: Fires explosive fireballs that blast enemies and apply burning DoT.
+    /// Hits exact targeted / mouse location within range.
+    /// Leveling grants extra fireballs (Lv.1: 1 -> Lv.3: 2 -> Lv.5: 3) and dramatically expands blast radius (1.6m -> 3.2m).
+    /// Strictly modular and under 500 lines.
     /// </summary>
     public class FireballEffect : ISkillEffect, ILevelableEffect
     {
         public float BaseDamage { get; set; }
         public float Radius { get; set; }
         public float Speed { get; set; }
+        public int FireballCount { get; set; }
 
         private readonly float _initialDamage;
         private readonly float _initialRadius;
         private readonly float _initialSpeed;
-        private readonly List<ISpatialEntity> _hitBuffer = new List<ISpatialEntity>(32);
+        private readonly List<ISpatialEntity> _hitBuffer = new List<ISpatialEntity>(64);
+        private readonly List<ISpatialEntity> _targetQueryBuffer = new List<ISpatialEntity>(16);
 
-        public FireballEffect(float baseDamage = 35f, float radius = 1.6f, float speed = 14f)
+        public FireballEffect(float baseDamage = 35f, float radius = 1.6f, float speed = 14f, int fireballCount = 1)
         {
             BaseDamage = baseDamage;
             Radius = radius;
             Speed = speed;
+            FireballCount = fireballCount;
+
             _initialDamage = baseDamage;
             _initialRadius = radius;
             _initialSpeed = speed;
@@ -33,9 +39,11 @@ namespace HappyShoot.Domain.Skills.Effects
 
         public void OnLevelUp(int newLevel)
         {
-            BaseDamage = _initialDamage + 10f * (newLevel - 1);
-            Radius = _initialRadius + 0.2f * (newLevel - 1);
-            Speed = _initialSpeed + 1.0f * (newLevel - 1);
+            // Lv.1: 1 ball, 1.6m -> Lv.3: 2 balls, 2.4m -> Lv.5: 3 balls, 3.2m
+            FireballCount = 1 + (newLevel >= 5 ? 2 : (newLevel >= 3 ? 1 : 0));
+            Radius = _initialRadius + 0.40f * (newLevel - 1); // 1.6m -> 3.2m giant fireball
+            BaseDamage = _initialDamage + 8f * (newLevel - 1); // 35 -> 67 dmg
+            Speed = _initialSpeed + 1.2f * (newLevel - 1);
         }
 
         public void ApplyEffect(SkillContext context, IList<Vector2D> targetPositions)
@@ -46,23 +54,51 @@ namespace HappyShoot.Domain.Skills.Effects
             float effectiveDamage = BaseDamage * (context.BaseDamage / 10f);
             float effectiveRadius = Radius * context.AreaMultiplier;
 
-            for (int t = 0; t < targetPositions.Count; t++)
+            int extraProj = context.CasterEntity != null ? context.CasterEntity.Stats.ExtraProjectiles : 0;
+            int totalFireballs = Math.Max(1, FireballCount + extraProj);
+
+            Vector2D primaryTarget = targetPositions[0];
+            Vector2D primaryOffset = primaryTarget - context.CasterPosition;
+            float primaryDist = (float)primaryOffset.Magnitude;
+            Vector2D primaryDir = primaryDist > 1e-4f ? primaryOffset.Normalized : Vector2D.Right;
+
+            // Find secondary targets for multi-fireball spread
+            float searchRadius = Math.Max(primaryDist + 2.0f, 8.0f);
+            int foundEnemies = context.TargetGrid.QueryRadiusNonAlloc(context.CasterPosition, searchRadius, _targetQueryBuffer);
+            List<Vector2D> targetsToBlast = new List<Vector2D>(totalFireballs);
+            targetsToBlast.Add(primaryTarget);
+
+            for (int i = 0; i < foundEnemies && targetsToBlast.Count < totalFireballs; i++)
             {
-                Vector2D targetPos = targetPositions[t];
-                Vector2D direction = (targetPos - context.CasterPosition).Normalized;
-                if (direction.SqrMagnitude < 1e-4f) direction = Vector2D.Right;
+                if (_targetQueryBuffer[i] is MonsterEntity m && m.IsActive && !m.IsDead)
+                {
+                    if ((m.Position - primaryTarget).SqrMagnitude > 1.0f)
+                    {
+                        targetsToBlast.Add(m.Position);
+                    }
+                }
+            }
 
-                // Launch visual fireball projectile if projectile manager is available
-                context.ProjectileManager?.LaunchProjectile(
-                    origin: context.CasterPosition,
-                    direction: direction,
-                    speed: Speed * context.SpeedMultiplier,
-                    damage: effectiveDamage,
-                    pierceCount: 1,
-                    lifetime: 1.5f
-                );
+            // Fallback fan spread targets relative to primary distance
+            float fanDist = Math.Max(1.2f, primaryDist);
+            while (targetsToBlast.Count < totalFireballs)
+            {
+                int idx = targetsToBlast.Count;
+                float angleOffset = (-18f + (36f / totalFireballs) * idx) * (float)Math.PI / 180f;
+                float baseAngle = (float)Math.Atan2(primaryDir.Y, primaryDir.X) + angleOffset;
+                Vector2D fanTarget = context.CasterPosition + new Vector2D((float)Math.Cos(baseAngle), (float)Math.Sin(baseAngle)) * fanDist;
+                targetsToBlast.Add(fanTarget);
+            }
 
-                // Area explosion at target position
+            // Execute explosions
+            for (int b = 0; b < targetsToBlast.Count; b++)
+            {
+                Vector2D targetPos = targetsToBlast[b];
+
+                // Publish Domain Event for Wizard Fireball visual effect
+                context.EventBus?.Publish(new FireballExplodedEvent(targetPos, effectiveRadius, effectiveDamage));
+                context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.MagicExplosion, volume: 0.85f));
+
                 int hitCount = context.TargetGrid.QueryRadiusNonAlloc(targetPos, effectiveRadius, _hitBuffer);
                 for (int i = 0; i < hitCount; i++)
                 {
@@ -72,10 +108,6 @@ namespace HappyShoot.Domain.Skills.Effects
                         monster.TakeDamage(effectiveDamage);
                     }
                 }
-
-                // Publish Domain Events
-                context.EventBus?.Publish(new FireballExplodedEvent(targetPos, effectiveRadius, effectiveDamage));
-                context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.MagicExplosion, volume: 0.9f));
             }
         }
     }
