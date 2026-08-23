@@ -54,6 +54,12 @@ namespace HappyShoot.Domain.Tests.Leveling
                 var s = p.Stats;
                 p.Stats = new CharacterStats(100f + 30f * lv, 1.5f * lv, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             });
+
+            _rewardManager.RegisterPassive("passive_crit", "Hawk's Eye", "+8% Crit & +5% Crit Dmg", 5, (p, lv) =>
+            {
+                var s = p.Stats;
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, 0.10f + 0.08f * lv, 1.50f + 0.05f * lv, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+            });
         }
 
         [Test]
@@ -61,7 +67,7 @@ namespace HappyShoot.Domain.Tests.Leveling
         {
             Assert.That(_player.GetPassiveLevel("passive_fang"), Is.EqualTo(0));
 
-            var rewards = _rewardManager.RollRewards(_player, count: 6);
+            var rewards = _rewardManager.RollRewards(_player, count: 7);
             var fangOption = rewards.Find(r => r.Id == "passive_fang");
             Assert.That(fangOption, Is.Not.Null);
 
@@ -89,6 +95,24 @@ namespace HappyShoot.Domain.Tests.Leveling
             var nextRewards = _rewardManager.RollRewards(_player, count: 10);
             var found = nextRewards.Find(r => r.Id == "passive_feather");
             Assert.That(found, Is.Null);
+        }
+
+        [Test]
+        public void ApplyPassiveCrit_IncreasesCritChanceAndMultiplierCorrectly()
+        {
+            Assert.That(_player.GetPassiveLevel("passive_crit"), Is.EqualTo(0));
+            Assert.That(_player.Stats.CritChance, Is.EqualTo(0.10f).Within(0.001f));
+            Assert.That(_player.Stats.CritDamageMultiplier, Is.EqualTo(1.50f).Within(0.001f));
+
+            var rewards = _rewardManager.RollRewards(_player, count: 10);
+            var critOption = rewards.Find(r => r.Id == "passive_crit");
+            Assert.That(critOption, Is.Not.Null);
+
+            _rewardManager.ApplyReward(_player, critOption);
+
+            Assert.That(_player.GetPassiveLevel("passive_crit"), Is.EqualTo(1));
+            Assert.That(_player.Stats.CritChance, Is.EqualTo(0.18f).Within(0.001f)); // 0.10 + 0.08
+            Assert.That(_player.Stats.CritDamageMultiplier, Is.EqualTo(1.55f).Within(0.001f)); // 1.50 + 0.05
         }
     }
 }

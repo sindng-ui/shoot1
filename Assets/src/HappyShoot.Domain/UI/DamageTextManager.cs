@@ -35,7 +35,7 @@ namespace HappyShoot.Domain.UI
             float offsetY = ((evt.MonsterId % 3)) * 0.15f;
             Vector2D spawnPos = evt.Position + new Vector2D(offsetX, offsetY);
 
-            SpawnText(spawnPos, evt.Damage, isCritical: evt.Damage >= 40f);
+            SpawnText(spawnPos, evt.Damage, isCritical: evt.IsCritical);
         }
 
         public DamageTextEntity SpawnText(Vector2D position, float damage, bool isCritical = false)

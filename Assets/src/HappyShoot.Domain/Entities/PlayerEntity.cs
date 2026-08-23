@@ -106,6 +106,20 @@ namespace HappyShoot.Domain.Entities
             }
         }
 
+        private readonly Random _random = new Random();
+
+        /// <summary>
+        /// Evaluates critical strike chance and returns final calculated damage and critical status flag.
+        /// </summary>
+        public (float damage, bool isCritical) RollDamage(float rawDamage)
+        {
+            if (rawDamage <= 0f) return (0f, false);
+
+            bool isCrit = Stats.CritChance > 0f && (_random.NextDouble() < Stats.CritChance);
+            float finalDmg = isCrit ? rawDamage * Stats.CritDamageMultiplier : rawDamage;
+            return (finalDmg, isCrit);
+        }
+
         /// <summary>
         /// Equips a skill to the player.
         /// </summary>

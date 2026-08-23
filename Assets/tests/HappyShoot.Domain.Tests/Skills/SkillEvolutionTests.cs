@@ -113,5 +113,31 @@ namespace HappyShoot.Domain.Tests.Skills
             _rewardManager.ApplyReward(_player, evoReward);
             Assert.That(_player.Skills.Any(s => s.Id == "blood_eater"), Is.True);
         }
+
+        [Test]
+        public void RollRewards_ExcludesBaseSkill_AfterEvolution()
+        {
+            _rewardManager.RegisterSkill("slash", "Slash", "Base Melee", () => new CompositeSkill("slash", "Slash", new CooldownTrigger(1f), new ClosestEnemyTargeter(), new GreatswordSlashEffect()), new[] { CharacterClassType.Warrior });
+            _rewardManager.RegisterSkill("whirlwind", "Whirlwind", "Spin Attack", () => new CompositeSkill("whirlwind", "Whirlwind", new CooldownTrigger(2f), new ClosestEnemyTargeter(), new WhirlwindEffect()), new[] { CharacterClassType.Warrior });
+
+            var slash = _player.Skills.First(s => s.Id == "slash");
+            while (!slash.IsMaxLevel) slash.LevelUp();
+            _player.AddPassive("passive_fang");
+
+            var rewards = _rewardManager.RollRewards(_player, count: 5);
+            var evoReward = rewards.Find(r => r.Category == RewardCategory.EvolveSkill);
+            Assert.That(evoReward, Is.Not.Null);
+
+            // Execute evolution -> Slash replaced with Blood Eater
+            _rewardManager.ApplyReward(_player, evoReward);
+            Assert.That(_player.Skills.Any(s => s.Id == "slash"), Is.False);
+            Assert.That(_player.Skills.Any(s => s.Id == "blood_eater"), Is.True);
+
+            // Roll rewards again after evolution -> Base skill "slash" must NOT appear in rewards!
+            var postEvoRewards = _rewardManager.RollRewards(_player, count: 10);
+            var slashOption = postEvoRewards.Find(r => r.Id == "slash");
+
+            Assert.That(slashOption, Is.Null, "Base skill 'slash' must NOT be offered after evolving into 'blood_eater'!");
+        }
     }
 }

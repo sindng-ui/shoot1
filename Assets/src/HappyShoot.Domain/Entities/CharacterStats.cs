@@ -26,7 +26,7 @@ namespace HappyShoot.Domain.Entities
             moveSpeed: 5.0f,
             attackPowerMultiplier: 1.0f,
             armor: 0f,
-            critChance: 0.05f,
+            critChance: 0.10f,
             critDamageMultiplier: 1.5f,
             cooldownReduction: 0f,
             areaMultiplier: 1.0f,

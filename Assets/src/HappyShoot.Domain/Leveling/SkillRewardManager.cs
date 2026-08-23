@@ -224,6 +224,12 @@ namespace HappyShoot.Domain.Leveling
                 var existingSkill = player.Skills.FirstOrDefault(s => s.Id == skillId);
                 if (existingSkill == null)
                 {
+                    // Exclude base skills that have already evolved into ultimate weapons
+                    if (_evolutionManager != null && _evolutionManager.IsBaseSkillEvolved(player, skillId))
+                    {
+                        continue;
+                    }
+
                     pool.Add(new SkillRewardOption(
                         id: skillId,
                         title: $"🗡️ {info.title}",

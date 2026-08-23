@@ -71,7 +71,8 @@ namespace HappyShoot.Domain.Skills.Effects
             if (currentMonster != null)
             {
                 currentMonster.ApplyShock(duration: 7.0f, damagePerTick: effectiveDamage * 0.10f);
-                currentMonster.TakeDamage(effectiveDamage);
+                var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
+                currentMonster.TakeDamage(hitDmg, isCrit);
                 _hitMonsterIds.Add(currentMonster.Id);
                 _hitPositions.Add(currentMonster.Position);
                 currentOrigin = currentMonster.Position;
@@ -107,7 +108,8 @@ namespace HappyShoot.Domain.Skills.Effects
                 if (closestNext != null)
                 {
                     closestNext.ApplyShock(duration: 7.0f, damagePerTick: effectiveDamage * 0.10f);
-                    closestNext.TakeDamage(effectiveDamage);
+                    var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
+                    closestNext.TakeDamage(hitDmg, isCrit);
                     _hitMonsterIds.Add(closestNext.Id);
                     _hitPositions.Add(closestNext.Position);
                     currentOrigin = closestNext.Position;

@@ -45,7 +45,9 @@ namespace HappyShoot.Domain.Projectiles
             int pierceCount = 1,
             float lifetime = 3f,
             float explosionRadius = 0f,
-            float explosionDamage = 0f)
+            float explosionDamage = 0f,
+            float critChance = 0f,
+            float critDamageMultiplier = 1.5f)
         {
             var projectile = _pool.Spawn();
             projectile.Initialize(
@@ -58,6 +60,8 @@ namespace HappyShoot.Domain.Projectiles
                 lifetime: lifetime,
                 explosionRadius: explosionRadius,
                 explosionDamage: explosionDamage,
+                critChance: critChance,
+                critDamageMultiplier: critDamageMultiplier,
                 eventBus: _eventBus
             );
 

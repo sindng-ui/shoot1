@@ -50,6 +50,9 @@ namespace HappyShoot.Domain.Skills.Effects
             int extraProj = context.CasterEntity != null ? context.CasterEntity.Stats.ExtraProjectiles : 0;
             int totalArrows = Math.Max(1, BaseArrowCount + extraProj);
 
+            float critChance = context.CasterEntity != null ? context.CasterEntity.Stats.CritChance : 0f;
+            float critDmgMult = context.CasterEntity != null ? context.CasterEntity.Stats.CritDamageMultiplier : 1.5f;
+
             for (int t = 0; t < targetPositions.Count; t++)
             {
                 Vector2D baseDir = (targetPositions[t] - context.CasterPosition).Normalized;
@@ -74,7 +77,9 @@ namespace HappyShoot.Domain.Skills.Effects
                         pierceCount: 999,
                         lifetime: 2.5f,
                         explosionRadius: effectiveRadius,
-                        explosionDamage: effectiveExplosionDmg
+                        explosionDamage: effectiveExplosionDmg,
+                        critChance: critChance,
+                        critDamageMultiplier: critDmgMult
                     );
                 }
             }

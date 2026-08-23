@@ -103,7 +103,8 @@ namespace HappyShoot.Domain.Skills.Effects
                     {
                         if (!_monsterHitTimers.TryGetValue(monster.Id, out float timer) || timer <= 0f)
                         {
-                            monster.TakeDamage(damage);
+                            var (hitDmg, isCrit) = context.RollDamage(damage);
+                            monster.TakeDamage(hitDmg, isCrit);
                             _monsterHitTimers[monster.Id] = HitDebounce;
                             hitAny = true;
                         }

@@ -14,6 +14,7 @@ namespace HappyShoot.Domain.Tests.Entities
 
             Assert.That(warrior.Stats.MaxHealth, Is.EqualTo(125f));
             Assert.That(warrior.Stats.Armor, Is.EqualTo(15f));
+            Assert.That(warrior.Stats.CritChance, Is.EqualTo(0.10f));
             Assert.That(warrior.Skills.Count, Is.EqualTo(1));
             Assert.That(warrior.Skills[0].Id, Is.EqualTo("slash"));
         }
@@ -24,7 +25,7 @@ namespace HappyShoot.Domain.Tests.Entities
             var ranger = PlayerClassFactory.CreatePlayer(2, CharacterClassType.Ranger, Vector2D.Zero);
 
             Assert.That(ranger.Stats.MoveSpeed, Is.EqualTo(6.0f));
-            Assert.That(ranger.Stats.CritChance, Is.EqualTo(0.15f));
+            Assert.That(ranger.Stats.CritChance, Is.EqualTo(0.20f));
             Assert.That(ranger.Skills.Count, Is.EqualTo(1));
             Assert.That(ranger.Skills[0].Id, Is.EqualTo("bow"));
         }
@@ -36,6 +37,7 @@ namespace HappyShoot.Domain.Tests.Entities
 
             Assert.That(wizard.Stats.CooldownReduction, Is.EqualTo(0.15f));
             Assert.That(wizard.Stats.AreaMultiplier, Is.EqualTo(1.2f));
+            Assert.That(wizard.Stats.CritChance, Is.EqualTo(0.10f));
             Assert.That(wizard.Skills.Count, Is.EqualTo(1));
             Assert.That(wizard.Skills[0].Id, Is.EqualTo("fireball"));
         }

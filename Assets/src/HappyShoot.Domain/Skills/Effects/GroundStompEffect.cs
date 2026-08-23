@@ -54,7 +54,8 @@ namespace HappyShoot.Domain.Skills.Effects
             {
                 if (_hitBuffer[j] is MonsterEntity monster && monster.IsActive && !monster.IsDead)
                 {
-                    monster.TakeDamage(effectiveDamage);
+                    var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
+                    monster.TakeDamage(hitDmg, isCrit);
                 }
             }
         }

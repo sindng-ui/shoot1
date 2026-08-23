@@ -21,6 +21,8 @@ namespace HappyShoot.Domain.Projectiles
         public Vector2D Direction { get; private set; }
         public float Speed { get; private set; }
         public float Damage { get; private set; }
+        public float CritChance { get; private set; }
+        public float CritDamageMultiplier { get; private set; }
         public int RemainingPierce { get; private set; }
         public float RemainingLifetime { get; private set; }
 
@@ -30,6 +32,7 @@ namespace HappyShoot.Domain.Projectiles
 
         private readonly HashSet<int> _hitMonsterIds = new HashSet<int>(8);
         private readonly List<MonsterEntity> _splashBuffer = new List<MonsterEntity>(16);
+        private readonly Random _random = new Random();
         private EventBus _eventBus;
 
         public ProjectileEntity()
@@ -47,6 +50,8 @@ namespace HappyShoot.Domain.Projectiles
             float lifetime,
             float explosionRadius = 0f,
             float explosionDamage = 0f,
+            float critChance = 0f,
+            float critDamageMultiplier = 1.5f,
             EventBus eventBus = null)
         {
             Id = id;
@@ -54,6 +59,8 @@ namespace HappyShoot.Domain.Projectiles
             Direction = direction.Normalized;
             Speed = speed;
             Damage = damage;
+            CritChance = critChance;
+            CritDamageMultiplier = critDamageMultiplier;
             RemainingPierce = Math.Max(1, pierceCount + 1);
             RemainingLifetime = Math.Max(0.1f, lifetime);
             ExplosionRadius = explosionRadius;
@@ -100,8 +107,10 @@ namespace HappyShoot.Domain.Projectiles
                     var monster = queryBuffer[i];
                     if (monster.IsActive && !monster.IsDead && _hitMonsterIds.Add(monster.Id))
                     {
-                        // 1. Direct Pierce Damage
-                        monster.TakeDamage(Damage);
+                        // 1. Direct Pierce Damage with Critical Strike
+                        bool isCrit = CritChance > 0f && (_random.NextDouble() < CritChance);
+                        float hitDmg = isCrit ? Damage * CritDamageMultiplier : Damage;
+                        monster.TakeDamage(hitDmg, isCrit);
 
                         // 2. Storm Bow Mini AoE Explosion at hit point!
                         if (HasExplosionOnHit)
@@ -113,7 +122,9 @@ namespace HappyShoot.Domain.Projectiles
                                 var splashTarget = _splashBuffer[s];
                                 if (splashTarget != null && splashTarget.IsActive && !splashTarget.IsDead && splashTarget.Id != monster.Id)
                                 {
-                                    splashTarget.TakeDamage(ExplosionDamage);
+                                    bool isSplashCrit = CritChance > 0f && (_random.NextDouble() < CritChance);
+                                    float splashDmg = isSplashCrit ? ExplosionDamage * CritDamageMultiplier : ExplosionDamage;
+                                    splashTarget.TakeDamage(splashDmg, isSplashCrit);
                                 }
                             }
 

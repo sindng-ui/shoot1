@@ -78,12 +78,12 @@ graph TD
 | :--- | :--- | :--- | :--- |
 | **Common** | `AppVersion.cs` | `AppVersion` | 버전 관리 단일 소스 (`Current = "v0.3.0"`, `ReleaseDate`) |
 | **Events** | `AudioEvents.cs` | `SoundEffectType`, `PlaySoundEvent`, `PlayBgmEvent`, `StopBgmEvent` | 14종 SFX 및 BGM 재생 요청 도메인 이벤트 집합 |
-| | `MagicEvents.cs [UPDATED]` | `FrostNovaExecutedEvent`, `ChainLightningExecutedEvent`, `FireballExplodedEvent`, `MeteorStrikeExecutedEvent [NEW]`, `MonsterShatteredEvent [NEW]` | 마법사 서리 폭발, 연쇄 번개, 화염구 폭발, 메테오 낙하, 빙결 파괴 도메인 이벤트 집합 |
+| | `MagicEvents.cs [UPDATED]` | `FrostNovaExecutedEvent`, `ChainLightningExecutedEvent`, `FireballExplodedEvent`, `MeteorStrikeExecutedEvent`, `MonsterShatteredEvent` | 마법사 서리 폭발, 연쇄 번개, 화염구 폭발, 메테오 낙하, 빙결 파괴 도메인 이벤트 집합 |
 | | `BossEvents.cs` | `BossSpawnedEvent`, `BossHealthUpdatedEvent`, `BossDiedEvent` | 보스 스폰/체력 변경/사망 이벤트 집합 |
 | | `ChestEvents.cs` | `TreasureChestSpawnedEvent`, `TreasureChestOpenedEvent` | 보물상자 스폰 및 개봉 이벤트 집합 |
 | | `EvolutionEvents.cs` | `SkillEvolvedEvent` | 스킬 진화 발생 이벤트 |
 | | `PlayerEvents.cs` | `PlayerDamagedEvent`, `PlayerMovedEvent`, `PlayerSlashExecutedEvent` | 플레이어 관련 이벤트 및 칼 휘두르기 궤적/각도/사거리 실행 이벤트 |
-| | `MonsterEvents.cs` | `MonsterSpawnedEvent`, `MonsterDiedEvent` 등 | 몬스터 관련 이벤트 집합 |
+| | `MonsterEvents.cs [UPDATED]` | `MonsterDamagedEvent (IsCritical 포함)`, `MonsterSpawnedEvent`, `MonsterDiedEvent` 등 | 몬스터 관련 이벤트 집합 (크리티컬 적중 여부 플래그 지원) |
 | | `LevelEvents.cs` | `PlayerLevelUpEvent`, `ExpGainedEvent` | 경험치 및 레벨업 이벤트 |
 | | `SessionEvents.cs` | `GameStateChangedEvent`, `SurvivalTimeUpdatedEvent`, `KillCountUpdatedEvent`, `GoldGainedEvent` | 세션 및 상태 전이 관련 도메인 이벤트 집합 |
 | | `EventBus.cs` | `EventBus` | 제네릭 타입 기반의 고성능 도메인 이벤트 버스 |
@@ -91,48 +91,54 @@ graph TD
 | | `MetaUpgradeDefinition.cs` | `MetaUpgradeDefinition`, `MetaUpgradeSaveData` | 8종 영구 강화 항목 정의 및 세이브 데이터 구조체 |
 | | `MetaUpgradeApplier.cs` | `MetaUpgradeApplier` | 세이브 데이터를 읽어 플레이어 시작 스탯에 영구 증강 적용 |
 | | `ISaveStorage.cs` | `ISaveStorage` | 영구 저장소 로컬/클라우드 입출력 추상화 인터페이스 |
-| **Skills & Passives** | `OrbitingBladesEffect.cs [UPDATED]` | `OrbitingBladesEffect` | [전 클래스 공통] 개별 회전 칼날(Blade Contact Position) 물리 위치 판정 기반으로 칼날 개수(2~6개)에 100% 정비례하여 타격 횟수/위력이 정밀 스케일링되는 극저부하 오비탈 무기 |
-| | `ChainLightningEffect.cs [UPDATED]` | `ChainLightningEffect` | [마법사 전용] 연쇄 번개 도메인 로직 및 4~8개 세그먼트 전격 아크 데이터 연동 |
-| | `FireballEffect.cs [UPDATED]` | `FireballEffect` | [마법사 전용] 마우스 커서 월드 좌표(`AimTargetPosition`)와 사거리 계산을 통해 사거리 내 마우스 위치에서 정확히 폭발하는 화염구 |
-| | `ArrowRainEffect.cs [UPDATED]` | `ArrowRainEffect` | [궁수 전용] 지속시간(1.5s~3.5s) 동안 20~60발의 화살이 지면에 착탄하는 0.001초의 순간 즉시 1:1 대미지가 동기화되는 화살비 |
+| **Skills & Passives** | `SkillRewardManager.cs [UPDATED]` | `SkillRewardManager`, `SkillRewardOption`, `PassiveDefinition` | 클래스별 전용 무기 3종, 공통 오비탈 무기, 9종 패시브(**`passive_crit: 치명타의 눈` 포함**), 진화 스킬 롤링 및 추천 관리자 |
+| | `OrbitingBladesEffect.cs [UPDATED]` | `OrbitingBladesEffect` | [전 클래스 공통] 개별 회전 칼날 물리 위치 판정 및 크리티컬 대미지 롤링 연동 |
+| | `ChainLightningEffect.cs [UPDATED]` | `ChainLightningEffect` | [마법사 전용] 연쇄 번개 도메인 로직 및 크리티컬 대미지 롤링 연동 |
+| | `FireballEffect.cs [UPDATED]` | `FireballEffect` | [마법사 전용] 사거리 내 폭발 및 광역 스플래시 크리티컬 롤링 연동 |
+| | `FrostNovaEffect.cs [UPDATED]` | `FrostNovaEffect` | [마법사 전용] 360도 전방위 냉기 파동 및 크리티컬 대미지 롤링 연동 |
+| | `ArrowRainEffect.cs [UPDATED]` | `ArrowRainEffect` | [궁수 전용] 화살 착탄 즉시 1:1 대미지 동기화 및 크리티컬 롤링 연동 |
+| | `WindGlaiveEffect.cs [UPDATED]` | `WindGlaiveEffect` | [궁수 전용] 회전 풍인 관통 및 복귀 2중 타격 크리티컬 롤링 연동 |
+| | `PiercingArrowEffect.cs [UPDATED]` | `PiercingArrowEffect` | [궁수 전용] 화면 끝까지 무제한 관통 사격 및 투사체별 개별 크리티컬 롤링 연동 |
+| | `GreatswordSlashEffect.cs [UPDATED]` | `GreatswordSlashEffect` | [전사 전용] 전방 150도 부채꼴 궤적 판정 및 크리티컬 대미지 롤링 연동 |
+| | `WhirlwindEffect.cs [UPDATED]` | `WhirlwindEffect` | [전사 전용] 360도 전방위 회전 검기 연속 크리티컬 롤링 연동 |
+| | `GroundStompEffect.cs [UPDATED]` | `GroundStompEffect` | [전사 전용] 대지 균열 지진파 크리티컬 롤링 연동 |
+| | `BloodEaterEffect.cs [UPDATED]` | `BloodEaterEffect` | [진화] 대검 + 뱀파이어 이빨 -> 흡혈 대검 베기 크리티컬 롤링 연동 |
+| | `StormArrowEffect.cs [UPDATED]` | `StormArrowEffect` | [진화] 활 + 깃털 -> 폭풍 충격파 및 투사체 크리티컬 롤링 연동 |
+| | `MeteorStrikeEffect.cs [UPDATED]` | `MeteorStrikeEffect` | [진화] 거대 메테오 낙하 쾅! 광역 대폭발 크리티컬 롤링 연동 |
 | | `AlwaysTrigger.cs` | `AlwaysTrigger` | 오비탈 블레이드/오라 등 매 프레임 연속 실행 스킬 전용 무할당 트리거 |
-| | `ClosestEnemyTargeter.cs [UPDATED]` | `ClosestEnemyTargeter` | 마우스 ON(수동 조준) 시 **기본 무기(대검/활/화염구)만 마우스 커서를 정밀 추적**하고, **서브 스킬들(글레이브/화살비/번개 등)은 마우스에 방해받지 않고 스마트 자동 타겟팅**하는 하이브리드 타겟터 |
-| | `SkillRewardManager.cs` | `SkillRewardManager`, `SkillRewardOption`, `PassiveDefinition` | 클래스별 전용 무기 3종, 공통 오비탈 무기, 8종 패시브, 진화 스킬 롤링 및 추천 관리자 |
-| | `GemManager.cs [UPDATED]` | `GemManager` | 1,500+ 대형 경험치 젬 풀 및 자석 흡수 도메인 관리자 |
+| | `ClosestEnemyTargeter.cs` | `ClosestEnemyTargeter` | 수동 조준 시 기본 무기만 마우스 추적, 서브 스킬은 스마트 자동 타겟팅 하이브리드 타겟터 |
+| | `GemManager.cs` | `GemManager` | 1,500+ 대형 경험치 젬 풀 및 자석 흡수 도메인 관리자 |
 | | `SkillEvolutionManager.cs` | `SkillEvolutionManager` | 8레벨 무기 + 패시브 결합 시 진화 조건 검증 및 스킬 교체 (`SkillEvolvedEvent` 발행) |
-| | `SkillEvolutionRecipe.cs` | `SkillEvolutionRecipe` | 대검+이빨->블러드 이터, 활+깃털->스톰 보우, 화염구+룬->메테오 스트라이크 레시피 |
-| | `GreatswordSlashEffect.cs` | `GreatswordSlashEffect` | [전사 전용] 전방 150도 부채꼴 궤적 판정 및 `PlayerSlashExecutedEvent` 발행 |
-| | `WhirlwindEffect.cs` | `WhirlwindEffect` | [전사 전용] 플레이어 주변 360도 전방위 회전 검기 연속 타격 스킬 |
-| | `PiercingArrowEffect.cs [UPDATED]` | `PiercingArrowEffect` | [궁수 전용] 화면 끝까지 무제한 관통 사격 (레벨업 시 화살 수 +1발 추가되어 최대 5발 전방 부채꼴 전멸 사격) |
-| | `WindGlaiveEffect.cs [NEW]` | `WindGlaiveEffect` | [궁수 전용] 전방으로 회전하는 풍인을 던져 적들을 관통하고 되돌아오며 2중 타격하는 사냥꾼의 부메랑 무기 |
-| | `ArrowRainEffect.cs` | `ArrowRainEffect` | [궁수 전용] 적 군집 상공에서 2.0초 동안 32발의 화살이 쏟아지는 광역 물리 화살 폭격 |
-| | `FireballEffect.cs [UPDATED]` | `FireballEffect` | [마법사 전용] 대상 적을 향해 날아가 충돌 시 반경 내 광역 스플래시 폭발 + 7초 화염 DoT(Burn) 부여 |
-| | `FrostNovaEffect.cs [UPDATED]` | `FrostNovaEffect` | [마법사 전용] 플레이어 주변 360도 전방위로 차가운 냉기 파동 방출 + 3.5초간 오한(Chill 40% 감속) 부여 |
-| | `ChainLightningEffect.cs [UPDATED]` | `ChainLightningEffect` | [마법사 전용] 가장 가까운 적 감전 후 최대 4마리 연속 번개 전이 + 7초 감전 DoT(Shock) 부여 |
-| | `BloodEaterEffect.cs` | `BloodEaterEffect` | [진화] 대검 + 뱀파이어 이빨 -> 흡혈 대검 베기 |
-| | `StormArrowEffect.cs` | `StormArrowEffect` | [진화] 활 + 깃털 -> 8방향 연사 폭풍 화살 |
-| | `MeteorStrikeEffect.cs [UPDATED]` | `MeteorStrikeEffect` | [진화] 화염구 + 마나 룬 -> 하늘에서 거대한 메테오 낙하 쾅! 광역 대폭발 + 7초 화염 DoT |
-| **Entities** | `PlayerEntity.cs` | `PlayerEntity`, `ISpatialEntity` | 플레이어 도메인 로직 (이동, 피격, 체력 재생, 패시브 레벨 관리, 스킬 실행) |
-| | `CharacterStats.cs` | `CharacterStats` | 이동속도, 공격력, 방어력, 크리티컬, 쿨감, 범위, 자석 등 종합 스탯 및 대미지 경감 공식 |
-| | `MonsterType.cs` | `MonsterType`, `MonsterDefinition` | 슬라임(근접), 박쥐(비행 스웜), 해골(원거리 카이팅), 골렘(헤비 탱커), 보스(대형 레이드) |
-| | `MonsterEntity.cs [UPDATED]` | `MonsterEntity` | 몬스터 도메인 로직 (오한 40% 감속 이동, 7초 화염/감전 DoT 틱 데미지, 사망 시 빙결 파괴 이벤트) |
-| | `MonsterSpawner.cs` | `MonsterSpawner` | 몬스터 풀링 스폰, 플레이어 충돌 공격 업데이트, 웨이브 스케일링, 보스 소환 |
-| | `PlayerClassFactory.cs` | `PlayerClassFactory`, `CharacterClassType` | 전사(Warrior), 궁수(Ranger), 마법사(Wizard) 3영웅 스탯 및 고유 시작 무기 팩토리 |
-| **Chests** | `TreasureChestEntity.cs` | `TreasureChestEntity` | 보스 처치 시 드랍되는 황금 보물상자 |
-| | `TreasureChestManager.cs` | `TreasureChestManager` | 보물상자 풀링, `BossDiedEvent` 시 자동 생성, 플레이어 충돌 시 오픈 |
-| **Session** | `GameSessionEntity.cs` | `GameSessionEntity` | 게임 세션 생명주기, 생존 시간 틱, 킬 수, 획득 골드, 레벨 관리 |
-| **Spatial** | `SpatialGrid2D.cs` | `SpatialGrid2D<T>`, `ISpatialGrid2D` | 대규모 엔티티를 위한 2D 공간 분할 해시 그리드 (O(1) 근접/범위 검색) |
-| **Gems** | `ExpGemEntity.cs` | `ExpGemEntity` | 경험치 젬 도메인 데이터 (위치, 경험치량, 자석 이동 가속도) |
-| | `GemManager.cs` | `GemManager` | 젬 풀링, 플레이어 흡수 반경 체크 및 자동 견인 흡수 |
-| **Leveling** | `LevelSystem.cs` | `LevelSystem` | 경험치 누적, 레벨업 계산 곡선, 레벨업 이벤트 |
-| **Waves** | `WaveStep.cs` | `WaveStep` | 시간대별 몬스터 타입, 스폰 간격, 스펙 배율 정의 데이터 |
-| | `WaveTimelineManager.cs`| `WaveTimelineManager` | 게임 경과 시간 기반 타임라인 스텝 자동 전환 관리 |
-| **Projectiles** | `ProjectileEntity.cs` | `ProjectileEntity` | 투사체 이동, 관통 카운트, 수명 주기, 적 충돌 판정 |
-| | `ProjectileManager.cs` | `ProjectileManager` | 투사체 풀링 관리 및 공간 그리드 기반 충돌 체크 |
-| **UI/Text** | `DamageTextEntity.cs` | `DamageTextEntity` | 대미지/크리티컬 플로팅 텍스트 수명 및 부유 좌표 계산 |
-| | `DamageTextManager.cs` | `DamageTextManager` | 텍스트 엔티티 생성 및 풀링 관리 |
-| **Settings** | `GameSettings.cs` | `GameSettings` | 조준 모드, 볼륨, 뮤트, UI 스케일, 데미지 텍스트, 전체화면 모델 및 PlayerPrefs 저장소 |
-| **Pool** | `ObjectPool.cs`, `IPoolable.cs` | `ObjectPool<T>` | 무할당(Zero-allocation) 도메인 객체 풀러 |
+| | `SkillEvolutionRecipe.cs` | `SkillEvolutionRecipe` | 3대 진화 레시피 정의 |
+| **Entities** | `PlayerEntity.cs [UPDATED]` | `PlayerEntity`, `ISpatialEntity` | 플레이어 도메인 로직, `RollDamage(float rawDamage)` 크리티컬 롤러 제공 |
+| | `CharacterStats.cs [UPDATED]` | `CharacterStats` | **기본 크리티컬 확률 10% (0.10f)**, 치명타 피해량(1.5x), 이동속도, 공격력, 방어력, 쿨감 등 종합 스탯 |
+| | `PlayerClassFactory.cs [UPDATED]` | `PlayerClassFactory`, `CharacterClassType` | 전사/마법사 기본 크리 10%, 궁수 기본 크리 20% 및 전용 크리 배율(1.75x) 팩토리 |
+| | `MonsterEntity.cs [UPDATED]` | `MonsterEntity` | 몬스터 도메인 로직, `TakeDamage(float damage, bool isCritical = false)` 지원 |
+| | `MonsterType.cs` | `MonsterType`, `MonsterDefinition` | 7종 일반 몬스터 및 보스 아키타입 정의 |
+| | `MonsterSpawner.cs` | `MonsterSpawner` | 몬스터 풀링 스폰 및 웨이브 스케일링 |
+| **Projectiles** | `ProjectileEntity.cs [UPDATED]` | `ProjectileEntity` | 투사체 관통 적중 및 미니 AoE 폭발 시 개별 크리티컬 롤링 판정 지원 |
+| | `ProjectileManager.cs [UPDATED]` | `ProjectileManager` | 발사 시 발사자의 `CritChance` 및 `CritDamageMultiplier`를 투사체에 전달 |
+| **UI/Text** | `DamageTextEntity.cs` | `DamageTextEntity` | 대미지 및 크리티컬 여부 플래그 저장 |
+| | `DamageTextManager.cs [UPDATED]` | `DamageTextManager` | `MonsterDamagedEvent.IsCritical` 플래그를 수신하여 크리티컬 텍스트 엔티티 생성 |
+| **Spatial & Pool**| `SpatialGrid2D.cs`, `ObjectPool.cs` | `SpatialGrid2D<T>`, `ObjectPool<T>` | 공간 분할 해시 그리드 및 제네릭 무할당 풀러 |
+
+---
+
+### 2. 🎮 Unity Presentation Layer (`Assets/src/HappyShoot.View`)
+
+| 카테고리 | 파일명 | 주요 컴포넌트 | 설명 |
+| :--- | :--- | :--- | :--- |
+| **Effects** | `CriticalHitVfxManagerView.cs [NEW]` | `CriticalHitVfxManagerView` | **무할당 32개 풀링 기반의 황금빛 십자 섬광 + 8방향 스타버스트 크리티컬 스파크 VFX 뷰 매니저** |
+| **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **크리티컬 피격 시 2배 강력한 Squash & Stretch (0.45/-0.35), 격렬한 셰이크 틸트 진동(+-16도), 황금빛 플래시 피격 피드백** |
+| | `MonsterSpawnerView.cs [UPDATED]` | `MonsterSpawnerView` | `MonsterDamagedEvent.IsCritical`을 `MonsterView.OnHitFeedback(evt.IsCritical)`로 전달 |
+| **UI** | `DamageTextView.cs [UPDATED]` | `DamageTextView`, `DamageTextManagerView` | **크리티컬 발생 시 볼드 42pt 대형 폰트, 네온 골드 컬러, 느낌표("!") 표기, 1.45배 튀어오르는 바운스 팝(Pop Animation) 애니메이션** |
+| | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 - 🎯 치명/스탯 (`crit_tuning`) 탭 지원** (크리티컬 확률 0~100%, 크리티컬 배율 1.0~5.0x, 공격력 배율, 이동속도, 방어력, 쿨감 실시간 슬라이더) |
+| | `SkillTuningUiBuilder.cs [UPDATED]` | `SkillTuningUiBuilder` | 샌드박스 16개 메인 탭 그리드 생성 전담 헬퍼 (500줄 규칙 준수 모듈화) |
+| | `SkillTuningRowConfigurator.cs [UPDATED]` | `SkillTuningRowConfigurator` | `crit_tuning` 슬라이더 6종 실시간 바인딩 (PlayerEntity.Stats 즉시 반영) |
+| | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | [개발자 모드] **`passive_crit: 치명타의 눈 (크리확률+8%, 대미지+5%)` 원클릭 추가 및 우클릭 해제 지원** |
+| | `LevelUpUiView.cs` | `LevelUpUiView` | 신규 패시브 `passive_crit` 3지선다 카드 자동 연동 |
+| **Utils** | `RewardIconHelper.cs [UPDATED]` | `RewardIconHelper` | **`passive_crit` 전용 황금 크로스헤어 + 네온 레드 동공 + 빛나는 글린트 80x80 픽셀아트 아이콘 생성기 (`DrawCritEyeIcon`)** |
+| **Bootstrap** | `GameBootstrap.cs [UPDATED]` | `GameBootstrap` | 신규 패시브 `passive_crit` 등록 및 `CriticalHitVfxManagerView` 인스턴스화/초기화 연동 |
 
 ---
 
@@ -155,8 +161,9 @@ graph TD
 | **UI** | `SettingsDialogUiView.cs` | `SettingsDialogUiView` | 3개 탭 종합 환경 설정 모달 다이얼로그 (자동/수동조준, 볼륨, UI스케일) |
 | | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | 영웅 선택창 (전사/궁수/마법사 3영웅 카드 가로 배치, **🛠️ 개발자 모드**, **🧪 밸런스 샌드박스 ON/OFF 토글**, 한글 폰트, 스탯/스킬 설명 및 [⚙️ 게임 환경 설정] 버튼) |
 | | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | [개발자 모드] 인게임 실시간 스킬(10종)/진화/패시브 원클릭 장착 및 **우클릭 즉시 Lv.0 해제/제거**, 치트(무적, 레벨업, 전멸, 배속 등) UI |
-| | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 (Combat Sandbox)** - 실시간 10종 스킬 + 3종 궁극기 튜닝, **💎 경험치 & 레벨업 시스템 튜닝**, **👾 7종 몬스터 + 보스 스탯(HP, 이동속도, 공격력, 투사체 스펙 등) 실시간 튜닝** 및 파일 저장/기본값 복원 UI |
-| | `SkillTuningUiBuilder.cs [UPDATED]` | `SkillTuningUiBuilder` | 샌드박스 모드 UI 요소 생성 전담 헬퍼 (15개 메인 탭 + 몬스터 8종 서브탭, 500줄 규칙 준수 모듈화) |
+| | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 (Combat Sandbox)** - 실시간 10종 스킬 + 3종 궁극기 튜닝, **💎 경험치 & 레벨업 시스템 튜닝**, **👾 7종 몬스터 + 보스 스탯**, **🎯 치명타 확률/배율 및 플레이어 코어 스탯 실시간 조절 및 JSON 파일 영구 저장/자동 복원** 지원 |
+| | `SkillTuningUiBuilder.cs [UPDATED]` | `SkillTuningUiBuilder` | 샌드박스 모드 UI 요소 생성 전담 헬퍼 (16개 메인 탭 + 몬스터 8종 서브탭, 500줄 규칙 준수 모듈화) |
+| | `SkillConfigModels.cs [UPDATED]` | `SkillConfigData`, `CritStatConfig [NEW]` | 전체 스킬/경험치/몬스터 스탯 및 **플레이어 치명타/공격력/이속/방어력/쿨감 커스텀 스탯(`CritStatConfig`) 직렬화 모델** |
 | | `MonsterTuningConfig.cs [NEW]` | `MonsterTuningConfigData`, `MonsterStatConfig` | 7종 일반 몬스터(슬라임/박쥐/해골/골렘/화염임프/독거미/흑기사) 및 보스 스탯 설정 데이터 모델 |
 | | `SkillTuningMemoryCache.cs [NEW]` | `SkillTuningMemoryCache` | 스킬 테스트 모드에서 L1~L5 레벨 간 이동 시 각 레벨별로 튜닝한 수치(공격력, 쿨다운, 반경 등)를 메모리에 완벽 보존/복원하는 세션 캐시 관리자 |
 | | `InGameHudView.cs` | `InGameHudView` | 1920x1080 반응형 CanvasScaler, 상단 EXP 바, HP/타이머/킬/골드 HUD, 6칸 스킬 인벤토리 |
@@ -192,16 +199,17 @@ graph TD
 ---
 
 ### 3. 🧪 Tests Layer (`Assets/tests/HappyShoot.Domain.Tests`)
-*총 101개 NUnit 단위 테스트 스위트 (100% ALL PASS)*
-- `StatusEffectTests.cs [NEW]`: 오한 40% 감속 검증, 오한 만료 시 정상 속도 복구, 7초 화염 DoT 틱 누적, 7초 감전 DoT 틱 누적, 오한 사망 시 `MonsterShatteredEvent` 발행, 메테오 스트라이크 이벤트 발행 및 화염 DoT 검증 6개 테스트
+*총 111개 NUnit 단위 테스트 스위트 (100% ALL PASS)*
+- `CriticalStrikeTests.cs [NEW]`: 기본 크리 10% 검증, 100% 확정 크리티컬 피해량 배율(2.5x) 연산, 0% 크리 시 일반 피해 연산, 몬스터 피격 시 `MonsterDamagedEvent.IsCritical` 플래그 발행, `DamageTextManager` 크리티컬 텍스트 엔티티 생성, 투사체 관통 크리티컬 개별 롤링 6개 테스트
+- `PassiveItemsTests.cs [UPDATED]`: `passive_crit` (치명타의 눈) 레벨업 시 크리티컬 확률 +8% 및 크리티컬 배율 +5% 누적 증가 검증 포함 3개 테스트
+- `SkillEvolutionTests.cs [UPDATED]`: 3대 진화 레시피 합성, 진화 카드 우선순위 추천, **궁극기로 진화 후 보상 선택지에서 기본 스킬 완전 제외 검증** 5개 테스트
+- `StatusEffectTests.cs`: 오한 40% 감속 검증, 오한 만료 시 정상 속도 복구, 7초 화염 DoT 틱 누적, 7초 감전 DoT 틱 누적, 오한 사망 시 `MonsterShatteredEvent` 발행, 메테오 스트라이크 이벤트 발행 및 화염 DoT 검증 6개 테스트
 - `WizardSkillsTests.cs`: 화염구 스플래시 판정 및 데미지, 서리 폭발 360도 전방위 적 피격, 연쇄 번개 4회 전이 타격, 마법사 팩토리 스탯, 레벨업 보상 롤링 및 타 클래스 스킬 배제 5개 테스트
 - `GreatswordSlashTests.cs`: 전방 150도 궤적 적 피격, 궤적 반대편 적 무피격, 사거리 밖 적 무피격, `PlayerSlashExecutedEvent` 및 사운드 이벤트 발행 4개 테스트
 - `AudioEventsTests.cs`: 사운드 및 BGM 도메인 이벤트 발행, 수신, 페이로드 정합성 3개 테스트
 - `MetaShopTests.cs`: 골드 추가, 업그레이드 레벨별 구매/골드 차감, 최대 레벨 초과 구매 방지, 100% 환불 골드 계산 5개 테스트
 - `MetaSaveDataTests.cs`: 업그레이드 데이터 직렬화 및 `MetaUpgradeApplier` 스탯 반영 공식 1개 테스트
 - `OrbitingBladesTests.cs`: 오비탈 궤도 위치 계산 및 충돌 다중 타격 2개 테스트
-- `PassiveItemsTests.cs`: 6종 패시브 스탯 누적, 최대 레벨(5Lv) 제외 2개 테스트
-- `SkillEvolutionTests.cs`: 3대 진화 레시피 합성, 진화 카드 우선순위 추천 4개 테스트
 - `MonsterVarietyTests.cs`: 4종 아키타입 스탯, 해골 원거리 카이팅 AI, 보스 스폰/피격/사망 이벤트 4개 테스트
 - `TreasureChestTests.cs`: 상자 스폰, 접근 오픈 및 보상 지급, 보스 사망 시 상자 자동 드랍 3개 테스트
 - `GameSessionTests.cs`: 세션 생명주기, 시간 틱, 킬 수/골드 누적, 일시정지, 게임오버/승리 13개 테스트

@@ -122,7 +122,7 @@ namespace HappyShoot.View.Monsters
         private void OnMonsterDamaged(MonsterDamagedEvent evt)
         {
             if (_activeViewMap.TryGetValue(evt.MonsterId, out var view) && view != null && view.gameObject.activeSelf)
-                view.OnHitFeedback();
+                view.OnHitFeedback(evt.IsCritical);
         }
 
         private void OnBossDied(BossDiedEvent evt)

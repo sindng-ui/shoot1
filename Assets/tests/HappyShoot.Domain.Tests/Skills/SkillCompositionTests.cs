@@ -77,20 +77,22 @@ namespace HappyShoot.Domain.Tests.Skills
         }
 
         [Test]
-        public void CompositeSkill_DoesNotFire_WhenNoTargetInRange()
+        public void CompositeSkill_FallbackForwardAim_WhenNoTargetInRange()
         {
             var trigger = new CooldownTrigger(1.0f);
             var targeter = new ClosestEnemyTargeter();
             var effect = new MockSkillEffect();
 
-            var skill = new CompositeSkill("slash", "Slash", trigger, targeter, effect, range: 2f);
+            var skill = new CompositeSkill("secondary_test", "Secondary", trigger, targeter, effect, range: 2f);
 
             // Enemy is out of range at (10, 0)
             _grid.Register(new MockTargetEntity(102, new Vector2D(10f, 0f)));
 
             skill.Update(1.0f, _context);
 
-            Assert.That(effect.ApplyCount, Is.EqualTo(0));
+            // Smart targeter falls back to forward aim position
+            Assert.That(effect.ApplyCount, Is.EqualTo(1));
+            Assert.That(effect.LastTargets.Count, Is.EqualTo(1));
         }
 
         [Test]

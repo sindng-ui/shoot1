@@ -123,7 +123,15 @@ namespace HappyShoot.View.Projectiles
                     if (!hitSet.Contains(monster.Id))
                     {
                         hitSet.Add(monster.Id);
-                        monster.TakeDamage(damage);
+                        if (_playerView != null && _playerView.Entity != null)
+                        {
+                            var (hitDmg, isCrit) = _playerView.Entity.RollDamage(damage);
+                            monster.TakeDamage(hitDmg, isCrit);
+                        }
+                        else
+                        {
+                            monster.TakeDamage(damage);
+                        }
                     }
                 }
             }

@@ -44,7 +44,8 @@ namespace HappyShoot.Domain.Skills.Effects
                     {
                         // Apply 7-second Burn DoT (ticks every 0.5s)
                         monster.ApplyBurn(duration: 7.0f, damagePerTick: effectiveDamage * 0.10f);
-                        monster.TakeDamage(effectiveDamage);
+                        var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
+                        monster.TakeDamage(hitDmg, isCrit);
                     }
                 }
             }

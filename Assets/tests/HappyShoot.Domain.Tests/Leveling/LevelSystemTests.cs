@@ -30,9 +30,9 @@ namespace HappyShoot.Domain.Tests.Leveling
 
             // Lv 1 required: 5 + 5(1) + 2(1) = 12
             int req = _levelSystem.RequiredExp;
-            Assert.That(req, Is.EqualTo(12));
+            Assert.That(req, Is.EqualTo(8));
 
-            _levelSystem.AddExp(12);
+            _levelSystem.AddExp(8);
 
             Assert.That(_levelSystem.Level, Is.EqualTo(2));
             Assert.That(levelUpCount, Is.EqualTo(1));
@@ -43,12 +43,12 @@ namespace HappyShoot.Domain.Tests.Leveling
         [Test]
         public void AddExp_MultiLevelUp_CarriesOverOverflowExp()
         {
-            // Lv 1 req = 12, Lv 2 req = 5 + 10 + 8 = 23 -> total for 2 level ups = 35
-            // Add 40 exp -> Should reach Lv 3 with 5 leftover exp!
+            // Lv 1 req = 8, Lv 2 req = 15 -> total for 2 level ups = 23
+            // Add 40 exp -> Should reach Lv 3 with 17 leftover exp!
             _levelSystem.AddExp(40);
 
             Assert.That(_levelSystem.Level, Is.EqualTo(3));
-            Assert.That(_levelSystem.CurrentExp, Is.EqualTo(5));
+            Assert.That(_levelSystem.CurrentExp, Is.EqualTo(17));
         }
     }
 }

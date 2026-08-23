@@ -79,6 +79,9 @@ namespace HappyShoot.View.Utils
                 case "passive_heart":
                     DrawHeartPendantIcon(pixels, size, cx, cy);
                     break;
+                case "passive_crit":
+                    DrawCritEyeIcon(pixels, size, cx, cy);
+                    break;
                 case "blood_eater":
                     DrawBloodEaterIcon(pixels, size, cx, cy);
                     break;
@@ -390,6 +393,52 @@ namespace HappyShoot.View.Utils
                     if (dist <= 14f) SetPixelSafe(pixels, size, cx + x, cy + y, rock);
                     else if (dist <= 20f) SetPixelSafe(pixels, size, cx + x, cy + y, magma);
                     else if (dist <= 26f && (x + y) > 0) SetPixelSafe(pixels, size, cx + x, cy + y, flame);
+                }
+            }
+        }
+
+        private static void DrawCritEyeIcon(Color[] pixels, int size, int cx, int cy)
+        {
+            Color gold = new Color(1.0f, 0.85f, 0.15f);
+            Color neonRed = new Color(1.0f, 0.20f, 0.25f);
+            Color darkRing = new Color(0.20f, 0.10f, 0.30f);
+            Color shine = new Color(1.0f, 1.0f, 0.80f);
+
+            // 1. Outer Eye / Reticle Shape
+            for (int y = -22; y <= 22; y++)
+            {
+                for (int x = -22; x <= 22; x++)
+                {
+                    float dist = Mathf.Sqrt(x * x + y * y);
+                    // Reticle ring
+                    if (dist >= 17f && dist <= 21f)
+                    {
+                        SetPixelSafe(pixels, size, cx + x, cy + y, gold);
+                    }
+                    // Inner glowing iris
+                    else if (dist <= 12f)
+                    {
+                        SetPixelSafe(pixels, size, cx + x, cy + y, neonRed);
+                    }
+                }
+            }
+
+            // 2. Crosshair Ticks (4 directions)
+            for (int i = 12; i <= 26; i++)
+            {
+                SetPixelSafe(pixels, size, cx + i, cy, gold);
+                SetPixelSafe(pixels, size, cx - i, cy, gold);
+                SetPixelSafe(pixels, size, cx, cy + i, gold);
+                SetPixelSafe(pixels, size, cx, cy - i, gold);
+            }
+
+            // 3. Central Critical Glint / Core Pupil
+            for (int y = -3; y <= 3; y++)
+            {
+                for (int x = -3; x <= 3; x++)
+                {
+                    if (Mathf.Abs(x) + Mathf.Abs(y) <= 4)
+                        SetPixelSafe(pixels, size, cx + x, cy + y, shine);
                 }
             }
         }

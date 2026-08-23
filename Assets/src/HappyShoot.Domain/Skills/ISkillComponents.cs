@@ -22,6 +22,18 @@ namespace HappyShoot.Domain.Skills
         public ISpatialGrid2D TargetGrid { get; set; }
         public Projectiles.ProjectileManager ProjectileManager { get; set; }
         public EventBus EventBus { get; set; }
+
+        /// <summary>
+        /// Rolls critical strike through CasterEntity or returns raw damage.
+        /// </summary>
+        public (float damage, bool isCritical) RollDamage(float rawDamage)
+        {
+            if (CasterEntity != null)
+            {
+                return CasterEntity.RollDamage(rawDamage);
+            }
+            return (rawDamage, false);
+        }
     }
 
     /// <summary>

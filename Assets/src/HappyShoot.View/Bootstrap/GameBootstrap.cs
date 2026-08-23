@@ -12,6 +12,7 @@ using HappyShoot.Domain.Skills.Targeters;
 using HappyShoot.Domain.Skills.Triggers;
 using HappyShoot.View.Cameras;
 using HappyShoot.View.Config;
+using HappyShoot.View.Effects;
 using HappyShoot.View.Gems;
 using HappyShoot.View.Monsters;
 using HappyShoot.View.Player;
@@ -148,7 +149,7 @@ namespace HappyShoot.View.Bootstrap
 
             var arrowRainGo = new GameObject("ArrowRainManager");
             var arrowRainView = arrowRainGo.AddComponent<Projectiles.ArrowRainManagerView>();
-            arrowRainView.Initialize(playerView.EventBus, spawnerView);
+            arrowRainView.Initialize(playerView.EventBus, spawnerView, playerView);
 
             var magicSkillGo = new GameObject("MagicSkillManager");
             var magicSkillView = magicSkillGo.AddComponent<Projectiles.MagicSkillManagerView>();
@@ -177,6 +178,10 @@ namespace HappyShoot.View.Bootstrap
             var damageTextGo = new GameObject("DamageTextManager");
             var damageTextView = damageTextGo.AddComponent<DamageTextManagerView>();
             damageTextView.Initialize(playerView.EventBus);
+
+            var critVfxGo = new GameObject("CriticalHitVfxManager");
+            var critVfxView = critVfxGo.AddComponent<Effects.CriticalHitVfxManagerView>();
+            critVfxView.Initialize(playerView.EventBus);
 
             var soundGo = new GameObject("SoundManager");
             var soundView = soundGo.AddComponent<Audio.SoundManagerView>();
@@ -226,6 +231,15 @@ namespace HappyShoot.View.Bootstrap
 
             // Apply permanent upgrades to player starting stats
             playerView.Entity.Stats = HappyShoot.Domain.Meta.MetaUpgradeApplier.ApplyUpgrades(playerView.Entity.Stats, metaShopManager.SaveData);
+
+            // Apply saved custom sandbox stats if available
+            var skillConfig = SkillConfigRepository.Instance.GetConfig();
+            if (skillConfig?.CritStat != null && skillConfig.CritStat.IsCustom)
+            {
+                var s = playerView.Entity.Stats;
+                var c = skillConfig.CritStat;
+                playerView.Entity.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, c.MoveSpeed, c.AttackPowerMultiplier, c.Armor, c.CritChance, c.CritDamageMultiplier, c.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+            }
 
             var metaShopGo = new GameObject("MetaShopUI");
             var metaShopView = metaShopGo.AddComponent<Shop.MetaShopUiView>();
@@ -439,6 +453,14 @@ namespace HappyShoot.View.Bootstrap
             {
                 var s = p.Stats;
                 p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction + 0.06f * lv, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+            });
+
+            rewardManager.RegisterPassive("passive_crit", "치명타의 눈", "크리티컬 확률 +8% & 크리티컬 데미지 +5% 증가", 5, (p, lv) =>
+            {
+                var s = p.Stats;
+                float baseCrit = p.ClassType == CharacterClassType.Ranger ? 0.20f : 0.10f;
+                float baseMult = p.ClassType == CharacterClassType.Ranger ? 1.75f : 1.50f;
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, baseCrit + 0.08f * lv, baseMult + 0.05f * lv, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             });
         }
 

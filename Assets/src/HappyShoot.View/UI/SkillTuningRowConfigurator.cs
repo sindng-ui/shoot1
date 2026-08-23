@@ -41,6 +41,65 @@ namespace HappyShoot.View.UI
                 AddRow(title, curVal ? 1f : 0f, 0f, 1f, 1f, v => onToggle?.Invoke(v >= 0.5f), isInt: true);
             }
 
+            if (skillId == "crit_tuning")
+            {
+                if (player == null) return;
+                if (config != null && config.CritStat == null) config.CritStat = new HappyShoot.Domain.Skills.CritStatConfig();
+
+                var cStat = config?.CritStat;
+                if (cStat != null && cStat.IsCustom)
+                {
+                    var sInit = player.Stats;
+                    player.Stats = new CharacterStats(sInit.MaxHealth, sInit.HealthRegen, cStat.MoveSpeed, cStat.AttackPowerMultiplier, cStat.Armor, cStat.CritChance, cStat.CritDamageMultiplier, cStat.CooldownReduction, sInit.AreaMultiplier, sInit.ProjectileSpeedMultiplier, sInit.ExtraProjectiles, sInit.PickupRadius);
+                }
+
+                var s = player.Stats;
+
+                AddRow("🎯 크리티컬 확률 (Crit Chance: 0~100%)", s.CritChance * 100f, 0f, 100f, 1f, v =>
+                {
+                    var cur = player.Stats;
+                    player.Stats = new CharacterStats(cur.MaxHealth, cur.HealthRegen, cur.MoveSpeed, cur.AttackPowerMultiplier, cur.Armor, v / 100f, cur.CritDamageMultiplier, cur.CooldownReduction, cur.AreaMultiplier, cur.ProjectileSpeedMultiplier, cur.ExtraProjectiles, cur.PickupRadius);
+                    if (cStat != null) { cStat.CritChance = v / 100f; cStat.IsCustom = true; }
+                }, isInt: true);
+
+                AddRow("💥 크리티컬 데미지 배율 (Crit Multiplier)", s.CritDamageMultiplier, 1.0f, 5.0f, 0.05f, v =>
+                {
+                    var cur = player.Stats;
+                    player.Stats = new CharacterStats(cur.MaxHealth, cur.HealthRegen, cur.MoveSpeed, cur.AttackPowerMultiplier, cur.Armor, cur.CritChance, v, cur.CooldownReduction, cur.AreaMultiplier, cur.ProjectileSpeedMultiplier, cur.ExtraProjectiles, cur.PickupRadius);
+                    if (cStat != null) { cStat.CritDamageMultiplier = v; cStat.IsCustom = true; }
+                });
+
+                AddRow("⚔️ 기본 공격력 배율 (Attack Power)", s.AttackPowerMultiplier, 0.2f, 5.0f, 0.1f, v =>
+                {
+                    var cur = player.Stats;
+                    player.Stats = new CharacterStats(cur.MaxHealth, cur.HealthRegen, cur.MoveSpeed, v, cur.Armor, cur.CritChance, cur.CritDamageMultiplier, cur.CooldownReduction, cur.AreaMultiplier, cur.ProjectileSpeedMultiplier, cur.ExtraProjectiles, cur.PickupRadius);
+                    if (cStat != null) { cStat.AttackPowerMultiplier = v; cStat.IsCustom = true; }
+                });
+
+                AddRow("🏃 이동 속도 (Move Speed)", s.MoveSpeed, 2.0f, 12.0f, 0.2f, v =>
+                {
+                    var cur = player.Stats;
+                    player.Stats = new CharacterStats(cur.MaxHealth, cur.HealthRegen, v, cur.AttackPowerMultiplier, cur.Armor, cur.CritChance, cur.CritDamageMultiplier, cur.CooldownReduction, cur.AreaMultiplier, cur.ProjectileSpeedMultiplier, cur.ExtraProjectiles, cur.PickupRadius);
+                    if (cStat != null) { cStat.MoveSpeed = v; cStat.IsCustom = true; }
+                });
+
+                AddRow("🛡️ 방어력 (Armor)", s.Armor, 0f, 100f, 1f, v =>
+                {
+                    var cur = player.Stats;
+                    player.Stats = new CharacterStats(cur.MaxHealth, cur.HealthRegen, cur.MoveSpeed, cur.AttackPowerMultiplier, v, cur.CritChance, cur.CritDamageMultiplier, cur.CooldownReduction, cur.AreaMultiplier, cur.ProjectileSpeedMultiplier, cur.ExtraProjectiles, cur.PickupRadius);
+                    if (cStat != null) { cStat.Armor = v; cStat.IsCustom = true; }
+                }, isInt: true);
+
+                AddRow("⏱️ 쿨타임 감소율 (CDR: 0~75%)", s.CooldownReduction * 100f, 0f, 75f, 1f, v =>
+                {
+                    var cur = player.Stats;
+                    player.Stats = new CharacterStats(cur.MaxHealth, cur.HealthRegen, cur.MoveSpeed, cur.AttackPowerMultiplier, cur.Armor, cur.CritChance, cur.CritDamageMultiplier, v / 100f, cur.AreaMultiplier, cur.ProjectileSpeedMultiplier, cur.ExtraProjectiles, cur.PickupRadius);
+                    if (cStat != null) { cStat.CooldownReduction = v / 100f; cStat.IsCustom = true; }
+                }, isInt: true);
+
+                return;
+            }
+
             if (skillId == "exp_tuning")
             {
                 if (config?.Exp == null) return;

@@ -67,12 +67,14 @@ namespace HappyShoot.View.UI
             string[] skillIds = {
                 "slash", "ground_stomp", "whirlwind", "bow", "glaive",
                 "arrow_rain", "fireball", "frost_nova", "chain_lightning", "orbital",
-                "blood_eater", "storm_bow", "meteor_strike", "exp_tuning", "monster_tuning"
+                "blood_eater", "storm_bow", "meteor_strike", "crit_tuning", "exp_tuning",
+                "monster_tuning"
             };
             string[] skillNames = {
                 "대검", "강타", "휠윈드", "활", "글레이브",
                 "화살비", "화염구", "서리폭발", "번개", "오비탈",
-                "🩸블러드", "⚡폭풍활", "☄️메테오", "💎경험치", "👾몬스터"
+                "🩸블러드", "⚡폭풍활", "☄️메테오", "🎯치명/스탯", "💎경험치",
+                "👾몬스터"
             };
 
             float startX = -188f;

@@ -168,12 +168,23 @@ namespace HappyShoot.View.Monsters
             if (_hurtJoltTimer > 0f)
             {
                 _hurtJoltTimer -= dt;
-                // Jolt elasticity on hit
-                squashX = 0.22f;
-                squashY = -0.18f;
+                if (_isCritHit)
+                {
+                    // Stronger Critical Jolt & Violent Shake
+                    squashX = 0.45f;
+                    squashY = -0.35f;
+                    tiltZ = Mathf.Sin(_animTimer * 24f) * 16f;
+                }
+                else
+                {
+                    // Regular hit jolt
+                    squashX = 0.22f;
+                    squashY = -0.18f;
+                }
             }
             else
             {
+                _isCritHit = false;
                 switch (_entity.Type)
                 {
                     case MonsterType.Slime:
@@ -250,6 +261,8 @@ namespace HappyShoot.View.Monsters
             }
         }
 
+        private bool _isCritHit = false;
+
         private void UpdateStatusTint()
         {
             if (_spriteRenderer == null || _entity == null) return;
@@ -273,17 +286,28 @@ namespace HappyShoot.View.Monsters
         }
 
         /// <summary>
-        /// Triggered when the monster takes damage. Flash white with lightweight jolt.
-        /// Zero time-scale disruption so rapid continuous AoE skills (e.g. Orbital Blades) stay silky smooth.
+        /// Triggered when the monster takes damage. Flash with elasticity and shake.
+        /// Critical hits trigger stronger squash/stretch, golden flash, and noticeable shake.
         /// </summary>
-        public void OnHitFeedback()
+        public void OnHitFeedback(bool isCritical = false)
         {
             if (_spriteRenderer != null)
             {
-                // Flash White with crisp micro-jolt
-                _spriteRenderer.color = _flashColor;
-                _flashTimer = _flashDuration;
-                _hurtJoltTimer = 0.06f;
+                _isCritHit = isCritical;
+                if (isCritical)
+                {
+                    // Golden Flash with prominent violent shake & deep squash
+                    _spriteRenderer.color = new Color(1.0f, 0.95f, 0.35f, 1f);
+                    _flashTimer = 0.14f;
+                    _hurtJoltTimer = 0.14f;
+                }
+                else
+                {
+                    // Flash White with crisp micro-jolt
+                    _spriteRenderer.color = _flashColor;
+                    _flashTimer = _flashDuration;
+                    _hurtJoltTimer = 0.06f;
+                }
             }
         }
     }

@@ -164,32 +164,24 @@ namespace HappyShoot.View.UI
         private void SetMonsterSubTabsVisible(bool visible)
         {
             for (int i = 0; i < _monsterSubTabImers.Count; i++)
-            {
                 if (_monsterSubTabImers[i] != null) _monsterSubTabImers[i].gameObject.SetActive(visible);
-            }
             for (int i = 0; i < _levelButtonImgs.Count; i++)
-            {
                 if (_levelButtonImgs[i] != null) _levelButtonImgs[i].gameObject.SetActive(!visible);
-            }
         }
 
         private void SelectMonsterSubTab(int idx)
         {
             _selectedMonsterIdx = idx;
             for (int i = 0; i < _monsterSubTabImers.Count; i++)
-            {
                 _monsterSubTabImers[i].color = (i == idx) ? new Color(0.8f, 0.3f, 0.2f, 1f) : new Color(0.18f, 0.24f, 0.35f, 1f);
-            }
             RebuildSlidersForSelectedSkill();
         }
 
         private void SetSelectionMode(bool isAddMode)
         {
             _isAddMode = isAddMode;
-            if (_btnSwitchModeImg != null)
-                _btnSwitchModeImg.color = !_isAddMode ? new Color(0.15f, 0.60f, 0.85f, 1f) : new Color(0.18f, 0.24f, 0.32f, 0.95f);
-            if (_btnAddModeImg != null)
-                _btnAddModeImg.color = _isAddMode ? new Color(0.20f, 0.75f, 0.35f, 1f) : new Color(0.18f, 0.24f, 0.32f, 0.95f);
+            if (_btnSwitchModeImg != null) _btnSwitchModeImg.color = !_isAddMode ? new Color(0.15f, 0.60f, 0.85f, 1f) : new Color(0.18f, 0.24f, 0.32f, 0.95f);
+            if (_btnAddModeImg != null) _btnAddModeImg.color = _isAddMode ? new Color(0.20f, 0.75f, 0.35f, 1f) : new Color(0.18f, 0.24f, 0.32f, 0.95f);
 
             if (_statusNoticeText != null)
             {
@@ -203,13 +195,10 @@ namespace HappyShoot.View.UI
         private void CreateBottomActionButtons()
         {
             float botY = 24f;
-
             var statusGo = new GameObject("StatusNoticeText");
             statusGo.transform.SetParent(_contentBox.transform, false);
             var sRt = statusGo.AddComponent<RectTransform>();
-            sRt.anchorMin = new Vector2(0.5f, 0f);
-            sRt.anchorMax = new Vector2(0.5f, 0f);
-            sRt.pivot = new Vector2(0.5f, 0f);
+            sRt.anchorMin = sRt.anchorMax = sRt.pivot = new Vector2(0.5f, 0f);
             sRt.anchoredPosition = new Vector2(0f, botY + 44f);
             sRt.sizeDelta = new Vector2(460f, 28f);
 
@@ -218,43 +207,29 @@ namespace HappyShoot.View.UI
             _statusNoticeText.fontSize = 11;
             _statusNoticeText.alignment = TextAnchor.MiddleCenter;
             _statusNoticeText.color = new Color(0.6f, 0.85f, 1f, 0.9f);
-            _statusNoticeText.text = "💡 스킬/경험치/몬스터 스탯을 실시간 조절하고 파일에 저장할 수 있습니다.";
+            _statusNoticeText.text = "💡 스킬/경험치/치명타/몬스터 스탯을 실시간 조절하고 파일에 저장할 수 있습니다.";
 
-            var saveGo = new GameObject("Btn_SaveToFile");
-            saveGo.transform.SetParent(_contentBox.transform, false);
-            var saveRt = saveGo.AddComponent<RectTransform>();
-            saveRt.anchorMin = new Vector2(0.5f, 0f);
-            saveRt.anchorMax = new Vector2(0.5f, 0f);
-            saveRt.pivot = new Vector2(0.5f, 0f);
-            saveRt.anchoredPosition = new Vector2(-115f, botY);
-            saveRt.sizeDelta = new Vector2(220f, 36f);
+            CreateActionButton("Btn_SaveToFile", -115f, botY, new Color(0.18f, 0.65f, 0.35f, 1f), "💾 파일에 반영 (Save Config)", OnSaveClicked);
+            CreateActionButton("Btn_ResetDefaults", 115f, botY, new Color(0.65f, 0.25f, 0.20f, 1f), "🔄 기본값 복원 (Restore)", OnResetClicked);
+        }
 
-            var saveImg = saveGo.AddComponent<Image>();
-            saveImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            saveImg.color = new Color(0.18f, 0.65f, 0.35f, 1f);
+        private void CreateActionButton(string name, float x, float y, Color col, string label, UnityEngine.Events.UnityAction onClick)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(_contentBox.transform, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = new Vector2(x, y);
+            rt.sizeDelta = new Vector2(220f, 36f);
 
-            var saveBtn = saveGo.AddComponent<Button>();
-            saveBtn.targetGraphic = saveImg;
-            saveBtn.onClick.AddListener(OnSaveClicked);
-            SkillTuningSliderFactory.CreateText(saveGo.transform, "Txt", "💾 파일에 반영 (Save Config)", 13, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            var img = go.AddComponent<Image>();
+            img.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            img.color = col;
 
-            var resetGo = new GameObject("Btn_ResetDefaults");
-            resetGo.transform.SetParent(_contentBox.transform, false);
-            var resetRt = resetGo.AddComponent<RectTransform>();
-            resetRt.anchorMin = new Vector2(0.5f, 0f);
-            resetRt.anchorMax = new Vector2(0.5f, 0f);
-            resetRt.pivot = new Vector2(0.5f, 0f);
-            resetRt.anchoredPosition = new Vector2(115f, botY);
-            resetRt.sizeDelta = new Vector2(220f, 36f);
-
-            var resetImg = resetGo.AddComponent<Image>();
-            resetImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            resetImg.color = new Color(0.65f, 0.25f, 0.20f, 1f);
-
-            var resetBtn = resetGo.AddComponent<Button>();
-            resetBtn.targetGraphic = resetImg;
-            resetBtn.onClick.AddListener(OnResetClicked);
-            SkillTuningSliderFactory.CreateText(resetGo.transform, "Txt", "🔄 기본값 복원 (Restore)", 13, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(onClick);
+            SkillTuningSliderFactory.CreateText(go.transform, "Txt", label, 13, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
         }
 
         private void SelectSkill(string skillId)
@@ -275,7 +250,7 @@ namespace HappyShoot.View.UI
 
             SetMonsterSubTabsVisible(false);
 
-            if (skillId == "exp_tuning")
+            if (skillId == "exp_tuning" || skillId == "crit_tuning")
             {
                 for (int i = 0; i < _levelButtonImgs.Count; i++)
                 {
@@ -438,13 +413,24 @@ namespace HappyShoot.View.UI
 
         private void OnSaveClicked()
         {
-            if (_playerView?.Entity != null && _selectedSkillId != "exp_tuning" && _selectedSkillId != "monster_tuning")
+            if (_playerView?.Entity != null)
             {
-                var activeSkill = _playerView.Entity.GetSkill(_selectedSkillId);
-                if (activeSkill != null && activeSkill.Level == 1)
+                if (_selectedSkillId != "exp_tuning" && _selectedSkillId != "monster_tuning" && _selectedSkillId != "crit_tuning")
                 {
-                    SkillLiveApplier.PullSkillStatsToConfig(_playerView.Entity, _selectedSkillId, _config);
+                    var activeSkill = _playerView.Entity.GetSkill(_selectedSkillId);
+                    if (activeSkill != null && activeSkill.Level == 1)
+                        SkillLiveApplier.PullSkillStatsToConfig(_playerView.Entity, _selectedSkillId, _config);
                 }
+
+                if (_config.CritStat == null) _config.CritStat = new HappyShoot.Domain.Skills.CritStatConfig();
+                var pStat = _playerView.Entity.Stats;
+                _config.CritStat.CritChance = pStat.CritChance;
+                _config.CritStat.CritDamageMultiplier = pStat.CritDamageMultiplier;
+                _config.CritStat.AttackPowerMultiplier = pStat.AttackPowerMultiplier;
+                _config.CritStat.MoveSpeed = pStat.MoveSpeed;
+                _config.CritStat.Armor = pStat.Armor;
+                _config.CritStat.CooldownReduction = pStat.CooldownReduction;
+                _config.CritStat.IsCustom = true;
             }
 
             SkillTuningMemoryCache.ExportToConfig(_config);
@@ -452,7 +438,7 @@ namespace HappyShoot.View.UI
 
             if (_statusNoticeText != null)
             {
-                _statusNoticeText.text = success ? "✅ 모든 스킬/경험치/몬스터 스탯 설정이 파일에 저장되었습니다!" : "❌ 저장 실패!";
+                _statusNoticeText.text = success ? "✅ 모든 스킬/치명타/경험치/몬스터 스탯이 파일에 저장되었습니다!" : "❌ 저장 실패!";
                 _statusNoticeText.color = success ? Color.green : Color.red;
             }
         }
@@ -466,7 +452,14 @@ namespace HappyShoot.View.UI
             if (_levelSystem != null) _levelSystem.Config = _config.Exp;
             if (_gemManager != null) _gemManager.Config = _config.Exp;
 
-            if (_selectedSkillId == "exp_tuning" || _selectedSkillId == "monster_tuning")
+            if (_config.CritStat != null && _config.CritStat.IsCustom && _playerView?.Entity != null)
+            {
+                var s = _playerView.Entity.Stats;
+                var c = _config.CritStat;
+                _playerView.Entity.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, c.MoveSpeed, c.AttackPowerMultiplier, c.Armor, c.CritChance, c.CritDamageMultiplier, c.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+            }
+
+            if (_selectedSkillId == "exp_tuning" || _selectedSkillId == "monster_tuning" || _selectedSkillId == "crit_tuning")
                 RebuildSlidersForSelectedSkill();
             else
                 SetSkillLevel(1);

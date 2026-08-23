@@ -71,5 +71,28 @@ namespace HappyShoot.Domain.Skills.Evolution
 
             return false;
         }
+
+        /// <summary>
+        /// Checks if a base skill has already been evolved into its corresponding ultimate weapon.
+        /// Prevents base skills from reappearing in level-up reward options after evolution.
+        /// </summary>
+        public bool IsBaseSkillEvolved(PlayerEntity player, string baseSkillId)
+        {
+            if (player == null || string.IsNullOrEmpty(baseSkillId)) return false;
+
+            for (int i = 0; i < _recipes.Count; i++)
+            {
+                var recipe = _recipes[i];
+                if (recipe.BaseSkillId == baseSkillId)
+                {
+                    if (player.Skills.Any(s => s.Id == recipe.EvolvedSkillId))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }

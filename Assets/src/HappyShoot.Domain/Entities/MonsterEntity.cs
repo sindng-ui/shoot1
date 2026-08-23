@@ -334,13 +334,13 @@ namespace HappyShoot.Domain.Entities
         /// <summary>
         /// Applies damage to the monster and triggers events (regular, boss, ice shatter).
         /// </summary>
-        public void TakeDamage(float damage)
+        public void TakeDamage(float damage, bool isCritical = false)
         {
             if (!IsActive || IsDead || damage <= 0f) return;
 
             bool wasChilled = IsChilled;
             CurrentHealth = Math.Max(0f, CurrentHealth - damage);
-            _eventBus?.Publish(new MonsterDamagedEvent(Id, damage, CurrentHealth, MaxHealth, Position));
+            _eventBus?.Publish(new MonsterDamagedEvent(Id, damage, CurrentHealth, MaxHealth, Position, isCritical));
 
             if (IsBoss)
             {

@@ -90,7 +90,8 @@ namespace HappyShoot.Domain.Skills.Effects
                     // Point-blank enemies in center overlap are always hit
                     if (dist <= 0.25f)
                     {
-                        monster.TakeDamage(effectiveDamage);
+                        var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
+                        monster.TakeDamage(hitDmg, isCrit);
                         continue;
                     }
 
@@ -107,7 +108,8 @@ namespace HappyShoot.Domain.Skills.Effects
                     // Hit if within arc angle or monster hitbox touches the swing sector
                     if (dot >= minDot)
                     {
-                        monster.TakeDamage(effectiveDamage);
+                        var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
+                        monster.TakeDamage(hitDmg, isCrit);
                     }
                 }
             }

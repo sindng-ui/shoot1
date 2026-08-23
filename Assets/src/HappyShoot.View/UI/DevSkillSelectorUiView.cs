@@ -169,6 +169,7 @@ namespace HappyShoot.View.UI
             AddPassiveButton("passive_armor", "강철 갑옷 (방어력 +5)", ref currentY);
             AddPassiveButton("passive_ring", "황금 반지 (골드 획득량 +25%)", ref currentY);
             AddPassiveButton("passive_heart", "생명의 펜던트 (최대 체력 +20)", ref currentY);
+            AddPassiveButton("passive_crit", "치명타의 눈 (크리확률+8%, 대미지+5%)", ref currentY);
         }
 
         private void ToggleCollapse()

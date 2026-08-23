@@ -37,7 +37,7 @@ namespace HappyShoot.Domain.Entities
                         moveSpeed: 4.8f,
                         attackPowerMultiplier: 1.1f,
                         armor: 15f,
-                        critChance: 0.05f,
+                        critChance: 0.10f,
                         critDamageMultiplier: 1.5f,
                         cooldownReduction: 0f,
                         areaMultiplier: 1.15f,
@@ -55,14 +55,14 @@ namespace HappyShoot.Domain.Entities
                     break;
 
                 case CharacterClassType.Ranger:
-                    // Ranger: +20% MoveSpeed (6.0), +10% CritChance (15%), Piercing Bow
+                    // Ranger: +20% MoveSpeed (6.0), +20% CritChance (20%), Piercing Bow
                     stats = new CharacterStats(
                         maxHealth: 90f,
                         healthRegen: 0f,
                         moveSpeed: 6.0f,
                         attackPowerMultiplier: 1.0f,
                         armor: 0f,
-                        critChance: 0.15f,
+                        critChance: 0.20f,
                         critDamageMultiplier: 1.75f,
                         cooldownReduction: 0f,
                         areaMultiplier: 1.0f,
@@ -88,7 +88,7 @@ namespace HappyShoot.Domain.Entities
                         moveSpeed: 5.0f,
                         attackPowerMultiplier: 1.25f,
                         armor: 0f,
-                        critChance: 0.05f,
+                        critChance: 0.10f,
                         critDamageMultiplier: 1.5f,
                         cooldownReduction: 0.15f,
                         areaMultiplier: 1.2f,

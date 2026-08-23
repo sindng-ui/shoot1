@@ -19,16 +19,47 @@ namespace HappyShoot.View.UI
             _textMesh = GetComponent<TextMesh>();
             _textMesh.alignment = TextAlignment.Center;
             _textMesh.anchor = TextAnchor.MiddleCenter;
+            _textMesh.characterSize = 1f;
+
+            var font = Utils.FontHelper.GetKoreanFont();
+            if (font != null)
+            {
+                _textMesh.font = font;
+                var mr = GetComponent<MeshRenderer>();
+                if (mr != null && font.material != null)
+                {
+                    mr.material = font.material;
+                }
+            }
         }
+
+        private float _spawnTimer = 0f;
+        private float _targetBaseScale = 0.075f;
 
         public void Bind(DamageTextEntity entity)
         {
             _entity = entity;
+            _spawnTimer = 0f;
             transform.position = new Vector3(entity.Position.X, entity.Position.Y, -1f);
 
-            _textMesh.text = entity.DamageValue.ToString("0");
-            _textMesh.fontSize = entity.IsCritical ? 32 : 24;
-            _textMesh.color = entity.IsCritical ? new Color(1f, 0.85f, 0.2f, 1f) : Color.white;
+            if (entity.IsCritical)
+            {
+                _textMesh.text = entity.DamageValue.ToString("0") + "!";
+                _textMesh.fontSize = 44;
+                _textMesh.color = new Color(1.0f, 0.88f, 0.15f, 1f);
+                _textMesh.fontStyle = FontStyle.Bold;
+                _targetBaseScale = 0.105f; // Slightly larger for critical
+                transform.localScale = Vector3.one * (_targetBaseScale * 1.35f);
+            }
+            else
+            {
+                _textMesh.text = entity.DamageValue.ToString("0");
+                _textMesh.fontSize = 32;
+                _textMesh.color = Color.white;
+                _textMesh.fontStyle = FontStyle.Normal;
+                _targetBaseScale = 0.075f;
+                transform.localScale = Vector3.one * _targetBaseScale;
+            }
 
             gameObject.SetActive(true);
         }
@@ -39,6 +70,19 @@ namespace HappyShoot.View.UI
             {
                 gameObject.SetActive(false);
                 return;
+            }
+
+            _spawnTimer += Time.deltaTime;
+
+            if (_entity.IsCritical)
+            {
+                // Dynamic punch bounce scale: 1.35x -> 1.0x
+                float pop = Mathf.Lerp(1.35f, 1.0f, Mathf.Clamp01(_spawnTimer * 10f));
+                transform.localScale = Vector3.one * (_targetBaseScale * pop);
+            }
+            else
+            {
+                transform.localScale = Vector3.one * _targetBaseScale;
             }
 
             transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, -1f);

@@ -50,8 +50,23 @@ namespace HappyShoot.Domain.Skills
         // 7. Monster Stats Tuning
         public HappyShoot.Domain.Entities.MonsterTuningConfigData Monsters = new HappyShoot.Domain.Entities.MonsterTuningConfigData();
 
-        // 8. Explicit Level-by-Level Tunings (L1~L5)
+        // 8. Player Critical & Core Stats Tuning
+        public CritStatConfig CritStat = new CritStatConfig();
+
+        // 9. Explicit Level-by-Level Tunings (L1~L5)
         public List<SkillLevelCustomData> LevelTunings = new List<SkillLevelCustomData>();
+    }
+
+    [Serializable]
+    public class CritStatConfig
+    {
+        public float CritChance = 0.10f;
+        public float CritDamageMultiplier = 1.50f;
+        public float AttackPowerMultiplier = 1.00f;
+        public float MoveSpeed = 5.00f;
+        public float Armor = 0f;
+        public float CooldownReduction = 0f;
+        public bool IsCustom = false;
     }
 
     [Serializable]

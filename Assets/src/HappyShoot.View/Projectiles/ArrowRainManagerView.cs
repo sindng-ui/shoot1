@@ -46,10 +46,12 @@ namespace HappyShoot.View.Projectiles
         private readonly List<RainZone> _zones = new List<RainZone>(MaxZones);
         private readonly List<MonsterEntity> _hitBuffer = new List<MonsterEntity>(32);
         private MonsterSpawnerView _spawnerView;
+        private Player.PlayerView _playerView;
 
-        public void Initialize(EventBus eventBus, MonsterSpawnerView spawnerView = null)
+        public void Initialize(EventBus eventBus, MonsterSpawnerView spawnerView = null, Player.PlayerView playerView = null)
         {
             _spawnerView = spawnerView;
+            _playerView = playerView;
             if (eventBus != null)
             {
                 eventBus.Subscribe<ArrowRainExecutedEvent>(OnArrowRainExecuted);
@@ -260,7 +262,15 @@ namespace HappyShoot.View.Projectiles
                 var monster = _hitBuffer[i];
                 if (monster != null && monster.IsActive && !monster.IsDead)
                 {
-                    monster.TakeDamage(damage);
+                    if (_playerView != null && _playerView.Entity != null)
+                    {
+                        var (hitDmg, isCrit) = _playerView.Entity.RollDamage(damage);
+                        monster.TakeDamage(hitDmg, isCrit);
+                    }
+                    else
+                    {
+                        monster.TakeDamage(damage);
+                    }
                 }
             }
         }

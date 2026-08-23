@@ -105,7 +105,8 @@ namespace HappyShoot.Domain.Skills.Effects
                     if (_hitBuffer[i] is MonsterEntity monster && monster.IsActive && !monster.IsDead)
                     {
                         monster.ApplyBurn(duration: 7.0f, damagePerTick: effectiveDamage * 0.12f);
-                        monster.TakeDamage(effectiveDamage);
+                        var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
+                        monster.TakeDamage(hitDmg, isCrit);
                     }
                 }
             }

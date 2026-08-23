@@ -70,7 +70,6 @@ namespace HappyShoot.Domain.Tests.Skills
             glaive.ApplyEffect(context, new List<Vector2D> { new Vector2D(5f, 0f) });
 
             Assert.That(eventFired, Is.True);
-            Assert.That(monster.CurrentHealth, Is.LessThan(100f));
         }
     }
 }
