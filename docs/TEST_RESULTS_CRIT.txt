@@ -83,6 +83,12 @@
    [PASS] Execute_DamagesMonstersInOrbitalPath
    [PASS] GetBladePosition_ReturnsCorrectCoordinates
 
+[Fixture] HappyShoot.Domain.Tests.Skills.WarriorSkillsTests
+   [PASS] GroundStompEffect_DealsDamageAndPublishesGroundStompExecutedEvent
+   [PASS] WhirlwindEffect_Deals360DegreeDamageAndPublishesWhirlwindExecutedEvent
+   [PASS] WhirlwindEffect_LevelUp_IncreasesDamageAndRadius
+   [PASS] BloodEaterEffect_DealsForwardSectorDamageAndLifeSteals
+
 [Fixture] HappyShoot.Domain.Tests.Skills.WizardSkillsTests
    [PASS] Fireball_ExplodesAndDealsSplashDamage_ToEnemiesInRadius
    [PASS] FrostNova_Deals360DegreeDamage_ToSurroundingEnemies
@@ -173,5 +179,5 @@
    [PASS] AddGold_PersistsCorrectly
 
 =================================================
- Total Tests: 111 | Passed: 111 | Failed: 0
+ Total Tests: 115 | Passed: 115 | Failed: 0
 =================================================

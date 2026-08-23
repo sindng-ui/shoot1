@@ -38,6 +38,27 @@ namespace HappyShoot.Domain.Events
     }
 
     /// <summary>
+    /// Event triggered when a Wizard launches a flying fiery comet fireball towards a target location.
+    /// </summary>
+    public readonly struct FireballLaunchedEvent : IDomainEvent
+    {
+        public readonly Vector2D StartPosition;
+        public readonly Vector2D TargetPosition;
+        public readonly float Radius;
+        public readonly float Damage;
+        public readonly float Speed;
+
+        public FireballLaunchedEvent(Vector2D startPosition, Vector2D targetPosition, float radius, float damage, float speed = 18f)
+        {
+            StartPosition = startPosition;
+            TargetPosition = targetPosition;
+            Radius = radius;
+            Damage = damage;
+            Speed = speed;
+        }
+    }
+
+    /// <summary>
     /// Event triggered when a Fireball explodes on impact.
     /// </summary>
     public readonly struct FireballExplodedEvent : IDomainEvent
@@ -85,6 +106,44 @@ namespace HappyShoot.Domain.Events
             MonsterId = monsterId;
             Position = position;
             Size = size;
+        }
+    }
+
+    /// <summary>
+    /// Event triggered when Wizard casts Evolved Gigastorm Chain Lightning.
+    /// </summary>
+    public readonly struct GigastormLightningExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D StartPosition;
+        public readonly IReadOnlyList<Vector2D> TargetPositions;
+        public readonly float Damage;
+        public readonly float SparkRadius;
+
+        public GigastormLightningExecutedEvent(Vector2D startPosition, IReadOnlyList<Vector2D> targetPositions, float damage, float sparkRadius = 1.5f)
+        {
+            StartPosition = startPosition;
+            TargetPositions = targetPositions;
+            Damage = damage;
+            SparkRadius = sparkRadius;
+        }
+    }
+
+    /// <summary>
+    /// Event triggered when Wizard casts Evolved Blizzard Nova.
+    /// </summary>
+    public readonly struct BlizzardNovaExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D CenterPosition;
+        public readonly float Radius;
+        public readonly float Damage;
+        public readonly int ShardCount;
+
+        public BlizzardNovaExecutedEvent(Vector2D centerPosition, float radius, float damage, int shardCount = 8)
+        {
+            CenterPosition = centerPosition;
+            Radius = radius;
+            Damage = damage;
+            ShardCount = shardCount;
         }
     }
 }

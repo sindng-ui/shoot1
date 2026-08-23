@@ -13,7 +13,7 @@ namespace HappyShoot.Domain.Entities
     {
         private readonly ObjectPool<MonsterEntity> _monsterPool;
         private readonly SpatialGrid2D<MonsterEntity> _monsterGrid;
-        private readonly List<MonsterEntity> _activeMonsters = new List<MonsterEntity>(512);
+        private readonly List<MonsterEntity> _activeMonsters = new List<MonsterEntity>(1280);
         private readonly EventBus _eventBus;
         private int _idCounter = 1000;
 

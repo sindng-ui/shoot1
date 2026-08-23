@@ -143,6 +143,62 @@ namespace HappyShoot.View.UI
                     }
                     if (skill.Trigger is CooldownTrigger cdMs) cdMs.Cooldown = cooldown(config.MeteorStrike.Cooldown);
                     break;
+                case "tempest_whirlwind":
+                    if (skill.Effect is TempestWhirlwindEffect tw)
+                    {
+                        tw.BaseDamage = config.TempestWhirlwind.Damage;
+                        tw.Radius = config.TempestWhirlwind.Radius;
+                        tw.SlashWaveCount = config.TempestWhirlwind.SlashWaveCount;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdTw) cdTw.Cooldown = cooldown(config.TempestWhirlwind.Cooldown);
+                    break;
+                case "earthshaker":
+                    if (skill.Effect is EarthshakerEffect es)
+                    {
+                        es.BaseDamage = config.Earthshaker.Damage;
+                        es.Radius = config.Earthshaker.Radius;
+                        es.FissureCount = config.Earthshaker.FissureCount;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdEs) cdEs.Cooldown = cooldown(config.Earthshaker.Cooldown);
+                    break;
+                case "phantom_glaive":
+                    if (skill.Effect is PhantomGlaiveEffect pg)
+                    {
+                        pg.BaseDamage = config.PhantomGlaive.Damage;
+                        pg.MaxDistance = config.PhantomGlaive.Distance;
+                        pg.Speed = config.PhantomGlaive.Speed;
+                        pg.PhantomCount = config.PhantomGlaive.PhantomCount;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdPg) cdPg.Cooldown = cooldown(config.PhantomGlaive.Cooldown);
+                    break;
+                case "stellar_rain":
+                    if (skill.Effect is StellarRainEffect sr)
+                    {
+                        sr.BaseDamage = config.StellarRain.Damage;
+                        sr.Radius = config.StellarRain.Radius;
+                        sr.ArrowCount = config.StellarRain.ArrowCount;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdSr) cdSr.Cooldown = cooldown(config.StellarRain.Cooldown);
+                    break;
+                case "gigastorm_lightning":
+                    if (skill.Effect is GigastormLightningEffect gl)
+                    {
+                        gl.BaseDamage = config.GigastormLightning.Damage;
+                        gl.ChainCount = config.GigastormLightning.ChainCount;
+                        gl.ChainRange = config.GigastormLightning.JumpRadius;
+                        gl.SparkRadius = config.GigastormLightning.SparkRadius;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdGl) cdGl.Cooldown = cooldown(config.GigastormLightning.Cooldown);
+                    break;
+                case "blizzard_nova":
+                    if (skill.Effect is BlizzardNovaEffect bn)
+                    {
+                        bn.BaseDamage = config.BlizzardNova.Damage;
+                        bn.Radius = config.BlizzardNova.Radius;
+                        bn.ShardCount = config.BlizzardNova.ShardCount;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdBn) cdBn.Cooldown = cooldown(config.BlizzardNova.Cooldown);
+                    break;
             }
         }
 
@@ -275,6 +331,62 @@ namespace HappyShoot.View.UI
                         config.MeteorStrike.Radius = ms.ExplosionRadius;
                     }
                     if (skill.Trigger is CooldownTrigger cdMsPull) config.MeteorStrike.Cooldown = cdMsPull.Cooldown;
+                    break;
+                case "tempest_whirlwind":
+                    if (skill.Effect is TempestWhirlwindEffect tw)
+                    {
+                        config.TempestWhirlwind.Damage = tw.BaseDamage;
+                        config.TempestWhirlwind.Radius = tw.Radius;
+                        config.TempestWhirlwind.SlashWaveCount = tw.SlashWaveCount;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdTwPull) config.TempestWhirlwind.Cooldown = cdTwPull.Cooldown;
+                    break;
+                case "earthshaker":
+                    if (skill.Effect is EarthshakerEffect es)
+                    {
+                        config.Earthshaker.Damage = es.BaseDamage;
+                        config.Earthshaker.Radius = es.Radius;
+                        config.Earthshaker.FissureCount = es.FissureCount;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdEsPull) config.Earthshaker.Cooldown = cdEsPull.Cooldown;
+                    break;
+                case "phantom_glaive":
+                    if (skill.Effect is PhantomGlaiveEffect pg)
+                    {
+                        config.PhantomGlaive.Damage = pg.BaseDamage;
+                        config.PhantomGlaive.Distance = pg.MaxDistance;
+                        config.PhantomGlaive.Speed = pg.Speed;
+                        config.PhantomGlaive.PhantomCount = pg.PhantomCount;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdPgPull) config.PhantomGlaive.Cooldown = cdPgPull.Cooldown;
+                    break;
+                case "stellar_rain":
+                    if (skill.Effect is StellarRainEffect sr)
+                    {
+                        config.StellarRain.Damage = sr.BaseDamage;
+                        config.StellarRain.Radius = sr.Radius;
+                        config.StellarRain.ArrowCount = sr.ArrowCount;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdSrPull) config.StellarRain.Cooldown = cdSrPull.Cooldown;
+                    break;
+                case "gigastorm_lightning":
+                    if (skill.Effect is GigastormLightningEffect gl)
+                    {
+                        config.GigastormLightning.Damage = gl.BaseDamage;
+                        config.GigastormLightning.ChainCount = gl.ChainCount;
+                        config.GigastormLightning.JumpRadius = gl.ChainRange;
+                        config.GigastormLightning.SparkRadius = gl.SparkRadius;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdGlPull) config.GigastormLightning.Cooldown = cdGlPull.Cooldown;
+                    break;
+                case "blizzard_nova":
+                    if (skill.Effect is BlizzardNovaEffect bn)
+                    {
+                        config.BlizzardNova.Damage = bn.BaseDamage;
+                        config.BlizzardNova.Radius = bn.Radius;
+                        config.BlizzardNova.ShardCount = bn.ShardCount;
+                    }
+                    if (skill.Trigger is CooldownTrigger cdBnPull) config.BlizzardNova.Cooldown = cdBnPull.Cooldown;
                     break;
             }
         }

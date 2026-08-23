@@ -179,11 +179,11 @@ namespace HappyShoot.View.Projectiles
                     ind.Root.transform.position = target;
                     // Decal fixed at exact diameter (radius * 2.0f)
                     ind.DecalRenderer.transform.localScale = Vector3.one * (radius * 2.0f);
-                    ind.DecalRenderer.color = new Color(1.0f, 0.55f, 0.1f, 0.85f);
+                    ind.DecalRenderer.color = new Color(0.95f, 0.40f, 0.1f, 0.45f);
 
                     // Pulse ring starts at double size and converges into center
-                    ind.PulseRenderer.transform.localScale = Vector3.one * (radius * 2.5f);
-                    ind.PulseRenderer.color = new Color(1.0f, 0.85f, 0.3f, 0.95f);
+                    ind.PulseRenderer.transform.localScale = Vector3.one * (radius * 2.4f);
+                    ind.PulseRenderer.color = new Color(1.0f, 0.65f, 0.15f, 0.35f);
 
                     ind.Root.SetActive(true);
                     _indicatorPool[i] = ind;
@@ -276,10 +276,10 @@ namespace HappyShoot.View.Projectiles
                     float currentPulseScale = Mathf.Lerp(ind.Radius * 2.4f, ind.Radius * 2.0f, progress);
                     ind.PulseRenderer.transform.localScale = Vector3.one * currentPulseScale;
 
-                    // Fade in / pulse alpha
-                    float alpha = Mathf.Lerp(0.6f, 1.0f, progress);
-                    ind.DecalRenderer.color = new Color(1.0f, 0.55f, 0.1f, alpha * 0.9f);
-                    ind.PulseRenderer.color = new Color(1.0f, 0.85f, 0.3f, alpha);
+                    // Soft fade in / pulse alpha (comfortable for eyes)
+                    float alpha = Mathf.Lerp(0.3f, 0.65f, progress);
+                    ind.DecalRenderer.color = new Color(0.95f, 0.40f, 0.1f, alpha * 0.50f);
+                    ind.PulseRenderer.color = new Color(1.0f, 0.65f, 0.15f, alpha * 0.35f);
 
                     if (progress >= 1.0f)
                     {
@@ -327,13 +327,13 @@ namespace HappyShoot.View.Projectiles
                     b.Elapsed += dt;
                     float progress = Mathf.Clamp01(b.Elapsed / b.Duration);
 
-                    // Core expand & fade
-                    float scale = Mathf.Lerp(0.4f, b.TargetScale, Mathf.Sqrt(progress));
+                    // Core expand & smooth fade
+                    float scale = Mathf.Lerp(b.TargetScale * 0.30f, b.TargetScale, Mathf.Sqrt(progress));
                     b.Root.transform.localScale = Vector3.one * scale;
 
-                    float alpha = 1.0f - progress;
-                    b.CoreRenderer.color = new Color(1.0f, 0.8f * (1f - progress), 0.15f, alpha * 0.95f);
-                    b.RingRenderer.color = new Color(1.0f, 0.45f, 0.1f, alpha * 0.85f);
+                    float alpha = Mathf.Clamp01(1.0f - progress * progress);
+                    b.CoreRenderer.color = new Color(1.0f, 0.48f * (1f - progress), 0.08f, alpha * 0.70f);
+                    b.RingRenderer.color = new Color(0.95f, 0.35f, 0.05f, alpha * 0.55f);
 
                     if (progress >= 1.0f)
                     {

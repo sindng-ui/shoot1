@@ -32,6 +32,7 @@ namespace HappyShoot.View.Player
 
         public PlayerEntity Entity => _entity;
         public EventBus EventBus => _eventBus;
+        public Vector2 CurrentMoveDirection { get; private set; } = Vector2.zero;
 
         public void SetExternalSystems(Monsters.MonsterSpawnerView spawnerView, Projectiles.ProjectileManagerView projectileManagerView)
         {
@@ -108,12 +109,12 @@ namespace HappyShoot.View.Player
 
             var slashGo = new GameObject("SlashArc");
             slashGo.transform.SetParent(_slashPivotGo.transform);
-            slashGo.transform.localPosition = new Vector3(0.8f, 0f, 0f);
-            slashGo.transform.localScale = Vector3.one * 2.5f;
+            slashGo.transform.localPosition = Vector3.zero;
+            slashGo.transform.localScale = Vector3.one;
 
             _slashVisualSr = slashGo.AddComponent<SpriteRenderer>();
             _slashVisualSr.sprite = Utils.SpriteHelper.GetOrCreateSlashArcSprite();
-            _slashVisualSr.color = new Color(1f, 0.95f, 0.35f, 0.95f);
+            _slashVisualSr.color = Color.white;
             _slashVisualSr.sortingOrder = 3;
             _slashPivotGo.SetActive(false);
 
@@ -136,6 +137,7 @@ namespace HappyShoot.View.Player
             _eventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
             _eventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
             _eventBus.Subscribe<PlayerSlashExecutedEvent>(OnPlayerSlashExecuted);
+            _eventBus.Subscribe<BloodEaterExecutedEvent>(OnBloodEaterExecuted);
 
             _lastPos = transform.position;
         }
@@ -214,6 +216,7 @@ namespace HappyShoot.View.Player
 
             if (moveDist > 0.0001f)
             {
+                CurrentMoveDirection = new Vector2(deltaMove.x, deltaMove.y).normalized;
                 _walkBobTimer += Time.deltaTime * 16f;
                 float hop = Mathf.Abs(Mathf.Sin(_walkBobTimer)) * 0.12f;
                 float squashY = Mathf.Sin(_walkBobTimer * 2f) * 0.08f;
@@ -252,6 +255,7 @@ namespace HappyShoot.View.Player
             }
             else
             {
+                CurrentMoveDirection = Vector2.zero;
                 // Idle breathing jelly pulse
                 _walkBobTimer += Time.deltaTime * 3.5f;
                 float breatheY = Mathf.Sin(_walkBobTimer) * 0.035f;
@@ -273,8 +277,8 @@ namespace HappyShoot.View.Player
                 _slashVisualTimer -= Time.deltaTime;
                 float progress = Mathf.Clamp01(1.0f - (_slashVisualTimer / SlashDuration)); // 0.0 -> 1.0
 
-                // Swing smoothly from -60 to +60 degrees
-                float currentAngle = _slashBaseAngle + Mathf.Lerp(-60f, 60f, progress);
+                // Swing smoothly through the full 150-degree arc (-75 to +75 degrees)
+                float currentAngle = _slashBaseAngle + Mathf.Lerp(-75f, 75f, Mathf.SmoothStep(0f, 1f, progress));
                 if (_slashPivotGo != null)
                 {
                     _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, currentAngle);
@@ -286,7 +290,7 @@ namespace HappyShoot.View.Player
                     _swordGo.transform.parent.rotation = Quaternion.Euler(0f, 0f, currentAngle);
                 }
 
-                // Fade out smoothly
+                // Smooth energetic fade out
                 if (_slashVisualSr != null)
                 {
                     Color c = _slashVisualSr.color;
@@ -371,34 +375,69 @@ namespace HappyShoot.View.Player
         {
             _slashBaseAngle = evt.DirectionAngleDegrees;
             _slashVisualTimer = SlashDuration;
+            if (_slashVisualSr != null)
+            {
+                _slashVisualSr.sprite = Utils.SpriteHelper.GetOrCreateSlashArcSprite();
+            }
+            if (_swordSr != null)
+            {
+                _swordSr.color = Color.white;
+            }
             if (_slashPivotGo != null)
             {
                 _slashPivotGo.SetActive(true);
-                float initialAngle = _slashBaseAngle - 60f;
+                float initialAngle = _slashBaseAngle - 75f;
                 _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
                 if (_swordGo != null && _swordGo.transform.parent != null)
                 {
                     _swordGo.transform.parent.rotation = Quaternion.Euler(0f, 0f, initialAngle);
                 }
 
-                // Dynamic scale of the slash arc visual based on slash skill level & Area multiplier
-                int slashLevel = 1;
-                if (_entity != null)
-                {
-                    var skills = _entity.Skills;
-                    for (int i = 0; i < skills.Count; i++)
-                    {
-                        if (skills[i].Id == "slash") { slashLevel = skills[i].Level; break; }
-                    }
-                }
-                float areaMult = _entity != null ? _entity.Stats.AreaMultiplier : 1.0f;
-                float arcScale = (2.5f + 0.85f * (slashLevel - 1)) * areaMult;
+                // 128px sprite with maxRadius = 112.64px at 32 PPU = 3.52 units base reach.
+                // Scale so that visual blade arc edge exactly matches domain effective radius.
+                float baseRadius = 3.52f;
+                float arcScale = Mathf.Max(0.5f, evt.Radius / baseRadius);
                 if (_slashVisualSr != null)
                 {
                     _slashVisualSr.transform.localScale = Vector3.one * arcScale;
-                    _slashVisualSr.transform.localPosition = new Vector3(arcScale * 0.35f, 0f, 0f);
-                    Color c = _slashVisualSr.color;
-                    c.a = 0.95f;
+                    _slashVisualSr.transform.localPosition = Vector3.zero;
+                    Color c = Color.white;
+                    c.a = 1.0f;
+                    _slashVisualSr.color = c;
+                }
+            }
+        }
+
+        private void OnBloodEaterExecuted(BloodEaterExecutedEvent evt)
+        {
+            _slashBaseAngle = evt.DirectionAngleDegrees;
+            _slashVisualTimer = SlashDuration;
+            if (_slashVisualSr != null)
+            {
+                _slashVisualSr.sprite = Utils.SpriteHelper.GetOrCreateBloodSlashArcSprite();
+            }
+            if (_swordSr != null)
+            {
+                _swordSr.color = new Color(1.0f, 0.35f, 0.45f, 1f); // Glowing ruby blade
+            }
+            if (_slashPivotGo != null)
+            {
+                _slashPivotGo.SetActive(true);
+                float initialAngle = _slashBaseAngle - 75f;
+                _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
+                if (_swordGo != null && _swordGo.transform.parent != null)
+                {
+                    _swordGo.transform.parent.rotation = Quaternion.Euler(0f, 0f, initialAngle);
+                }
+
+                float baseRadius = 3.52f;
+                float arcScale = Mathf.Max(0.5f, evt.Radius / baseRadius);
+                if (_slashVisualSr != null)
+                {
+                    _slashVisualSr.transform.localScale = Vector3.one * arcScale;
+                    _slashVisualSr.transform.localPosition = Vector3.zero;
+                    Color c = Color.white;
+                    c.a = 1.0f;
                     _slashVisualSr.color = c;
                 }
             }

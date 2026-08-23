@@ -47,11 +47,13 @@ namespace HappyShoot.View.Projectiles
             _spawnerView = spawnerView;
 
             _eventBus?.Subscribe<WindGlaiveExecutedEvent>(OnWindGlaiveExecuted);
+            _eventBus?.Subscribe<PhantomGlaiveExecutedEvent>(OnPhantomGlaiveExecuted);
         }
 
         private void OnDestroy()
         {
             _eventBus?.Unsubscribe<WindGlaiveExecutedEvent>(OnWindGlaiveExecuted);
+            _eventBus?.Unsubscribe<PhantomGlaiveExecutedEvent>(OnPhantomGlaiveExecuted);
         }
 
         private void Update()
@@ -169,6 +171,45 @@ namespace HappyShoot.View.Projectiles
                 glaive.HitMonstersReturn.Clear();
 
                 glaive.GameObject.transform.position = new Vector3(origin.x, origin.y, -0.2f);
+                glaive.GameObject.SetActive(true);
+
+                _activeGlaives.Add(glaive);
+            }
+        }
+
+        private void OnPhantomGlaiveExecuted(PhantomGlaiveExecutedEvent evt)
+        {
+            Vector2 origin = new Vector2((float)evt.Origin.X, (float)evt.Origin.Y);
+            Vector2 baseDir = new Vector2((float)evt.TargetDirection.X, (float)evt.TargetDirection.Y).normalized;
+            if (baseDir.sqrMagnitude < 0.01f) baseDir = Vector2.right;
+
+            float baseAngle = Mathf.Atan2(baseDir.y, baseDir.x) * Mathf.Rad2Deg;
+            float outwardTime = Mathf.Max(0.25f, evt.MaxDistance / Mathf.Max(1f, evt.Speed));
+            float returnTime = outwardTime * 0.85f;
+
+            // Spawn Prime Glaive + 2 Phantom Glaives
+            int totalGlaives = 1 + evt.PhantomCount;
+            for (int i = 0; i < totalGlaives; i++)
+            {
+                float offsetAngle = (i == 0) ? 0f : (i == 1 ? -16f : 16f);
+                float finalAngle = (baseAngle + offsetAngle) * Mathf.Deg2Rad;
+                Vector2 dir = new Vector2(Mathf.Cos(finalAngle), Mathf.Sin(finalAngle));
+                Vector2 peakPos = origin + dir * (evt.MaxDistance * (i == 0 ? 1.0f : 0.90f));
+
+                var glaive = GetOrCreateGlaive();
+                glaive.StartPos = origin;
+                glaive.TargetPeakPos = peakPos;
+                glaive.OutwardDuration = outwardTime;
+                glaive.ReturnDuration = returnTime;
+                glaive.ElapsedTime = 0f;
+                glaive.Damage = evt.Damage * (i == 0 ? 1.0f : 0.65f);
+                glaive.IsReturning = false;
+                glaive.RotationAngle = Random.Range(0f, 360f);
+                glaive.HitMonstersOutward.Clear();
+                glaive.HitMonstersReturn.Clear();
+
+                glaive.GameObject.transform.position = new Vector3(origin.x, origin.y, -0.2f);
+                glaive.Renderer.color = (i == 0) ? Color.white : new Color(0.4f, 1.0f, 0.85f, 0.85f);
                 glaive.GameObject.SetActive(true);
 
                 _activeGlaives.Add(glaive);

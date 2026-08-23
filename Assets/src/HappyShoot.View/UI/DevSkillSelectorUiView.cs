@@ -72,7 +72,7 @@ namespace HappyShoot.View.UI
             rootRt.anchorMax = new Vector2(1f, 0.5f);
             rootRt.pivot = new Vector2(1f, 0.5f);
             rootRt.anchoredPosition = new Vector2(-15f, 0f);
-            rootRt.sizeDelta = new Vector2(360f, 660f);
+            rootRt.sizeDelta = new Vector2(360f, 780f);
 
             // 2. Collapse Toggle Tab (Left border tab)
             var tabGo = new GameObject("CollapseTab");
@@ -150,13 +150,19 @@ namespace HappyShoot.View.UI
             AddSkillButton("orbital", "⚔️ 오비탈 블레이드 [공용]", ref currentY);
             currentY -= 6f;
 
-            // 2. EVOLVED SKILLS
+            // 2. EVOLVED SKILLS (9 Total)
             CreateText(_contentBox.transform, "Sec_Evo", "✨ 진화 궁극기 (좌: 장착 / 우: 해제)", 12, TextAnchor.MiddleLeft, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, currentY), new Vector2(330f, 18f), new Color(1f, 0.85f, 0.2f, 1f));
             currentY -= 22f;
 
-            AddSkillButton("blood_eater", "🩸 블러드 이터", ref currentY);
-            AddSkillButton("storm_bow", "⚡ 폭풍의 활", ref currentY);
-            AddSkillButton("meteor_strike", "☄️ 메테오 스트라이크", ref currentY);
+            AddSkillButton("blood_eater", "🩸 블러드 이터 [전사]", ref currentY);
+            AddSkillButton("tempest_whirlwind", "🌪️ 템페스트 휠윈드 [전사]", ref currentY);
+            AddSkillButton("earthshaker", "🌋 어스셰이커 파쇄 [전사]", ref currentY);
+            AddSkillButton("storm_bow", "⚡ 폭풍의 활 [궁수]", ref currentY);
+            AddSkillButton("phantom_glaive", "🪃 팬텀 글레이브 [궁수]", ref currentY);
+            AddSkillButton("stellar_rain", "🌟 스텔라 레인 [궁수]", ref currentY);
+            AddSkillButton("meteor_strike", "☄️ 메테오 스트라이크 [마법사]", ref currentY);
+            AddSkillButton("blizzard_nova", "❄️ 블리자드 노바 [마법사]", ref currentY);
+            AddSkillButton("gigastorm_lightning", "⚡ 기가스톰 체인 [마법사]", ref currentY);
             currentY -= 6f;
 
             // 3. PASSIVES

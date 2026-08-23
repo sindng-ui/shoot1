@@ -44,7 +44,7 @@ namespace HappyShoot.Domain.Skills.Effects
 
             // Audio & Event
             context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.SlashAttack, volume: 0.85f));
-            context.EventBus?.Publish(new GroundStompExecutedEvent(center, effectiveRadius));
+            context.EventBus?.Publish(new WhirlwindExecutedEvent(center, effectiveRadius));
 
             int hitCount = context.TargetGrid.QueryRadiusNonAlloc(center, effectiveRadius, _hitBuffer);
 

@@ -39,10 +39,16 @@ namespace HappyShoot.Domain.Skills
         // 4. Shared
         public OrbitalConfig Orbital = new OrbitalConfig();
 
-        // 5. Ultimate Evolutions
+        // 5. Ultimate Evolutions (9 Total)
         public BloodEaterConfig BloodEater = new BloodEaterConfig();
+        public TempestWhirlwindConfig TempestWhirlwind = new TempestWhirlwindConfig();
+        public EarthshakerConfig Earthshaker = new EarthshakerConfig();
         public StormBowConfig StormBow = new StormBowConfig();
+        public PhantomGlaiveConfig PhantomGlaive = new PhantomGlaiveConfig();
+        public StellarRainConfig StellarRain = new StellarRainConfig();
         public MeteorStrikeConfig MeteorStrike = new MeteorStrikeConfig();
+        public GigastormLightningConfig GigastormLightning = new GigastormLightningConfig();
+        public BlizzardNovaConfig BlizzardNova = new BlizzardNovaConfig();
 
         // 6. Experience & Leveling Tuning
         public ExpConfig Exp = new ExpConfig();
@@ -198,9 +204,71 @@ namespace HappyShoot.Domain.Skills
     [Serializable]
     public class MeteorStrikeConfig
     {
-        public float Damage = 120f;
-        public float Radius = 3.0f;
+        public float Damage = 220f;
+        public float Radius = 6.0f;
+        public float Cooldown = 1.0f;
+        public bool EnableCameraShake = false;
+    }
+
+    [Serializable]
+    public class TempestWhirlwindConfig
+    {
+        public float Damage = 75f;
+        public float Radius = 4.2f;
+        public int SlashWaveCount = 4;
+        public float Cooldown = 1.1f;
+        public bool EnableCameraShake = false;
+    }
+
+    [Serializable]
+    public class EarthshakerConfig
+    {
+        public float Damage = 80f;
+        public float Radius = 4.8f;
+        public int FissureCount = 4;
+        public float Cooldown = 1.6f;
+        public bool EnableCameraShake = false;
+    }
+
+    [Serializable]
+    public class PhantomGlaiveConfig
+    {
+        public float Damage = 60f;
+        public float Distance = 11.0f;
+        public float Speed = 17.0f;
+        public int PhantomCount = 2;
+        public float Cooldown = 1.3f;
+        public bool EnableCameraShake = false;
+    }
+
+    [Serializable]
+    public class StellarRainConfig
+    {
+        public float Damage = 75f;
+        public float Radius = 5.0f;
+        public int ArrowCount = 60;
+        public float Cooldown = 2.2f;
+        public bool EnableCameraShake = false;
+    }
+
+    [Serializable]
+    public class GigastormLightningConfig
+    {
+        public float Damage = 85f;
+        public int ChainCount = 10;
+        public float JumpRadius = 7.5f;
+        public float SparkRadius = 2.2f;
         public float Cooldown = 1.2f;
+        public bool EnableCameraShake = false;
+    }
+
+    [Serializable]
+    public class BlizzardNovaConfig
+    {
+        public float Damage = 70f;
+        public float Radius = 5.2f;
+        public int ShardCount = 8;
+        public float Cooldown = 1.8f;
         public bool EnableCameraShake = false;
     }
 
@@ -208,7 +276,10 @@ namespace HappyShoot.Domain.Skills
     public class ExpConfig
     {
         public float GemExpMultiplier = 1.0f; // 경험치 알 하나당 획득 경험치 배율
-        public int BaseRequiredExp = 4;       // 1레벨업 기본 필요 경험치 (기존 5 -> 4)
-        public float ExpGrowthFactor = 0.85f; // 레벨별 필요 경험치 증가율 (기존 1.0 -> 0.85로 더 자주 레벨업)
+        public int BaseRequiredExp = 4;       // 1레벨업 기본 필요 경험치
+        public float ExpGrowthFactor = 0.85f; // 레벨별 필요 경험치 증가율
+        public bool EnableLevelExpScaling = true; // 레벨업 경험치 증가율 비례 최대 몹 수 증가 활성화
+        public float MobScalingRatio = 0.30f;     // 경험치 증가량 중 몹 수 반영 비율 (30%)
+        public int MaxMonsterCapLimit = 1200; // 최대 몬스터 수 상한선 (기본 1200)
     }
 }

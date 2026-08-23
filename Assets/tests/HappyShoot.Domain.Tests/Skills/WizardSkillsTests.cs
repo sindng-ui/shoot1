@@ -58,27 +58,18 @@ namespace HappyShoot.Domain.Tests.Skills
         {
             var fireball = new FireballEffect(baseDamage: 35f, radius: 2.0f);
 
-            var m1 = CreateMonster(101, new Vector2D(5f, 0f)); // Direct hit position
-            var m2 = CreateMonster(102, new Vector2D(6f, 0.5f)); // Within 2.0m radius of (5, 0)
-            var mFar = CreateMonster(103, new Vector2D(9f, 0f)); // Outside radius
-
-            _grid.Register(m1);
-            _grid.Register(m2);
-            _grid.Register(mFar);
-
-            bool eventReceived = false;
-            _eventBus.Subscribe<FireballExplodedEvent>(e =>
+            bool launchedEventReceived = false;
+            _eventBus.Subscribe<FireballLaunchedEvent>(e =>
             {
-                eventReceived = true;
-                Assert.That(e.CenterPosition.X, Is.EqualTo(5f));
+                launchedEventReceived = true;
+                Assert.That(e.TargetPosition.X, Is.EqualTo(5f));
+                Assert.That(e.Radius, Is.EqualTo(2.0f));
+                Assert.That(e.Damage, Is.EqualTo(35f));
             });
 
             fireball.ApplyEffect(_context, new List<Vector2D> { new Vector2D(5f, 0f) });
 
-            Assert.That(eventReceived, Is.True);
-            Assert.That(m1.CurrentHealth, Is.EqualTo(65f)); // 100 - 35
-            Assert.That(m2.CurrentHealth, Is.EqualTo(65f)); // 100 - 35
-            Assert.That(mFar.CurrentHealth, Is.EqualTo(100f)); // Unharmed
+            Assert.That(launchedEventReceived, Is.True);
         }
 
         [Test]
@@ -188,6 +179,66 @@ namespace HappyShoot.Domain.Tests.Skills
 
             // Wizard skills and Orbital should be rollable
             Assert.That(skillIds.Contains("frost_nova") || skillIds.Contains("chain_lightning") || skillIds.Contains("orbital"), Is.True);
+        }
+
+        [Test]
+        public void GigastormLightning_ChainsAndAppliesGuaranteedShock()
+        {
+            var giga = new GigastormLightningEffect(baseDamage: 65f, chainCount: 5, chainRange: 6.0f, sparkRadius: 1.8f);
+            var m1 = CreateMonster(201, new Vector2D(2f, 0f));
+            var m2 = CreateMonster(202, new Vector2D(4f, 0f));
+            var m3 = CreateMonster(203, new Vector2D(6f, 0f));
+
+            _grid.Register(m1);
+            _grid.Register(m2);
+            _grid.Register(m3);
+
+            bool eventReceived = false;
+            _eventBus.Subscribe<GigastormLightningExecutedEvent>(e =>
+            {
+                eventReceived = true;
+                Assert.That(e.TargetPositions.Count, Is.EqualTo(3));
+            });
+
+            giga.ApplyEffect(_context, new List<Vector2D> { m1.Position });
+
+            Assert.That(eventReceived, Is.True);
+            Assert.That(m1.CurrentHealth, Is.LessThan(m1.MaxHealth));
+            Assert.That(m2.CurrentHealth, Is.LessThan(m2.MaxHealth));
+            Assert.That(m3.CurrentHealth, Is.LessThan(m3.MaxHealth));
+            Assert.That(m1.IsShocked, Is.True);
+            Assert.That(m2.IsShocked, Is.True);
+            Assert.That(m3.IsShocked, Is.True);
+        }
+
+        [Test]
+        public void BlizzardNova_FreezesAndDamagesSurroundingEnemies()
+        {
+            var blizzard = new BlizzardNovaEffect(baseDamage: 70f, radius: 5.2f, shardCount: 8);
+            var m1 = CreateMonster(301, new Vector2D(3f, 0f));
+            var m2 = CreateMonster(302, new Vector2D(-3f, 0f));
+            var mFar = CreateMonster(303, new Vector2D(10f, 0f));
+
+            _grid.Register(m1);
+            _grid.Register(m2);
+            _grid.Register(mFar);
+
+            bool eventReceived = false;
+            _eventBus.Subscribe<BlizzardNovaExecutedEvent>(e =>
+            {
+                eventReceived = true;
+                Assert.That(e.Radius, Is.EqualTo(5.2f));
+                Assert.That(e.ShardCount, Is.EqualTo(8));
+            });
+
+            blizzard.ApplyEffect(_context, null);
+
+            Assert.That(eventReceived, Is.True);
+            Assert.That(m1.CurrentHealth, Is.LessThan(m1.MaxHealth));
+            Assert.That(m2.CurrentHealth, Is.LessThan(m2.MaxHealth));
+            Assert.That(mFar.CurrentHealth, Is.EqualTo(mFar.MaxHealth));
+            Assert.That(m1.IsChilled, Is.True);
+            Assert.That(m2.IsChilled, Is.True);
         }
     }
 }

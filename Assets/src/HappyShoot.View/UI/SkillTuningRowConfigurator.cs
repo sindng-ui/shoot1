@@ -122,6 +122,21 @@ namespace HappyShoot.View.UI
                     exp.ExpGrowthFactor = v;
                     if (levelSystem != null) levelSystem.Config = exp;
                 });
+
+                AddShakeRow("👾 경험치 비례 몹 수 증가 (Exp->Mob Scaling)", exp.EnableLevelExpScaling, on =>
+                {
+                    exp.EnableLevelExpScaling = on;
+                });
+
+                AddRow("📊 경험치 증가분 대비 몹 젠 비율 (%: 0~100%)", exp.MobScalingRatio * 100f, 0f, 100f, 1f, v =>
+                {
+                    exp.MobScalingRatio = v / 100f;
+                }, isInt: true);
+
+                AddRow("🛑 최대 몹 수 상한선 (Max Mob Cap)", exp.MaxMonsterCapLimit, 200f, 1200f, 50f, v =>
+                {
+                    exp.MaxMonsterCapLimit = (int)v;
+                }, isInt: true);
                 return;
             }
 
@@ -306,6 +321,86 @@ namespace HappyShoot.View.UI
                         AddRow("⏱️ 쿨다운 (Cooldown)", cdTrigger.Cooldown, 0.2f, 4.0f, 0.1f, v => { cdTrigger.Cooldown = isInfiniteSpam ? 0.06f : v; mem.Cooldown = v; });
                     if (config?.MeteorStrike != null)
                         AddShakeRow("📳 카메라 셰이크 (Shake: 0=OFF, 1=ON)", config.MeteorStrike.EnableCameraShake, on => config.MeteorStrike.EnableCameraShake = on);
+                    break;
+
+                case "tempest_whirlwind":
+                    if (skill.Effect is TempestWhirlwindEffect tw)
+                    {
+                        AddRow("🌪️ 공격력 (Damage)", tw.BaseDamage, 20f, 400f, 5f, v => { tw.BaseDamage = v; mem.Damage = v; });
+                        AddRow("📏 회전 반경 (Radius)", tw.Radius, 1.5f, 9.0f, 0.2f, v => { tw.Radius = v; mem.Radius = v; });
+                        AddRow("⚔️ 참격 파동 수 (Waves)", tw.SlashWaveCount, 1f, 8f, 1f, v => { tw.SlashWaveCount = (int)v; mem.Count = (int)v; }, isInt: true);
+                    }
+                    if (cdTrigger != null)
+                        AddRow("⏱️ 쿨다운 (Cooldown)", cdTrigger.Cooldown, 0.2f, 4.0f, 0.1f, v => { cdTrigger.Cooldown = isInfiniteSpam ? 0.06f : v; mem.Cooldown = v; });
+                    if (config?.TempestWhirlwind != null)
+                        AddShakeRow("📳 카메라 셰이크 (Shake: 0=OFF, 1=ON)", config.TempestWhirlwind.EnableCameraShake, on => config.TempestWhirlwind.EnableCameraShake = on);
+                    break;
+
+                case "earthshaker":
+                    if (skill.Effect is EarthshakerEffect es)
+                    {
+                        AddRow("🌋 공격력 (Damage)", es.BaseDamage, 20f, 400f, 5f, v => { es.BaseDamage = v; mem.Damage = v; });
+                        AddRow("📏 지진 반경 (Radius)", es.Radius, 2.0f, 10.0f, 0.2f, v => { es.Radius = v; mem.Radius = v; });
+                        AddRow("⚡ 균열 방향 수 (Fissures)", es.FissureCount, 2f, 8f, 1f, v => { es.FissureCount = (int)v; mem.Count = (int)v; }, isInt: true);
+                    }
+                    if (cdTrigger != null)
+                        AddRow("⏱️ 쿨다운 (Cooldown)", cdTrigger.Cooldown, 0.2f, 4.0f, 0.1f, v => { cdTrigger.Cooldown = isInfiniteSpam ? 0.06f : v; mem.Cooldown = v; });
+                    if (config?.Earthshaker != null)
+                        AddShakeRow("📳 카메라 셰이크 (Shake: 0=OFF, 1=ON)", config.Earthshaker.EnableCameraShake, on => config.Earthshaker.EnableCameraShake = on);
+                    break;
+
+                case "phantom_glaive":
+                    if (skill.Effect is PhantomGlaiveEffect pg)
+                    {
+                        AddRow("🪃 공격력 (Damage)", pg.BaseDamage, 20f, 400f, 5f, v => { pg.BaseDamage = v; mem.Damage = v; });
+                        AddRow("📏 사거리 (Distance)", pg.MaxDistance, 4.0f, 20.0f, 0.5f, v => { pg.MaxDistance = v; mem.Radius = v; });
+                        AddRow("🚀 비행 속도 (Speed)", pg.Speed, 5.0f, 35.0f, 1f, v => { pg.Speed = v; mem.Speed = v; });
+                        AddRow("👻 환영 글레이브 (PhantomCount)", pg.PhantomCount, 1f, 4f, 1f, v => { pg.PhantomCount = (int)v; mem.Count = (int)v; }, isInt: true);
+                    }
+                    if (cdTrigger != null)
+                        AddRow("⏱️ 쿨다운 (Cooldown)", cdTrigger.Cooldown, 0.2f, 4.0f, 0.1f, v => { cdTrigger.Cooldown = isInfiniteSpam ? 0.06f : v; mem.Cooldown = v; });
+                    if (config?.PhantomGlaive != null)
+                        AddShakeRow("📳 카메라 셰이크 (Shake: 0=OFF, 1=ON)", config.PhantomGlaive.EnableCameraShake, on => config.PhantomGlaive.EnableCameraShake = on);
+                    break;
+
+                case "stellar_rain":
+                    if (skill.Effect is StellarRainEffect sr)
+                    {
+                        AddRow("🌟 공격력 (Damage)", sr.BaseDamage, 20f, 400f, 5f, v => { sr.BaseDamage = v; mem.Damage = v; });
+                        AddRow("📏 폭격 반경 (Radius)", sr.Radius, 2.0f, 10.0f, 0.2f, v => { sr.Radius = v; mem.Radius = v; });
+                        AddRow("🏹 유성 화살 수 (ArrowCount)", sr.ArrowCount, 20f, 120f, 5f, v => { sr.ArrowCount = (int)v; mem.Count = (int)v; }, isInt: true);
+                    }
+                    if (cdTrigger != null)
+                        AddRow("⏱️ 쿨다운 (Cooldown)", cdTrigger.Cooldown, 0.5f, 5.0f, 0.2f, v => { cdTrigger.Cooldown = isInfiniteSpam ? 0.06f : v; mem.Cooldown = v; });
+                    if (config?.StellarRain != null)
+                        AddShakeRow("📳 카메라 셰이크 (Shake: 0=OFF, 1=ON)", config.StellarRain.EnableCameraShake, on => config.StellarRain.EnableCameraShake = on);
+                    break;
+
+                case "gigastorm_lightning":
+                    if (skill.Effect is GigastormLightningEffect gl)
+                    {
+                        AddRow("⚡ 공격력 (Damage)", gl.BaseDamage, 20f, 400f, 5f, v => { gl.BaseDamage = v; mem.Damage = v; });
+                        AddRow("🔢 연쇄 횟수 (ChainCount)", gl.ChainCount, 2f, 16f, 1f, v => { gl.ChainCount = (int)v; mem.Count = (int)v; }, isInt: true);
+                        AddRow("📏 점프 반경 (ChainRange)", gl.ChainRange, 2.0f, 12.0f, 0.5f, v => { gl.ChainRange = v; mem.Radius = v; });
+                        AddRow("💥 뇌격 폭발 반경 (SparkRadius)", gl.SparkRadius, 0.8f, 4.0f, 0.2f, v => { gl.SparkRadius = v; mem.ExtraParam1 = v; });
+                    }
+                    if (cdTrigger != null)
+                        AddRow("⏱️ 쿨다운 (Cooldown)", cdTrigger.Cooldown, 0.2f, 4.0f, 0.1f, v => { cdTrigger.Cooldown = isInfiniteSpam ? 0.06f : v; mem.Cooldown = v; });
+                    if (config?.GigastormLightning != null)
+                        AddShakeRow("📳 카메라 셰이크 (Shake: 0=OFF, 1=ON)", config.GigastormLightning.EnableCameraShake, on => config.GigastormLightning.EnableCameraShake = on);
+                    break;
+
+                case "blizzard_nova":
+                    if (skill.Effect is BlizzardNovaEffect bn)
+                    {
+                        AddRow("❄️ 공격력 (Damage)", bn.BaseDamage, 20f, 400f, 5f, v => { bn.BaseDamage = v; mem.Damage = v; });
+                        AddRow("📏 냉기 반경 (Radius)", bn.Radius, 2.0f, 12.0f, 0.3f, v => { bn.Radius = v; mem.Radius = v; });
+                        AddRow("🧊 빙하 파편 수 (ShardCount)", bn.ShardCount, 4f, 16f, 1f, v => { bn.ShardCount = (int)v; mem.Count = (int)v; }, isInt: true);
+                    }
+                    if (cdTrigger != null)
+                        AddRow("⏱️ 쿨다운 (Cooldown)", cdTrigger.Cooldown, 0.2f, 4.0f, 0.1f, v => { cdTrigger.Cooldown = isInfiniteSpam ? 0.06f : v; mem.Cooldown = v; });
+                    if (config?.BlizzardNova != null)
+                        AddShakeRow("📳 카메라 셰이크 (Shake: 0=OFF, 1=ON)", config.BlizzardNova.EnableCameraShake, on => config.BlizzardNova.EnableCameraShake = on);
                     break;
             }
         }

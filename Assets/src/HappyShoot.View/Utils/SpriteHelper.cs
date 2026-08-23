@@ -410,9 +410,12 @@ namespace HappyShoot.View.Utils
         }
 
         // Forwarding helpers for skill sprites to SkillSpriteHelper
-        public static Sprite GetOrCreateSlashArcSprite(int size = 64) => SkillSpriteHelper.GetOrCreateSlashArcSprite(size);
+        public static Sprite GetOrCreateSlashArcSprite(int size = 128) => SkillSpriteHelper.GetOrCreateSlashArcSprite(size);
+        public static Sprite GetOrCreateBloodSlashArcSprite(int size = 128) => SkillSpriteHelper.GetOrCreateBloodSlashArcSprite(size);
+        public static Sprite GetOrCreateBloodOrbSprite(int size = 32) => SkillSpriteHelper.GetOrCreateBloodOrbSprite(size);
         public static Sprite GetOrCreateBoneSprite() => SkillSpriteHelper.GetOrCreateBoneSprite();
         public static Sprite GetOrCreateGroundStompSprite() => SkillSpriteHelper.GetOrCreateGroundStompSprite();
+        public static Sprite GetOrCreateWhirlwindBladeSprite() => SkillSpriteHelper.GetOrCreateWhirlwindBladeSprite();
 
         // Forwarding helpers for monsters and chests to MonsterSpriteHelper
         public static Sprite GetOrCreateBatSprite(int size = 24) => MonsterSpriteHelper.GetOrCreateBatSprite(size);

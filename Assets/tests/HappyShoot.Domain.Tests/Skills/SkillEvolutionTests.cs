@@ -139,5 +139,38 @@ namespace HappyShoot.Domain.Tests.Skills
 
             Assert.That(slashOption, Is.Null, "Base skill 'slash' must NOT be offered after evolving into 'blood_eater'!");
         }
+
+        [Test]
+        public void AllNineSkillEvolutionRecipes_RegisterAndEvolveCorrectly()
+        {
+            var evoManager = new SkillEvolutionManager(_eventBus);
+
+            // Register all 9 recipes
+            evoManager.RegisterRecipe(new SkillEvolutionRecipe("slash", "passive_fang", "blood_eater", "Blood Eater", () => new CompositeSkill("blood_eater", "Blood Eater", new CooldownTrigger(0.85f), new ClosestEnemyTargeter(), new BloodEaterEffect())));
+            evoManager.RegisterRecipe(new SkillEvolutionRecipe("whirlwind", "passive_feather", "tempest_whirlwind", "Tempest Whirlwind", () => new CompositeSkill("tempest_whirlwind", "Tempest Whirlwind", new CooldownTrigger(1.1f), new ClosestEnemyTargeter(), new TempestWhirlwindEffect())));
+            evoManager.RegisterRecipe(new SkillEvolutionRecipe("ground_stomp", "passive_armor", "earthshaker", "Earthshaker", () => new CompositeSkill("earthshaker", "Earthshaker", new CooldownTrigger(1.6f), new ClosestEnemyTargeter(), new EarthshakerEffect())));
+            evoManager.RegisterRecipe(new SkillEvolutionRecipe("bow", "passive_feather", "storm_bow", "Storm Bow", () => new CompositeSkill("storm_bow", "Storm Bow", new CooldownTrigger(1.6f), new ClosestEnemyTargeter(), new StormArrowEffect())));
+            evoManager.RegisterRecipe(new SkillEvolutionRecipe("glaive", "passive_crit", "phantom_glaive", "Phantom Glaive", () => new CompositeSkill("phantom_glaive", "Phantom Glaive", new CooldownTrigger(1.3f), new ClosestEnemyTargeter(), new PhantomGlaiveEffect())));
+            evoManager.RegisterRecipe(new SkillEvolutionRecipe("arrow_rain", "passive_ring", "stellar_rain", "Stellar Rain", () => new CompositeSkill("stellar_rain", "Stellar Rain", new CooldownTrigger(2.2f), new ClosestEnemyTargeter(), new StellarRainEffect())));
+            evoManager.RegisterRecipe(new SkillEvolutionRecipe("fireball", "passive_rune", "meteor_strike", "Meteor Strike", () => new CompositeSkill("meteor_strike", "Meteor Strike", new CooldownTrigger(1.2f), new ClosestEnemyTargeter(), new MeteorStrikeEffect())));
+            evoManager.RegisterRecipe(new SkillEvolutionRecipe("chain_lightning", "passive_overcharge", "gigastorm_lightning", "Gigastorm Lightning", () => new CompositeSkill("gigastorm_lightning", "Gigastorm Lightning", new CooldownTrigger(1.4f), new ClosestEnemyTargeter(), new GigastormLightningEffect())));
+            evoManager.RegisterRecipe(new SkillEvolutionRecipe("frost_nova", "passive_heart", "blizzard_nova", "Blizzard Nova", () => new CompositeSkill("blizzard_nova", "Blizzard Nova", new CooldownTrigger(1.8f), new ClosestEnemyTargeter(), new BlizzardNovaEffect())));
+
+            // Test Wizard with Chain Lightning Lv5 + Overcharge Core -> Gigastorm Lightning
+            var wizard = PlayerClassFactory.CreatePlayer(2, CharacterClassType.Wizard, Vector2D.Zero, _eventBus);
+            var cl = new CompositeSkill("chain_lightning", "Chain Lightning", new CooldownTrigger(2f), new ClosestEnemyTargeter(), new ChainLightningEffect());
+            while (!cl.IsMaxLevel) cl.LevelUp();
+            wizard.AddSkill(cl);
+            wizard.AddPassive("passive_overcharge");
+
+            var wizardEvos = evoManager.GetAvailableEvolutions(wizard);
+            Assert.That(wizardEvos.Count, Is.EqualTo(1));
+            Assert.That(wizardEvos[0].EvolvedSkillId, Is.EqualTo("gigastorm_lightning"));
+
+            bool success = evoManager.EvolveSkill(wizard, wizardEvos[0]);
+            Assert.That(success, Is.True);
+            Assert.That(wizard.Skills.Any(s => s.Id == "gigastorm_lightning"), Is.True);
+            Assert.That(wizard.Skills.Any(s => s.Id == "chain_lightning"), Is.False);
+        }
     }
 }

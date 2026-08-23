@@ -442,7 +442,7 @@ namespace HappyShoot.View.Utils
         private static Sprite _targetIndicatorSprite;
 
         /// <summary>
-        /// 128x128 Clean, crisp circular AOE target indicator with border glow and crosshair markings.
+        /// 128x128 Clean, soft circular AOE target indicator with subtle magma glow and soft crosshair markings.
         /// </summary>
         public static Sprite GetOrCreateTargetIndicatorSprite(int size = 128)
         {
@@ -451,7 +451,7 @@ namespace HappyShoot.View.Utils
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
             float center = size * 0.5f, outerRadius = size * 0.48f, innerRadius = size * 0.44f;
             Color[] pixels = new Color[size * size];
-            Color borderGlow = new Color(1.0f, 0.55f, 0.1f, 0.95f), crosshairCol = new Color(1.0f, 0.85f, 0.3f, 0.95f), innerFill = new Color(1.0f, 0.3f, 0.05f, 0.12f);
+            Color borderGlow = new Color(0.95f, 0.42f, 0.10f, 0.65f), crosshairCol = new Color(1.0f, 0.68f, 0.22f, 0.70f), innerFill = new Color(0.85f, 0.20f, 0.05f, 0.06f);
 
             for (int y = 0; y < size; y++)
             {
@@ -477,7 +477,7 @@ namespace HappyShoot.View.Utils
 
             tex.SetPixels(pixels);
             tex.Apply();
-            _targetIndicatorSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16);
+            _targetIndicatorSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
             return _targetIndicatorSprite;
         }
     }

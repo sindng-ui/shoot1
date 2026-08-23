@@ -90,25 +90,14 @@ namespace HappyShoot.Domain.Skills.Effects
                 targetsToBlast.Add(fanTarget);
             }
 
-            // Execute explosions
+            // Launch flying fireball comets
             for (int b = 0; b < targetsToBlast.Count; b++)
             {
                 Vector2D targetPos = targetsToBlast[b];
 
-                // Publish Domain Event for Wizard Fireball visual effect
-                context.EventBus?.Publish(new FireballExplodedEvent(targetPos, effectiveRadius, effectiveDamage));
-                context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.MagicExplosion, volume: 0.85f));
-
-                int hitCount = context.TargetGrid.QueryRadiusNonAlloc(targetPos, effectiveRadius, _hitBuffer);
-                for (int i = 0; i < hitCount; i++)
-                {
-                    if (_hitBuffer[i] is MonsterEntity monster && monster.IsActive && !monster.IsDead)
-                    {
-                        monster.ApplyBurn(duration: 7.0f, damagePerTick: effectiveDamage * 0.12f);
-                        var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
-                        monster.TakeDamage(hitDmg, isCrit);
-                    }
-                }
+                // Publish Domain Event for Wizard Fireball flight (explosion & damage trigger upon arrival)
+                context.EventBus?.Publish(new FireballLaunchedEvent(context.CasterPosition, targetPos, effectiveRadius, effectiveDamage, Speed));
+                context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.BowShoot, volume: 0.70f));
             }
         }
     }

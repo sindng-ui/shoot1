@@ -41,10 +41,12 @@ namespace HappyShoot.View.UI
         private Image _btnSwitchModeImg;
         private Image _btnAddModeImg;
 
+        private string _selectedCategory = "warrior";
         private string _selectedSkillId = "slash";
         private int _selectedMonsterIdx = 0;
         private readonly List<GameObject> _activeSliderRows = new List<GameObject>();
-        private readonly Dictionary<string, Image> _tabButtons = new Dictionary<string, Image>();
+        private readonly Dictionary<string, Image> _categoryTabImgs = new Dictionary<string, Image>();
+        private readonly Dictionary<string, (GameObject go, Image img)> _skillTabButtons = new Dictionary<string, (GameObject, Image)>();
         private List<Image> _levelButtonImgs = new List<Image>();
         private List<Image> _monsterSubTabImgs = new List<Image>();
 
@@ -64,7 +66,7 @@ namespace HappyShoot.View.UI
             SkillTuningMemoryCache.ImportFromConfig(_config);
 
             BuildUi();
-            SelectSkill("slash");
+            SelectCategory("warrior");
         }
 
         public void Show() => _panelRoot?.SetActive(true);
@@ -123,7 +125,8 @@ namespace HappyShoot.View.UI
             _btnSwitchModeImg = modes.switchImg;
             _btnAddModeImg = modes.addImg;
 
-            SkillTuningUiBuilder.CreateSkillSelectButtons(_contentBox.transform, _tabButtons, SelectSkill, UnequipSkill);
+            SkillTuningUiBuilder.CreateCategoryTabs(_contentBox.transform, _categoryTabImgs, SelectCategory);
+            SkillTuningUiBuilder.CreateSkillSelectButtons(_contentBox.transform, _skillTabButtons, SelectSkill, UnequipSkill);
             var utils = SkillTuningUiBuilder.CreateUtilityToolbar(_contentBox.transform, ToggleInfiniteSpam, ResetDummies, AddBatDummies);
             _spamBtnImg = utils.spamImg;
             _spamBtnText = utils.spamTxt;
@@ -132,30 +135,7 @@ namespace HappyShoot.View.UI
             _monsterSubTabImers = SkillTuningUiBuilder.CreateMonsterSubTabs(_contentBox.transform, SelectMonsterSubTab);
             SetMonsterSubTabsVisible(false);
 
-            // Scroll Sliders View
-            var scrollGo = new GameObject("SlidersScrollView");
-            scrollGo.transform.SetParent(_contentBox.transform, false);
-            var scrollRt = scrollGo.AddComponent<RectTransform>();
-            scrollRt.anchorMin = new Vector2(0.5f, 0.5f);
-            scrollRt.anchorMax = new Vector2(0.5f, 0.5f);
-            scrollRt.pivot = new Vector2(0.5f, 0.5f);
-            scrollRt.anchoredPosition = new Vector2(0f, -30f);
-            scrollRt.sizeDelta = new Vector2(476f, 370f);
-
-            var scrollImg = scrollGo.AddComponent<Image>();
-            scrollImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            scrollImg.color = new Color(0.05f, 0.07f, 0.10f, 0.85f);
-
-            var contentObj = new GameObject("ScrollContent");
-            contentObj.transform.SetParent(scrollGo.transform, false);
-            var contentRect = contentObj.AddComponent<RectTransform>();
-            contentRect.anchorMin = new Vector2(0f, 1f);
-            contentRect.anchorMax = new Vector2(1f, 1f);
-            contentRect.pivot = new Vector2(0f, 1f);
-            contentRect.anchoredPosition = Vector2.zero;
-            contentRect.sizeDelta = new Vector2(0f, 400f);
-            _slidersContainer = contentObj.transform;
-
+            _slidersContainer = SkillTuningUiBuilder.CreateSlidersScrollView(_contentBox.transform);
             CreateBottomActionButtons();
         }
 
@@ -185,9 +165,7 @@ namespace HappyShoot.View.UI
 
             if (_statusNoticeText != null)
             {
-                _statusNoticeText.text = _isAddMode 
-                    ? "➕ [누적 추가 모드] 스킬 탭 클릭 시 기존 스킬을 유지하고 추가 장착합니다."
-                    : "🔁 [단독 교체 모드] 스킬 탭 클릭 시 다른 스킬을 해제하고 1개만 장착합니다.";
+                _statusNoticeText.text = _isAddMode ? "➕ [누적 추가 모드] 스킬 탭 클릭 시 추가 장착합니다." : "🔁 [단독 교체 모드] 스킬 탭 클릭 시 1개만 장착합니다.";
                 _statusNoticeText.color = _isAddMode ? Color.green : Color.cyan;
             }
         }
@@ -232,13 +210,69 @@ namespace HappyShoot.View.UI
             SkillTuningSliderFactory.CreateText(go.transform, "Txt", label, 13, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
         }
 
+        private void SelectCategory(string catId)
+        {
+            _selectedCategory = catId;
+
+            // 1. Update Category Tab Buttons
+            foreach (var kvp in _categoryTabImgs)
+            {
+                kvp.Value.color = (kvp.Key == catId) ? new Color(0.18f, 0.55f, 0.85f, 1f) : new Color(0.12f, 0.16f, 0.22f, 0.95f);
+            }
+
+            // 2. Show only skills belonging to this category
+            string firstSkillId = null;
+            foreach (var def in SkillTuningUiBuilder.AllSkillDefinitions)
+            {
+                if (_skillTabButtons.TryGetValue(def.id, out var tuple))
+                {
+                    bool isMatch = (def.cat == catId);
+                    tuple.go.SetActive(isMatch);
+                    if (isMatch && firstSkillId == null)
+                    {
+                        firstSkillId = def.id;
+                    }
+                }
+            }
+
+            // 3. Select first skill if current skill doesn't belong to new category
+            bool currentInCat = false;
+            foreach (var def in SkillTuningUiBuilder.AllSkillDefinitions)
+            {
+                if (def.id == _selectedSkillId && def.cat == catId)
+                {
+                    currentInCat = true;
+                    break;
+                }
+            }
+
+            if (!currentInCat && firstSkillId != null)
+            {
+                SelectSkill(firstSkillId);
+            }
+            else
+            {
+                SelectSkill(_selectedSkillId);
+            }
+        }
+
         private void SelectSkill(string skillId)
         {
             _selectedSkillId = skillId;
 
-            foreach (var kvp in _tabButtons)
+            foreach (var kvp in _skillTabButtons)
             {
-                kvp.Value.color = (kvp.Key == skillId) ? new Color(0.2f, 0.6f, 0.95f, 1f) : new Color(0.14f, 0.18f, 0.26f, 0.95f);
+                bool isSelected = (kvp.Key == skillId);
+                bool isUlt = false;
+                foreach (var def in SkillTuningUiBuilder.AllSkillDefinitions)
+                {
+                    if (def.id == kvp.Key) { isUlt = def.isUltimate; break; }
+                }
+
+                if (isSelected)
+                    kvp.Value.img.color = new Color(0.2f, 0.6f, 0.95f, 1f);
+                else
+                    kvp.Value.img.color = isUlt ? new Color(0.24f, 0.18f, 0.32f, 0.95f) : new Color(0.14f, 0.18f, 0.26f, 0.95f);
             }
 
             if (skillId == "monster_tuning")
@@ -413,28 +447,7 @@ namespace HappyShoot.View.UI
 
         private void OnSaveClicked()
         {
-            if (_playerView?.Entity != null)
-            {
-                if (_selectedSkillId != "exp_tuning" && _selectedSkillId != "monster_tuning" && _selectedSkillId != "crit_tuning")
-                {
-                    var activeSkill = _playerView.Entity.GetSkill(_selectedSkillId);
-                    if (activeSkill != null && activeSkill.Level == 1)
-                        SkillLiveApplier.PullSkillStatsToConfig(_playerView.Entity, _selectedSkillId, _config);
-                }
-
-                if (_config.CritStat == null) _config.CritStat = new HappyShoot.Domain.Skills.CritStatConfig();
-                var pStat = _playerView.Entity.Stats;
-                _config.CritStat.CritChance = pStat.CritChance;
-                _config.CritStat.CritDamageMultiplier = pStat.CritDamageMultiplier;
-                _config.CritStat.AttackPowerMultiplier = pStat.AttackPowerMultiplier;
-                _config.CritStat.MoveSpeed = pStat.MoveSpeed;
-                _config.CritStat.Armor = pStat.Armor;
-                _config.CritStat.CooldownReduction = pStat.CooldownReduction;
-                _config.CritStat.IsCustom = true;
-            }
-
-            SkillTuningMemoryCache.ExportToConfig(_config);
-            bool success = SkillConfigRepository.Instance.Save(_config);
+            bool success = SkillTuningPersistenceHelper.SaveConfig(_playerView?.Entity, _selectedSkillId, _config);
 
             if (_statusNoticeText != null)
             {
@@ -446,18 +459,7 @@ namespace HappyShoot.View.UI
         private void OnResetClicked()
         {
             bool hasFile = SkillConfigRepository.Instance.HasSavedConfigFile();
-            _config = SkillConfigRepository.Instance.ReloadFromFileOrDefaults();
-            
-            SkillTuningMemoryCache.ImportFromConfig(_config);
-            if (_levelSystem != null) _levelSystem.Config = _config.Exp;
-            if (_gemManager != null) _gemManager.Config = _config.Exp;
-
-            if (_config.CritStat != null && _config.CritStat.IsCustom && _playerView?.Entity != null)
-            {
-                var s = _playerView.Entity.Stats;
-                var c = _config.CritStat;
-                _playerView.Entity.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, c.MoveSpeed, c.AttackPowerMultiplier, c.Armor, c.CritChance, c.CritDamageMultiplier, c.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
-            }
+            _config = SkillTuningPersistenceHelper.ResetConfig(_playerView?.Entity, _levelSystem, _gemManager);
 
             if (_selectedSkillId == "exp_tuning" || _selectedSkillId == "monster_tuning" || _selectedSkillId == "crit_tuning")
                 RebuildSlidersForSelectedSkill();

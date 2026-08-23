@@ -21,11 +21,12 @@ namespace HappyShoot.View.Monsters
         [Header("Spawn Settings")]
         [SerializeField] private float _spawnRadius = 21.0f;
 
-        private const int MaxPoolCapacity = 512;
+        private const int MaxPoolCapacity = 1200;
         private MonsterSpawner _domainSpawner;
         private SpatialGrid2D<MonsterEntity> _monsterGrid;
         private readonly List<MonsterView> _viewPool = new List<MonsterView>(MaxPoolCapacity);
         private readonly Dictionary<int, MonsterView> _activeViewMap = new Dictionary<int, MonsterView>(MaxPoolCapacity);
+        private HappyShoot.Domain.Leveling.LevelSystem _levelSystem;
 
         private float _timer;
         private float _elapsedTime;
@@ -46,6 +47,7 @@ namespace HappyShoot.View.Monsters
         public bool IsSpawningSuppressed { get; set; } = false;
 
         public void SetEnemyProjectileManager(EnemyProjectileManagerView mgr) => _enemyProjManager = mgr;
+        public void SetLevelSystem(HappyShoot.Domain.Leveling.LevelSystem levelSystem) => _levelSystem = levelSystem;
 
         private void Awake()
         {
@@ -105,9 +107,10 @@ namespace HappyShoot.View.Monsters
             }
         }
 
-        public void Initialize(PlayerView playerView)
+        public void Initialize(PlayerView playerView, HappyShoot.Domain.Leveling.LevelSystem levelSystem = null)
         {
             _playerView = playerView;
+            _levelSystem = levelSystem;
             if (playerView != null && playerView.EventBus != null)
             {
                 _domainSpawner = new MonsterSpawner(_monsterGrid, playerView.EventBus, initialPoolSize: MaxPoolCapacity);
@@ -164,12 +167,14 @@ namespace HappyShoot.View.Monsters
             if (_timer >= currentSpawnInterval && _domainSpawner.ActiveCount < currentMaxMonsters)
             {
                 _timer = 0f;
-                float randomAngle = Random.Range(0f, Mathf.PI * 2f);
+                Vector2 moveDir = _playerView != null ? _playerView.CurrentMoveDirection : Vector2.zero;
+                float spawnAngle = GetBiasedSpawnAngle(moveDir);
+
                 MonsterDefinition archetype = _phaseCtrl.Boss1Defeated
                     ? _phaseCtrl.RollPhase2Archetype(monsterCfg)
                     : _phaseCtrl.RollPhase1Archetype(_elapsedTime, monsterCfg);
 
-                var monster = _domainSpawner.SpawnDefinitionAroundPlayer(playerPos, _spawnRadius, randomAngle, archetype);
+                var monster = _domainSpawner.SpawnDefinitionAroundPlayer(playerPos, _spawnRadius, spawnAngle, archetype);
                 GetOrCreateView(monster);
             }
 
@@ -236,32 +241,92 @@ namespace HappyShoot.View.Monsters
             }
         }
 
+        private float GetBiasedSpawnAngle(Vector2 moveDir)
+        {
+            // If player is stationary, spawn uniformly across full 360 degrees
+            if (moveDir.sqrMagnitude < 0.01f)
+            {
+                return Random.Range(0f, Mathf.PI * 2f);
+            }
+
+            float moveAngle = Mathf.Atan2(moveDir.y, moveDir.x);
+
+            // 90% chance: Rear & flank 240-degree arc (moveAngle + 60 deg to moveAngle + 300 deg)
+            // 10% chance: Forward 120-degree escape cone (moveAngle - 60 deg to moveAngle + 60 deg)
+            bool spawnInEscapeCone = Random.value < 0.10f;
+            if (spawnInEscapeCone)
+            {
+                float offset = Random.Range(-60f, 60f) * Mathf.Deg2Rad;
+                return moveAngle + offset;
+            }
+            else
+            {
+                float offset = Random.Range(60f, 300f) * Mathf.Deg2Rad;
+                return moveAngle + offset;
+            }
+        }
+
+        private float GetExpGrowthScale()
+        {
+            var expCfg = Config.SkillConfigRepository.Instance.GetConfig()?.Exp;
+            if (expCfg == null || !expCfg.EnableLevelExpScaling || _levelSystem == null)
+                return 1.0f;
+
+            int currentLevel = _levelSystem.Level;
+            if (currentLevel <= 1) return 1.0f;
+
+            int baseExp = _levelSystem.CalculateRequiredExp(1);
+            int currentReqExp = _levelSystem.CalculateRequiredExp(currentLevel);
+            if (baseExp <= 0) return 1.0f;
+
+            float rawExpScale = (float)currentReqExp / baseExp;
+            float expIncrease = Mathf.Max(0f, rawExpScale - 1.0f);
+            float ratio = expCfg.MobScalingRatio; // 기본 30% (0.30f)
+
+            float effectiveScale = 1.0f + (expIncrease * ratio);
+            return Mathf.Max(1.0f, effectiveScale);
+        }
+
         private float GetSpawnInterval(float time)
         {
+            float baseInterval;
             if (_phaseCtrl.Boss1Defeated)
             {
-                // Phase 2: rapid aggressive spawn
-                float p2 = _phaseCtrl.CurrentPhase == WavePhaseController.Phase.Phase2Wave1
+                baseInterval = _phaseCtrl.CurrentPhase == WavePhaseController.Phase.Phase2Wave1
                     ? 0.35f
                     : _phaseCtrl.CurrentPhase == WavePhaseController.Phase.Phase2Wave2
                         ? 0.22f
                         : 0.12f;
-                return p2;
+            }
+            else
+            {
+                if (time < 55f)  baseInterval = Mathf.Max(0.12f, 0.8f * Mathf.Pow(0.965f, time));
+                else if (time < 70f)  baseInterval = 0.55f;  // Boss 1 breathing room
+                else if (time < 175f) baseInterval = Mathf.Max(0.08f, 0.55f * Mathf.Pow(0.975f, time - 70f));
+                else baseInterval = 0.05f;
             }
 
-            if (time < 55f)  return Mathf.Max(0.12f, 0.8f * Mathf.Pow(0.965f, time));
-            if (time < 70f)  return 0.55f;  // Boss 1 breathing room
-            if (time < 175f) return Mathf.Max(0.08f, 0.55f * Mathf.Pow(0.975f, time - 70f));
-            return 0.05f;
+            float expScale = GetExpGrowthScale();
+            float speedMult = Mathf.Clamp(Mathf.Sqrt(expScale), 1.0f, 3.5f);
+            return Mathf.Max(0.03f, baseInterval / speedMult);
         }
 
         private int GetMaxMonsters(float time)
         {
-            if (_phaseCtrl.Boss1Defeated) return 380;
-            if (time < 55f)  return 250;
-            if (time < 70f)  return 180;
-            if (time < 175f) return 400;
-            return 500;
+            int baseMax;
+            if (_phaseCtrl.Boss1Defeated) baseMax = 380;
+            else if (time < 55f)  baseMax = 250;
+            else if (time < 70f)  baseMax = 180;
+            else if (time < 175f) baseMax = 400;
+            else baseMax = 500;
+
+            var expCfg = Config.SkillConfigRepository.Instance.GetConfig()?.Exp;
+            int capLimit = expCfg != null ? expCfg.MaxMonsterCapLimit : MaxPoolCapacity;
+            capLimit = Mathf.Clamp(capLimit, 100, MaxPoolCapacity);
+
+            float expScale = GetExpGrowthScale();
+            int scaledMax = Mathf.RoundToInt(baseMax * expScale);
+            return Mathf.Clamp(scaledMax, baseMax, capLimit);
         }
 
         private MonsterView GetOrCreateView(MonsterEntity entity)

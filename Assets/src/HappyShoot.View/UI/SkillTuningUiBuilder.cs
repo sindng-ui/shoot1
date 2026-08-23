@@ -58,74 +58,209 @@ namespace HappyShoot.View.UI
             return (switchImg, addImg);
         }
 
-        public static void CreateSkillSelectButtons(
-            Transform contentBox,
-            Dictionary<string, Image> tabButtons,
-            Action<string> onSelectSkill,
-            Action<string> onUnequipSkill)
+        public static (string id, string name, string cat, bool isUltimate)[] AllSkillDefinitions = new (string id, string name, string cat, bool isUltimate)[]
         {
-            string[] skillIds = {
-                "slash", "ground_stomp", "whirlwind", "bow", "glaive",
-                "arrow_rain", "fireball", "frost_nova", "chain_lightning", "orbital",
-                "blood_eater", "storm_bow", "meteor_strike", "crit_tuning", "exp_tuning",
-                "monster_tuning"
-            };
-            string[] skillNames = {
-                "대검", "강타", "휠윈드", "활", "글레이브",
-                "화살비", "화염구", "서리폭발", "번개", "오비탈",
-                "🩸블러드", "⚡폭풍활", "☄️메테오", "🎯치명/스탯", "💎경험치",
-                "👾몬스터"
-            };
+            // 1. Warrior
+            ("slash", "대검 베기", "warrior", false),
+            ("ground_stomp", "지면 강타", "warrior", false),
+            ("whirlwind", "휠윈드", "warrior", false),
+            ("blood_eater", "🩸 블러드 이터", "warrior", true),
+            ("tempest_whirlwind", "🌪️ 템페스트 휠윈드", "warrior", true),
+            ("earthshaker", "🌋 어스셰이커 파쇄", "warrior", true),
 
-            float startX = -188f;
-            float startY = -74f;
+            // 2. Ranger
+            ("bow", "관통 화살", "ranger", false),
+            ("glaive", "칼바람 글레이브", "ranger", false),
+            ("arrow_rain", "화살비", "ranger", false),
+            ("storm_bow", "⚡ 폭풍의 활", "ranger", true),
+            ("phantom_glaive", "🪃 팬텀 글레이브", "ranger", true),
+            ("stellar_rain", "🌟 스텔라 레인", "ranger", true),
 
-            for (int i = 0; i < skillIds.Length; i++)
+            // 3. Wizard
+            ("fireball", "화염구", "wizard", false),
+            ("frost_nova", "서리 폭발", "wizard", false),
+            ("chain_lightning", "연쇄 번개", "wizard", false),
+            ("meteor_strike", "☄️ 메테오 스트라이크", "wizard", true),
+            ("blizzard_nova", "❄️ 블리자드 노바", "wizard", true),
+            ("gigastorm_lightning", "⚡ 기가스톰 체인", "wizard", true),
+
+            // 4. Common & Stats
+            ("orbital", "⚔️ 수호의 검 (오비탈)", "common", false),
+            ("crit_tuning", "🎯 치명/코어스탯", "common", true),
+
+            // 5. System
+            ("exp_tuning", "💎 경험치/레벨 튜닝", "system", false),
+            ("monster_tuning", "👾 몬스터 스탯 튜닝", "system", true)
+        };
+
+        public static (string catId, string catName)[] Categories = new (string, string)[]
+        {
+            ("warrior", "⚔️ 전사"),
+            ("ranger", "🏹 궁수"),
+            ("wizard", "🧙 마법사"),
+            ("common", "🛡️ 공통/스탯"),
+            ("system", "⚙️ 시스템")
+        };
+
+        public static void CreateCategoryTabs(
+            Transform contentBox,
+            Dictionary<string, Image> categoryTabImgs,
+            Action<string> onSelectCategory)
+        {
+            float startX = -184f;
+            float spacingX = 92f;
+            float tabY = -72f;
+
+            for (int i = 0; i < Categories.Length; i++)
             {
-                int row = i / 5;
-                int col = i % 5;
-                string id = skillIds[i];
-                string label = skillNames[i];
-
-                Vector2 pos = new Vector2(startX + col * 94f, startY - row * 27f);
-                float btnWidth = 90f;
-
-                var btnGo = new GameObject($"BtnTab_{id}");
-                btnGo.transform.SetParent(contentBox, false);
-                var rt = btnGo.AddComponent<RectTransform>();
+                var (catId, catName) = Categories[i];
+                var catGo = new GameObject($"BtnCat_{catId}");
+                catGo.transform.SetParent(contentBox, false);
+                var rt = catGo.AddComponent<RectTransform>();
                 rt.anchorMin = new Vector2(0.5f, 1f);
                 rt.anchorMax = new Vector2(0.5f, 1f);
                 rt.pivot = new Vector2(0.5f, 1f);
-                rt.anchoredPosition = pos;
-                rt.sizeDelta = new Vector2(btnWidth, 24f);
+                rt.anchoredPosition = new Vector2(startX + i * spacingX, tabY);
+                rt.sizeDelta = new Vector2(88f, 24f);
 
-                var img = btnGo.AddComponent<Image>();
+                var img = catGo.AddComponent<Image>();
                 img.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-                img.color = new Color(0.14f, 0.18f, 0.26f, 0.95f);
-                tabButtons[id] = img;
+                img.color = (i == 0) ? new Color(0.18f, 0.55f, 0.85f, 1f) : new Color(0.12f, 0.16f, 0.22f, 0.95f);
+                categoryTabImgs[catId] = img;
 
-                var btn = btnGo.AddComponent<Button>();
+                var btn = catGo.AddComponent<Button>();
                 btn.targetGraphic = img;
+                string capturedCat = catId;
+                btn.onClick.AddListener(() => onSelectCategory?.Invoke(capturedCat));
 
-                string capturedId = id;
-                var trigger = btnGo.AddComponent<EventTrigger>();
-                var clickEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
-                clickEntry.callback.AddListener((data) =>
-                {
-                    var pointerData = (PointerEventData)data;
-                    if (pointerData.button == PointerEventData.InputButton.Right)
-                    {
-                        onUnequipSkill?.Invoke(capturedId);
-                    }
-                    else
-                    {
-                        onSelectSkill?.Invoke(capturedId);
-                    }
-                });
-                trigger.triggers.Add(clickEntry);
-
-                SkillTuningSliderFactory.CreateText(btnGo.transform, "Txt", label, 12, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+                SkillTuningSliderFactory.CreateText(catGo.transform, "Txt", catName, 12, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
             }
+        }
+
+        public static void CreateSkillSelectButtons(
+            Transform contentBox,
+            Dictionary<string, (GameObject go, Image img)> skillTabButtons,
+            Action<string> onSelectSkill,
+            Action<string> onUnequipSkill)
+        {
+            // Create sub-buttons for all skills (grouped by category)
+            foreach (var (catId, _) in Categories)
+            {
+                var skillsInCat = new List<(string id, string name, string cat, bool isUltimate)>();
+                foreach (var def in AllSkillDefinitions)
+                {
+                    if (def.cat == catId) skillsInCat.Add(def);
+                }
+
+                // 2 rows layout per category (Row 0: Base skills, Row 1: Ultimates/Special)
+                var baseSkills = skillsInCat.FindAll(s => !s.isUltimate);
+                var ultSkills = skillsInCat.FindAll(s => s.isUltimate);
+
+                // Row 0: Base skills
+                float btnWidth = 145f;
+                float btnHeight = 23f;
+                float startY = -100f;
+
+                for (int i = 0; i < baseSkills.Count; i++)
+                {
+                    var def = baseSkills[i];
+                    float xPos = -150f + i * 150f;
+                    if (baseSkills.Count == 1) xPos = 0f;
+                    else if (baseSkills.Count == 2) xPos = -75f + i * 150f;
+
+                    var btnGo = CreateSubSkillButton(contentBox, def.id, def.name, new Vector2(xPos, startY), new Vector2(btnWidth, btnHeight), false, onSelectSkill, onUnequipSkill);
+                    skillTabButtons[def.id] = (btnGo, btnGo.GetComponent<Image>());
+                }
+
+                // Row 1: Ultimates
+                float ultY = -126f;
+                for (int i = 0; i < ultSkills.Count; i++)
+                {
+                    var def = ultSkills[i];
+                    float xPos = -150f + i * 150f;
+                    if (ultSkills.Count == 1) xPos = 0f;
+                    else if (ultSkills.Count == 2) xPos = -75f + i * 150f;
+
+                    var btnGo = CreateSubSkillButton(contentBox, def.id, def.name, new Vector2(xPos, ultY), new Vector2(btnWidth, btnHeight), true, onSelectSkill, onUnequipSkill);
+                    skillTabButtons[def.id] = (btnGo, btnGo.GetComponent<Image>());
+                }
+            }
+        }
+
+        private static GameObject CreateSubSkillButton(
+            Transform parent,
+            string id,
+            string label,
+            Vector2 pos,
+            Vector2 size,
+            bool isUltimate,
+            Action<string> onSelectSkill,
+            Action<string> onUnequipSkill)
+        {
+            var btnGo = new GameObject($"BtnTab_{id}");
+            btnGo.transform.SetParent(parent, false);
+            var rt = btnGo.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 1f);
+            rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.anchoredPosition = pos;
+            rt.sizeDelta = size;
+
+            var img = btnGo.AddComponent<Image>();
+            img.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            img.color = isUltimate ? new Color(0.24f, 0.18f, 0.32f, 0.95f) : new Color(0.14f, 0.18f, 0.26f, 0.95f);
+
+            var btn = btnGo.AddComponent<Button>();
+            btn.targetGraphic = img;
+
+            string capturedId = id;
+            var trigger = btnGo.AddComponent<EventTrigger>();
+            var clickEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
+            clickEntry.callback.AddListener((data) =>
+            {
+                var pointerData = (PointerEventData)data;
+                if (pointerData.button == PointerEventData.InputButton.Right)
+                {
+                    onUnequipSkill?.Invoke(capturedId);
+                }
+                else
+                {
+                    onSelectSkill?.Invoke(capturedId);
+                }
+            });
+            trigger.triggers.Add(clickEntry);
+
+            Color txtColor = isUltimate ? new Color(1.0f, 0.88f, 0.40f, 1f) : Color.white;
+            SkillTuningSliderFactory.CreateText(btnGo.transform, "Txt", label, 11, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, txtColor);
+
+            return btnGo;
+        }
+
+        public static Transform CreateSlidersScrollView(Transform contentBox)
+        {
+            var scrollGo = new GameObject("SlidersScrollView");
+            scrollGo.transform.SetParent(contentBox, false);
+            var scrollRt = scrollGo.AddComponent<RectTransform>();
+            scrollRt.anchorMin = new Vector2(0.5f, 0.5f);
+            scrollRt.anchorMax = new Vector2(0.5f, 0.5f);
+            scrollRt.pivot = new Vector2(0.5f, 0.5f);
+            scrollRt.anchoredPosition = new Vector2(0f, -30f);
+            scrollRt.sizeDelta = new Vector2(476f, 370f);
+
+            var scrollImg = scrollGo.AddComponent<Image>();
+            scrollImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            scrollImg.color = new Color(0.05f, 0.07f, 0.10f, 0.85f);
+
+            var contentObj = new GameObject("ScrollContent");
+            contentObj.transform.SetParent(scrollGo.transform, false);
+            var contentRect = contentObj.AddComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0f, 1f);
+            contentRect.anchorMax = new Vector2(1f, 1f);
+            contentRect.pivot = new Vector2(0f, 1f);
+            contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = new Vector2(0f, 400f);
+
+            return contentObj.transform;
         }
 
         public static (Image spamImg, Text spamTxt) CreateUtilityToolbar(
@@ -134,7 +269,7 @@ namespace HappyShoot.View.UI
             Action onResetDummies,
             Action onAddBatDummies)
         {
-            float toolY = -160f;
+            float toolY = -154f;
 
             var spamGo = new GameObject("Btn_InfiniteSpam");
             spamGo.transform.SetParent(contentBox, false);
@@ -143,7 +278,7 @@ namespace HappyShoot.View.UI
             spRt.anchorMax = new Vector2(0.5f, 1f);
             spRt.pivot = new Vector2(0.5f, 1f);
             spRt.anchoredPosition = new Vector2(-155f, toolY);
-            spRt.sizeDelta = new Vector2(140f, 26f);
+            spRt.sizeDelta = new Vector2(140f, 25f);
 
             var spamImg = spamGo.AddComponent<Image>();
             spamImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -161,7 +296,7 @@ namespace HappyShoot.View.UI
             dRt.anchorMax = new Vector2(0.5f, 1f);
             dRt.pivot = new Vector2(0.5f, 1f);
             dRt.anchoredPosition = new Vector2(0f, toolY);
-            dRt.sizeDelta = new Vector2(150f, 26f);
+            dRt.sizeDelta = new Vector2(145f, 25f);
 
             var dImg = dummyGo.AddComponent<Image>();
             dImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -179,7 +314,7 @@ namespace HappyShoot.View.UI
             bRt.anchorMax = new Vector2(0.5f, 1f);
             bRt.pivot = new Vector2(0.5f, 1f);
             bRt.anchoredPosition = new Vector2(155f, toolY);
-            bRt.sizeDelta = new Vector2(140f, 26f);
+            bRt.sizeDelta = new Vector2(140f, 25f);
 
             var bImg = batGo.AddComponent<Image>();
             bImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -198,7 +333,7 @@ namespace HappyShoot.View.UI
             Action<int> onSelectLevel)
         {
             var levelButtonImgs = new List<Image>();
-            float lvY = -194f;
+            float lvY = -184f;
             float startX = -188f;
 
             for (int i = 0; i < 5; i++)
@@ -211,7 +346,7 @@ namespace HappyShoot.View.UI
                 rt.anchorMax = new Vector2(0.5f, 1f);
                 rt.pivot = new Vector2(0.5f, 1f);
                 rt.anchoredPosition = new Vector2(startX + i * 94f, lvY);
-                rt.sizeDelta = new Vector2(88f, 24f);
+                rt.sizeDelta = new Vector2(88f, 23f);
 
                 var img = btnGo.AddComponent<Image>();
                 img.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -222,7 +357,7 @@ namespace HappyShoot.View.UI
                 btn.targetGraphic = img;
                 btn.onClick.AddListener(() => onSelectLevel?.Invoke(lv));
 
-                SkillTuningSliderFactory.CreateText(btnGo.transform, "Txt", $"Lv.{lv}", 12, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+                SkillTuningSliderFactory.CreateText(btnGo.transform, "Txt", $"Lv.{lv}", 11, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
             }
 
             return levelButtonImgs;
@@ -235,7 +370,7 @@ namespace HappyShoot.View.UI
             string[] names = { "슬라임", "박쥐", "해골", "골렘", "화염임프", "독거미", "흑기사", "보스" };
             var images = new List<Image>();
             float startX = -205f;
-            float y = -194f;
+            float y = -184f;
 
             for (int i = 0; i < names.Length; i++)
             {
@@ -247,7 +382,7 @@ namespace HappyShoot.View.UI
                 rt.anchorMax = new Vector2(0.5f, 1f);
                 rt.pivot = new Vector2(0.5f, 1f);
                 rt.anchoredPosition = new Vector2(startX + i * 58f, y);
-                rt.sizeDelta = new Vector2(55f, 24f);
+                rt.sizeDelta = new Vector2(55f, 23f);
 
                 var img = btnGo.AddComponent<Image>();
                 img.sprite = SpriteHelper.GetOrCreateWhiteSprite();

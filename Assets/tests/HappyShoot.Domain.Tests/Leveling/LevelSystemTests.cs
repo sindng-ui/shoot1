@@ -50,5 +50,32 @@ namespace HappyShoot.Domain.Tests.Leveling
             Assert.That(_levelSystem.Level, Is.EqualTo(3));
             Assert.That(_levelSystem.CurrentExp, Is.EqualTo(17));
         }
+
+        [Test]
+        public void ExpGrowthScale_CalculatesCorrectProportion_WithConfig()
+        {
+            var config = new HappyShoot.Domain.Skills.ExpConfig
+            {
+                BaseRequiredExp = 4,
+                ExpGrowthFactor = 1.5f,
+                EnableLevelExpScaling = true
+            };
+
+            var levelSystem = new LevelSystem(_eventBus, 1, config);
+            int exp1 = levelSystem.CalculateRequiredExp(1);
+            int exp2 = levelSystem.CalculateRequiredExp(2);
+            int exp3 = levelSystem.CalculateRequiredExp(3);
+
+            float scale2 = (float)exp2 / exp1;
+            float scale3 = (float)exp3 / exp1;
+
+            Assert.That(scale2, Is.GreaterThan(1.0f));
+            Assert.That(scale3, Is.GreaterThan(scale2));
+
+            // Verify 30% Mob Scaling Formula: 1.0 + ((scale - 1.0) * 0.30)
+            float mobScale2 = 1.0f + ((scale2 - 1.0f) * config.MobScalingRatio);
+            Assert.That(mobScale2, Is.GreaterThan(1.0f));
+            Assert.That(mobScale2, Is.LessThan(scale2)); // Scaled mob count increases more gently
+        }
     }
 }

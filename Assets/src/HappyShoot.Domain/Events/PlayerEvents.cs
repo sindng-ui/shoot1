@@ -86,6 +86,18 @@ namespace HappyShoot.Domain.Events
         }
     }
 
+    public readonly struct WhirlwindExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D CenterPosition;
+        public readonly float Radius;
+
+        public WhirlwindExecutedEvent(Vector2D centerPosition, float radius)
+        {
+            CenterPosition = centerPosition;
+            Radius = radius;
+        }
+    }
+
     public readonly struct ArrowRainExecutedEvent : IDomainEvent
     {
         public readonly Vector2D CenterPosition;
@@ -108,17 +120,31 @@ namespace HappyShoot.Domain.Events
     {
         public readonly int CasterId;
         public readonly Vector2D CenterPosition;
+        public readonly float DirectionAngleDegrees;
         public readonly float Radius;
+        public readonly float ArcAngleDegrees;
         public readonly float Damage;
         public readonly float HealedAmount;
+        public readonly System.Collections.Generic.IReadOnlyList<Vector2D> HitPositions;
 
-        public BloodEaterExecutedEvent(int casterId, Vector2D centerPosition, float radius, float damage, float healedAmount)
+        public BloodEaterExecutedEvent(
+            int casterId, 
+            Vector2D centerPosition, 
+            float directionAngleDegrees, 
+            float radius, 
+            float arcAngleDegrees, 
+            float damage, 
+            float healedAmount,
+            System.Collections.Generic.IReadOnlyList<Vector2D> hitPositions = null)
         {
             CasterId = casterId;
             CenterPosition = centerPosition;
+            DirectionAngleDegrees = directionAngleDegrees;
             Radius = radius;
+            ArcAngleDegrees = arcAngleDegrees;
             Damage = damage;
             HealedAmount = healedAmount;
+            HitPositions = hitPositions ?? System.Array.Empty<Vector2D>();
         }
     }
 
@@ -183,6 +209,74 @@ namespace HappyShoot.Domain.Events
             MaxDistance = maxDistance;
             Speed = speed;
             GlaiveCount = glaiveCount;
+        }
+    }
+
+    public readonly struct TempestWhirlwindExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D CenterPosition;
+        public readonly float Radius;
+        public readonly float Damage;
+        public readonly int SlashWaveCount;
+
+        public TempestWhirlwindExecutedEvent(Vector2D centerPosition, float radius, float damage, int slashWaveCount = 4)
+        {
+            CenterPosition = centerPosition;
+            Radius = radius;
+            Damage = damage;
+            SlashWaveCount = slashWaveCount;
+        }
+    }
+
+    public readonly struct EarthshakerExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D CenterPosition;
+        public readonly float Radius;
+        public readonly float Damage;
+        public readonly int FissureCount;
+
+        public EarthshakerExecutedEvent(Vector2D centerPosition, float radius, float damage, int fissureCount = 4)
+        {
+            CenterPosition = centerPosition;
+            Radius = radius;
+            Damage = damage;
+            FissureCount = fissureCount;
+        }
+    }
+
+    public readonly struct PhantomGlaiveExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D Origin;
+        public readonly Vector2D TargetDirection;
+        public readonly float Damage;
+        public readonly float MaxDistance;
+        public readonly float Speed;
+        public readonly int PhantomCount;
+
+        public PhantomGlaiveExecutedEvent(Vector2D origin, Vector2D targetDirection, float damage, float maxDistance, float speed, int phantomCount = 2)
+        {
+            Origin = origin;
+            TargetDirection = targetDirection;
+            Damage = damage;
+            MaxDistance = maxDistance;
+            Speed = speed;
+            PhantomCount = phantomCount;
+        }
+    }
+
+    public readonly struct StellarRainExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D TargetCenter;
+        public readonly float Radius;
+        public readonly float Damage;
+        public readonly int ArrowCount;
+
+        public StellarRainExecutedEvent(Vector2D targetCenter, float radius, float damage, int arrowCount = 60)
+        {
+            TargetCenter = targetCenter;
+            Radius = radius;
+            Damage = damage;
+            ArrowCount = arrowCount;
         }
     }
 }

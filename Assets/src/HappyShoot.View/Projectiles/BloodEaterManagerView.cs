@@ -8,24 +8,11 @@ namespace HappyShoot.View.Projectiles
 {
     /// <summary>
     /// Presentation manager for Blood Eater (Evolved Greatsword) ultimate skill.
-    /// Manages 360-degree crimson vortex ring expansions, blood splatter particles,
-    /// life-steal absorption orbs traveling towards the player, and camera shakes.
+    /// Spawns crimson blood essence orbs from hit enemies traveling in curved paths towards the player for life-steal.
     /// Strictly modular and under 500 lines.
     /// </summary>
     public class BloodEaterManagerView : MonoBehaviour
     {
-        private struct ActiveBloodRing
-        {
-            public GameObject Root;
-            public SpriteRenderer Renderer;
-            public Vector2 Center;
-            public float TargetRadius;
-            public float Elapsed;
-            public float Duration;
-            public float InitialRotation;
-            public bool IsActive;
-        }
-
         private struct ActiveBloodParticle
         {
             public GameObject Root;
@@ -49,21 +36,18 @@ namespace HappyShoot.View.Projectiles
             public bool IsActive;
         }
 
-        private readonly List<ActiveBloodRing> _ringPool = new List<ActiveBloodRing>(6);
         private readonly List<ActiveBloodParticle> _particlePool = new List<ActiveBloodParticle>(32);
-        private readonly List<ActiveLifeDrainOrb> _orbPool = new List<ActiveLifeDrainOrb>(16);
+        private readonly List<ActiveLifeDrainOrb> _orbPool = new List<ActiveLifeDrainOrb>(32);
 
         private EventBus _eventBus;
         private Transform _playerTransform;
-        private Sprite _ringSprite;
         private Sprite _orbSprite;
 
         public void Initialize(EventBus eventBus, Transform playerTransform)
         {
             _eventBus = eventBus;
             _playerTransform = playerTransform;
-            _ringSprite = SkillSpriteHelper.GetOrCreateBloodSpinSprite();
-            _orbSprite = SkillSpriteHelper.GetOrCreateBloodOrbSprite();
+            _orbSprite = SpriteHelper.GetOrCreateBloodOrbSprite();
 
             PrewarmPools();
             _eventBus?.Subscribe<BloodEaterExecutedEvent>(OnBloodEaterExecuted);
@@ -71,20 +55,7 @@ namespace HappyShoot.View.Projectiles
 
         private void PrewarmPools()
         {
-            // 1. Ring Pool
-            for (int i = 0; i < 6; i++)
-            {
-                var go = new GameObject($"BloodRing_{i}");
-                go.transform.SetParent(transform, false);
-                var sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = _ringSprite;
-                sr.sortingOrder = 28;
-                go.SetActive(false);
-
-                _ringPool.Add(new ActiveBloodRing { Root = go, Renderer = sr, IsActive = false });
-            }
-
-            // 2. Particle Pool
+            // 1. Blood Particle & Absorption Flash Pool
             for (int i = 0; i < 32; i++)
             {
                 var go = new GameObject($"BloodDebris_{i}");
@@ -97,8 +68,8 @@ namespace HappyShoot.View.Projectiles
                 _particlePool.Add(new ActiveBloodParticle { Root = go, Renderer = sr, IsActive = false });
             }
 
-            // 3. Life Drain Orb Pool
-            for (int i = 0; i < 16; i++)
+            // 2. Life Drain Blood Essence Orb Pool
+            for (int i = 0; i < 32; i++)
             {
                 var go = new GameObject($"BloodDrainOrb_{i}");
                 go.transform.SetParent(transform, false);
@@ -113,84 +84,104 @@ namespace HappyShoot.View.Projectiles
 
         private void OnBloodEaterExecuted(BloodEaterExecutedEvent evt)
         {
-            Vector2 center = new Vector2((float)evt.CenterPosition.X, (float)evt.CenterPosition.Y);
-            float radius = evt.Radius > 0f ? evt.Radius : 4.8f;
+            // 1. Camera Slash Shake
+            CameraFollowView.Instance?.TriggerShake("slash", duration: 0.18f, intensity: 0.24f);
 
-            // 1. Trigger Screen Shake (filtered by slash shake setting)
-            CameraFollowView.Instance?.TriggerShake("slash", duration: 0.18f, intensity: 0.22f);
-
-            // 2. Spawn Expanding Crimson Vortex Ring
-            for (int i = 0; i < _ringPool.Count; i++)
+            // 2. Spawn crimson blood essence orbs from each hit enemy position
+            if (evt.HitPositions != null && evt.HitPositions.Count > 0 && _playerTransform != null)
             {
-                var r = _ringPool[i];
-                if (!r.IsActive)
+                int maxOrbsToSpawn = Mathf.Min(evt.HitPositions.Count * 2, 24);
+                int spawnedOrbs = 0;
+
+                for (int h = 0; h < evt.HitPositions.Count && spawnedOrbs < maxOrbsToSpawn; h++)
                 {
-                    r.IsActive = true;
-                    r.Center = center;
-                    r.TargetRadius = radius;
-                    r.Elapsed = 0f;
-                    r.Duration = 0.38f;
-                    r.InitialRotation = Random.Range(0f, 360f);
-                    r.Root.transform.position = center;
-                    r.Root.transform.localScale = Vector3.zero;
-                    r.Root.SetActive(true);
-                    _ringPool[i] = r;
-                    break;
+                    Vector2 hitPos = new Vector2((float)evt.HitPositions[h].X, (float)evt.HitPositions[h].Y);
+
+                    // Spawn 1~2 life drain orbs per hit enemy
+                    int orbsFromThisEnemy = (h % 2 == 0) ? 2 : 1;
+                    for (int o = 0; o < orbsFromThisEnemy && spawnedOrbs < maxOrbsToSpawn; o++)
+                    {
+                        for (int i = 0; i < _orbPool.Count; i++)
+                        {
+                            var orb = _orbPool[i];
+                            if (!orb.IsActive)
+                            {
+                                orb.IsActive = true;
+                                orb.StartPos = hitPos + Random.insideUnitCircle * 0.25f;
+                                orb.TargetTransform = _playerTransform;
+                                orb.Elapsed = 0f;
+                                orb.Duration = Random.Range(0.28f, 0.42f);
+
+                                // Random bezier control point for organic curved flight towards player
+                                Vector2 toPlayer = (Vector2)_playerTransform.position - hitPos;
+                                Vector2 perp = new Vector2(-toPlayer.y, toPlayer.x).normalized;
+                                float curveOffset = Random.Range(-1.8f, 1.8f);
+                                orb.CurveControl = hitPos + (toPlayer * 0.5f) + (perp * curveOffset);
+
+                                orb.Root.transform.position = orb.StartPos;
+                                orb.Root.transform.localScale = Vector3.one * Random.Range(0.9f, 1.35f);
+                                orb.Renderer.color = new Color(1.0f, 0.15f, 0.25f, 1.0f);
+                                orb.Root.SetActive(true);
+                                _orbPool[i] = orb;
+
+                                spawnedOrbs++;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Spawn a small blood splash spark at hit position
+                    SpawnBloodSplatter(hitPos, count: 2);
                 }
             }
+        }
 
-            // 3. Spawn 12 Blood Splatter Particles in 360 degrees
-            int spawnedParticles = 0;
-            for (int i = 0; i < _particlePool.Count && spawnedParticles < 12; i++)
+        private void SpawnBloodSplatter(Vector2 position, int count)
+        {
+            int spawned = 0;
+            for (int i = 0; i < _particlePool.Count && spawned < count; i++)
             {
                 var p = _particlePool[i];
                 if (!p.IsActive)
                 {
                     p.IsActive = true;
-                    p.Position = center;
-                    float angle = (spawnedParticles * 30f + Random.Range(-10f, 10f)) * Mathf.Deg2Rad;
-                    float speed = Random.Range(5.0f, 11.0f);
+                    p.Position = position;
+                    float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+                    float speed = Random.Range(3.5f, 7.0f);
                     p.Velocity = new Vector2(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed);
                     p.Elapsed = 0f;
-                    p.Lifetime = Random.Range(0.25f, 0.45f);
-                    p.Root.transform.position = center;
-                    p.Root.transform.localScale = Vector3.one * Random.Range(0.6f, 1.2f);
-                    p.Renderer.color = new Color(0.9f, 0.1f, 0.15f, 1.0f);
+                    p.Lifetime = Random.Range(0.18f, 0.30f);
+                    p.Root.transform.position = position;
+                    p.Root.transform.localScale = Vector3.one * Random.Range(0.5f, 0.9f);
+                    p.Renderer.color = new Color(0.95f, 0.10f, 0.20f, 1.0f);
                     p.Root.SetActive(true);
                     _particlePool[i] = p;
-                    spawnedParticles++;
+                    spawned++;
                 }
             }
+        }
 
-            // 4. If Healed > 0, spawn absorption orbs flying towards player
-            if (evt.HealedAmount > 0f && _playerTransform != null)
+        private void SpawnAbsorptionBurst(Vector2 position)
+        {
+            int spawned = 0;
+            for (int i = 0; i < _particlePool.Count && spawned < 2; i++)
             {
-                int orbCount = Mathf.Clamp(Mathf.RoundToInt(evt.HealedAmount / 2.0f), 2, 6);
-                int spawnedOrbs = 0;
-                for (int i = 0; i < _orbPool.Count && spawnedOrbs < orbCount; i++)
+                var p = _particlePool[i];
+                if (!p.IsActive)
                 {
-                    var o = _orbPool[i];
-                    if (!o.IsActive)
-                    {
-                        o.IsActive = true;
-                        float randAngle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-                        float spawnDist = Random.Range(1.8f, radius * 0.85f);
-                        o.StartPos = center + new Vector2(Mathf.Cos(randAngle) * spawnDist, Mathf.Sin(randAngle) * spawnDist);
-                        o.TargetTransform = _playerTransform;
-                        o.Elapsed = 0f;
-                        o.Duration = Random.Range(0.35f, 0.55f);
-
-                        // Curve offset for curved homing suction effect
-                        Vector2 perp = new Vector2(-Mathf.Sin(randAngle), Mathf.Cos(randAngle)) * Random.Range(-1.5f, 1.5f);
-                        o.CurveControl = (o.StartPos + (Vector2)_playerTransform.position) * 0.5f + perp;
-
-                        o.Root.transform.position = o.StartPos;
-                        o.Root.transform.localScale = Vector3.one * 1.1f;
-                        o.Renderer.color = new Color(1.0f, 0.3f, 0.35f, 1.0f);
-                        o.Root.SetActive(true);
-                        _orbPool[i] = o;
-                        spawnedOrbs++;
-                    }
+                    p.IsActive = true;
+                    p.Position = position;
+                    float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+                    float speed = Random.Range(1.5f, 3.5f);
+                    p.Velocity = new Vector2(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed);
+                    p.Elapsed = 0f;
+                    p.Lifetime = Random.Range(0.15f, 0.25f);
+                    p.Root.transform.position = position;
+                    p.Root.transform.localScale = Vector3.one * 0.7f;
+                    p.Renderer.color = new Color(1.0f, 0.45f, 0.60f, 1.0f); // Bright pink-ruby absorption sparkle
+                    p.Root.SetActive(true);
+                    _particlePool[i] = p;
+                    spawned++;
                 }
             }
         }
@@ -199,88 +190,66 @@ namespace HappyShoot.View.Projectiles
         {
             float dt = Time.deltaTime;
 
-            // 1. Update Expanding Vortex Rings
-            for (int i = 0; i < _ringPool.Count; i++)
-            {
-                var r = _ringPool[i];
-                if (r.IsActive)
-                {
-                    r.Elapsed += dt;
-                    float progress = Mathf.Clamp01(r.Elapsed / r.Duration);
-
-                    // Rapid burst expansion
-                    float easeScale = Mathf.Sin(progress * Mathf.PI * 0.5f);
-                    float diameter = r.TargetRadius * 2.0f * easeScale;
-                    r.Root.transform.localScale = new Vector3(diameter, diameter, 1f);
-
-                    // Fast spin rotation
-                    float currentRot = r.InitialRotation + progress * 360f;
-                    r.Root.transform.rotation = Quaternion.Euler(0, 0, currentRot);
-
-                    // Alpha fade out near end
-                    float alpha = 1.0f - (progress * progress);
-                    r.Renderer.color = new Color(1.0f, 0.15f, 0.2f, alpha * 0.95f);
-
-                    if (progress >= 1.0f)
-                    {
-                        r.IsActive = false;
-                        r.Root.SetActive(false);
-                    }
-                    _ringPool[i] = r;
-                }
-            }
-
-            // 2. Update Blood Splatter Particles
+            // 1. Update Blood Particles
             for (int i = 0; i < _particlePool.Count; i++)
             {
                 var p = _particlePool[i];
-                if (p.IsActive)
+                if (!p.IsActive) continue;
+
+                p.Elapsed += dt;
+                if (p.Elapsed >= p.Lifetime)
                 {
-                    p.Elapsed += dt;
-                    float progress = Mathf.Clamp01(p.Elapsed / p.Lifetime);
-
-                    p.Position += p.Velocity * dt;
-                    p.Velocity = Vector2.Lerp(p.Velocity, Vector2.zero, dt * 6.0f); // Air resistance
-                    p.Root.transform.position = p.Position;
-
-                    float alpha = 1.0f - progress;
-                    p.Renderer.color = new Color(0.9f, 0.1f, 0.15f, alpha);
-
-                    if (progress >= 1.0f)
-                    {
-                        p.IsActive = false;
-                        p.Root.SetActive(false);
-                    }
+                    p.IsActive = false;
+                    p.Root.SetActive(false);
                     _particlePool[i] = p;
+                    continue;
                 }
+
+                p.Position += p.Velocity * dt;
+                p.Velocity *= Mathf.Pow(0.12f, dt); // Strong friction drag
+                p.Root.transform.position = p.Position;
+
+                float alpha = Mathf.Clamp01(1.0f - (p.Elapsed / p.Lifetime));
+                Color c = p.Renderer.color;
+                c.a = alpha;
+                p.Renderer.color = c;
+                _particlePool[i] = p;
             }
 
-            // 3. Update Life Drain Absorption Orbs
+            // 2. Update Life Drain Absorption Orbs
             for (int i = 0; i < _orbPool.Count; i++)
             {
                 var o = _orbPool[i];
-                if (o.IsActive)
+                if (!o.IsActive) continue;
+
+                o.Elapsed += dt;
+                float progress = Mathf.Clamp01(o.Elapsed / o.Duration);
+
+                Vector2 targetPos = (o.TargetTransform != null) 
+                    ? (Vector2)o.TargetTransform.position 
+                    : o.CurveControl;
+
+                // Quadratic Bezier Curve: B(t) = (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
+                float u = 1f - progress;
+                Vector2 currentPos = (u * u * o.StartPos) + (2f * u * progress * o.CurveControl) + (progress * progress * targetPos);
+
+                o.Root.transform.position = currentPos;
+
+                // Scale pulse and energetic glow
+                float scaleMod = Mathf.Sin(progress * Mathf.PI) * 0.4f + 0.9f;
+                o.Root.transform.localScale = Vector3.one * scaleMod;
+
+                // Siphon into player upon arrival
+                if (progress >= 1.0f || (o.TargetTransform != null && Vector2.Distance(currentPos, targetPos) < 0.35f))
                 {
-                    o.Elapsed += dt;
-                    float t = Mathf.Clamp01(o.Elapsed / o.Duration);
-
-                    Vector2 target = o.TargetTransform != null ? (Vector2)o.TargetTransform.position : o.StartPos;
-
-                    // Quadratic Bezier curve suction
-                    float u = 1f - t;
-                    Vector2 currentPos = (u * u * o.StartPos) + (2f * u * t * o.CurveControl) + (t * t * target);
-                    o.Root.transform.position = currentPos;
-
-                    // Pulsing scale shrink into player
-                    o.Root.transform.localScale = Vector3.one * Mathf.Lerp(1.2f, 0.4f, t);
-
-                    if (t >= 1.0f)
-                    {
-                        o.IsActive = false;
-                        o.Root.SetActive(false);
-                    }
+                    o.IsActive = false;
+                    o.Root.SetActive(false);
+                    SpawnAbsorptionBurst(targetPos);
                     _orbPool[i] = o;
+                    continue;
                 }
+
+                _orbPool[i] = o;
             }
         }
     }

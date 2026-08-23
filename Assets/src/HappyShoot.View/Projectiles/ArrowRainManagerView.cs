@@ -48,16 +48,29 @@ namespace HappyShoot.View.Projectiles
         private MonsterSpawnerView _spawnerView;
         private Player.PlayerView _playerView;
 
+        private EventBus _eventBus;
+
         public void Initialize(EventBus eventBus, MonsterSpawnerView spawnerView = null, Player.PlayerView playerView = null)
         {
+            _eventBus = eventBus;
             _spawnerView = spawnerView;
             _playerView = playerView;
-            if (eventBus != null)
+            if (_eventBus != null)
             {
-                eventBus.Subscribe<ArrowRainExecutedEvent>(OnArrowRainExecuted);
+                _eventBus.Subscribe<ArrowRainExecutedEvent>(OnArrowRainExecuted);
+                _eventBus.Subscribe<StellarRainExecutedEvent>(OnStellarRainExecuted);
             }
 
             PrewarmPool();
+        }
+
+        private void OnDestroy()
+        {
+            if (_eventBus != null)
+            {
+                _eventBus.Unsubscribe<ArrowRainExecutedEvent>(OnArrowRainExecuted);
+                _eventBus.Unsubscribe<StellarRainExecutedEvent>(OnStellarRainExecuted);
+            }
         }
 
         private void PrewarmPool()
@@ -113,10 +126,15 @@ namespace HappyShoot.View.Projectiles
 
         private void OnArrowRainExecuted(ArrowRainExecutedEvent evt)
         {
-            SpawnRainZone(evt.CenterPosition, evt.Radius, evt.Duration, evt.ArrowCount, evt.DamagePerArrow);
+            SpawnRainZone(evt.CenterPosition, evt.Radius, evt.Duration, evt.ArrowCount, evt.DamagePerArrow, isStellar: false);
         }
 
-        private void SpawnRainZone(Vector2D center, float radius, float duration, int arrowCount, float damagePerArrow)
+        private void OnStellarRainExecuted(StellarRainExecutedEvent evt)
+        {
+            SpawnRainZone(evt.TargetCenter, evt.Radius, 1.8f, evt.ArrowCount, evt.Damage, isStellar: true);
+        }
+
+        private void SpawnRainZone(Vector2D center, float radius, float duration, int arrowCount, float damagePerArrow, bool isStellar = false)
         {
             for (int i = 0; i < _zones.Count; i++)
             {

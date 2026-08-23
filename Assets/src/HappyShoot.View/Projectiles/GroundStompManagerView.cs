@@ -44,8 +44,15 @@ namespace HappyShoot.View.Projectiles
         {
             _eventBus = eventBus;
             _eventBus?.Subscribe<GroundStompExecutedEvent>(OnGroundStompExecuted);
+            _eventBus?.Subscribe<EarthshakerExecutedEvent>(OnEarthshakerExecuted);
 
             PrewarmPool();
+        }
+
+        private void OnDestroy()
+        {
+            _eventBus?.Unsubscribe<GroundStompExecutedEvent>(OnGroundStompExecuted);
+            _eventBus?.Unsubscribe<EarthshakerExecutedEvent>(OnEarthshakerExecuted);
         }
 
         private void PrewarmPool()
@@ -62,7 +69,7 @@ namespace HappyShoot.View.Projectiles
 
                 var sr = rootGo.AddComponent<SpriteRenderer>();
                 sr.sprite = stompSprite;
-                sr.sortingOrder = 3;
+                sr.sortingOrder = 2; // Floor ground layer
                 rootGo.SetActive(false);
 
                 var instance = new GroundStompInstance
@@ -73,8 +80,8 @@ namespace HappyShoot.View.Projectiles
                     IsActive = false
                 };
 
-                // Create 8 flying rock debris particles per stomp instance
-                for (int d = 0; d < 8; d++)
+                // Create 12 flying rock debris and glowing magma ember particles
+                for (int d = 0; d < 12; d++)
                 {
                     var rockGo = new GameObject($"RockDebris_{d + 1}");
                     rockGo.transform.SetParent(rootGo.transform, false);
@@ -103,10 +110,24 @@ namespace HappyShoot.View.Projectiles
             SpawnStompVisual(new Vector2(evt.CenterPosition.X, evt.CenterPosition.Y), evt.Radius * 2.0f);
         }
 
-        public void SpawnStompVisual(Vector2 position, float diameter)
+        private void OnEarthshakerExecuted(EarthshakerExecutedEvent evt)
+        {
+            Vector2 center = new Vector2(evt.CenterPosition.X, evt.CenterPosition.Y);
+            SpawnStompVisual(center, evt.Radius * 2.0f, isEarthshaker: true);
+
+            // 4-cardinal direction fissure tremors
+            Vector2[] dirs = { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
+            for (int d = 0; d < dirs.Length; d++)
+            {
+                Vector2 fissurePos = center + dirs[d] * (evt.Radius * 0.55f);
+                SpawnStompVisual(fissurePos, evt.Radius * 1.1f, isEarthshaker: false);
+            }
+        }
+
+        public void SpawnStompVisual(Vector2 position, float diameter, bool isEarthshaker = false)
         {
             // Camera impact shake (filtered by ground_stomp shake setting)
-            CameraFollowView.Instance?.TriggerShake("ground_stomp", duration: 0.16f, intensity: 0.22f);
+            CameraFollowView.Instance?.TriggerShake("ground_stomp", duration: isEarthshaker ? 0.24f : 0.18f, intensity: isEarthshaker ? 0.32f : 0.26f);
 
             for (int i = 0; i < _pool.Count; i++)
             {
@@ -115,12 +136,13 @@ namespace HappyShoot.View.Projectiles
                 {
                     fx.IsActive = true;
                     fx.Transform.position = position;
-                    fx.TargetScale = Mathf.Max(1.0f, diameter);
+                    // 128px sprite at 16 PPU = 8.0 units base width. Scale to exactly match world diameter.
+                    fx.TargetScale = Mathf.Max(0.5f, diameter / 8.0f);
                     fx.Timer = 0f;
-                    fx.Duration = 0.38f; // Heavy 380ms earthquake tremor duration
+                    fx.Duration = 0.45f; // Heavy 450ms earthquake ground crater duration
                     fx.Transform.localScale = Vector3.zero;
 
-                    Color c = fx.Renderer.color;
+                    Color c = Color.white;
                     c.a = 1.0f;
                     fx.Renderer.color = c;
 
@@ -130,15 +152,18 @@ namespace HappyShoot.View.Projectiles
                         var debris = fx.DebrisList[d];
                         debris.IsActive = true;
                         debris.Transform.localPosition = Vector3.zero;
-                        debris.MaxLifetime = Random.Range(0.28f, 0.38f);
+                        debris.MaxLifetime = Random.Range(0.32f, 0.45f);
                         debris.Lifetime = debris.MaxLifetime;
-                        debris.Gravity = Random.Range(18.0f, 26.0f);
+                        debris.Gravity = Random.Range(20.0f, 30.0f);
 
-                        float angle = (d * (360f / fx.DebrisList.Count) + Random.Range(-15f, 15f)) * Mathf.Deg2Rad;
-                        float speed = Random.Range(3.5f, 6.0f);
-                        debris.Velocity = new Vector3(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed + Random.Range(2.0f, 4.0f), 0f);
+                        float angle = (d * (360f / fx.DebrisList.Count) + Random.Range(-12f, 12f)) * Mathf.Deg2Rad;
+                        float speed = Random.Range(4.0f, 7.5f);
+                        debris.Velocity = new Vector3(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed + Random.Range(3.0f, 5.5f), 0f);
 
-                        debris.Renderer.color = (d % 2 == 0) ? new Color(0.48f, 0.26f, 0.10f, 1f) : new Color(0.85f, 0.45f, 0.12f, 1f);
+                        // Alternate between heavy rock brown and glowing ember orange/gold
+                        debris.Renderer.color = (d % 3 == 0) 
+                            ? new Color(1.0f, 0.75f, 0.20f, 1f) 
+                            : (d % 3 == 1 ? new Color(0.95f, 0.40f, 0.10f, 1f) : new Color(0.35f, 0.18f, 0.08f, 1f));
                         debris.Transform.gameObject.SetActive(true);
                     }
 
@@ -160,12 +185,20 @@ namespace HappyShoot.View.Projectiles
                 fx.Timer += dt;
                 float progress = Mathf.Clamp01(fx.Timer / fx.Duration);
 
-                // Smooth expansion scaling & alpha fade out
-                float currentScale = Mathf.Lerp(0.15f, fx.TargetScale, Mathf.Sin(progress * Mathf.PI * 0.5f));
+                // Fast slam expansion in first 80ms, then stable crater, then smooth fade
+                float scaleT = Mathf.Clamp01(fx.Timer / 0.08f);
+                float currentScale = Mathf.Lerp(fx.TargetScale * 0.3f, fx.TargetScale, Mathf.Sin(scaleT * Mathf.PI * 0.5f));
                 fx.Transform.localScale = Vector3.one * currentScale;
 
                 Color c = fx.Renderer.color;
-                c.a = Mathf.Clamp01((1.0f - progress) * 1.5f);
+                if (progress > 0.65f)
+                {
+                    c.a = Mathf.Clamp01((1.0f - progress) / 0.35f);
+                }
+                else
+                {
+                    c.a = 1.0f;
+                }
                 fx.Renderer.color = c;
 
                 // Update flying rock debris physics
@@ -185,7 +218,7 @@ namespace HappyShoot.View.Projectiles
                     debris.Velocity.y -= debris.Gravity * dt;
                     debris.Transform.localPosition += debris.Velocity * dt;
 
-                    float debrisAlpha = Mathf.Clamp01(debris.Lifetime / (debris.MaxLifetime * 0.5f));
+                    float debrisAlpha = Mathf.Clamp01(debris.Lifetime / (debris.MaxLifetime * 0.4f));
                     Color dc = debris.Renderer.color;
                     dc.a = debrisAlpha;
                     debris.Renderer.color = dc;

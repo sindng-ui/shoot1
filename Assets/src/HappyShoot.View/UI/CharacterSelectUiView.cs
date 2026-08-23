@@ -184,15 +184,15 @@ namespace HappyShoot.View.UI
                 classType: CharacterClassType.Wizard
             );
 
-            // Bottom Button 1: Dev Mode Toggle (Left)
+            // Bottom Button 1: Dev Mode Toggle
             var devBtnGo = new GameObject("BtnToggleDevMode");
             devBtnGo.transform.SetParent(_panelRoot.transform, false);
             var devRt = devBtnGo.AddComponent<RectTransform>();
             devRt.anchorMin = new Vector2(0.5f, 0f);
             devRt.anchorMax = new Vector2(0.5f, 0f);
             devRt.pivot = new Vector2(0.5f, 0f);
-            devRt.anchoredPosition = new Vector2(-310f, 35f);
-            devRt.sizeDelta = new Vector2(270f, 52f);
+            devRt.anchoredPosition = new Vector2(-405f, 35f);
+            devRt.sizeDelta = new Vector2(250f, 52f);
 
             _devModeBtnImg = devBtnGo.AddComponent<Image>();
             _devModeBtnImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -202,17 +202,17 @@ namespace HappyShoot.View.UI
             devBtn.targetGraphic = _devModeBtnImg;
             devBtn.onClick.AddListener(ToggleDevMode);
 
-            _devModeBtnText = CreateText(devBtnGo.transform, "BtnText", "🛠️ 개발자 모드: OFF", 17, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            _devModeBtnText = CreateText(devBtnGo.transform, "BtnText", "🛠️ 개발자 모드: OFF", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
 
-            // Bottom Button 2: Skill Test Mode Toggle (Center)
+            // Bottom Button 2: Skill Test Mode Toggle
             var testBtnGo = new GameObject("BtnToggleSkillTest");
             testBtnGo.transform.SetParent(_panelRoot.transform, false);
             var testRt = testBtnGo.AddComponent<RectTransform>();
             testRt.anchorMin = new Vector2(0.5f, 0f);
             testRt.anchorMax = new Vector2(0.5f, 0f);
             testRt.pivot = new Vector2(0.5f, 0f);
-            testRt.anchoredPosition = new Vector2(0f, 35f);
-            testRt.sizeDelta = new Vector2(270f, 52f);
+            testRt.anchoredPosition = new Vector2(-135f, 35f);
+            testRt.sizeDelta = new Vector2(250f, 52f);
 
             _skillTestBtnImg = testBtnGo.AddComponent<Image>();
             _skillTestBtnImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -222,17 +222,17 @@ namespace HappyShoot.View.UI
             testBtn.targetGraphic = _skillTestBtnImg;
             testBtn.onClick.AddListener(ToggleSkillTestMode);
 
-            _skillTestBtnText = CreateText(testBtnGo.transform, "BtnText", "🧪 밸런스 샌드박스: OFF", 17, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            _skillTestBtnText = CreateText(testBtnGo.transform, "BtnText", "🧪 밸런스 샌드박스: OFF", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
 
-            // Bottom Button 3: Settings Button (Right)
+            // Bottom Button 3: Settings Button
             var settingsBtnGo = new GameObject("BtnOpenSettings");
             settingsBtnGo.transform.SetParent(_panelRoot.transform, false);
             var settingsRt = settingsBtnGo.AddComponent<RectTransform>();
             settingsRt.anchorMin = new Vector2(0.5f, 0f);
             settingsRt.anchorMax = new Vector2(0.5f, 0f);
             settingsRt.pivot = new Vector2(0.5f, 0f);
-            settingsRt.anchoredPosition = new Vector2(310f, 35f);
-            settingsRt.sizeDelta = new Vector2(270f, 52f);
+            settingsRt.anchoredPosition = new Vector2(135f, 35f);
+            settingsRt.sizeDelta = new Vector2(250f, 52f);
 
             var settingsImg = settingsBtnGo.AddComponent<Image>();
             settingsImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -242,10 +242,40 @@ namespace HappyShoot.View.UI
             settingsBtn.targetGraphic = settingsImg;
             settingsBtn.onClick.AddListener(() => _settingsDialog?.Show());
 
-            CreateText(settingsBtnGo.transform, "BtnText", "⚙️ 게임 환경 설정", 17, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            CreateText(settingsBtnGo.transform, "BtnText", "⚙️ 게임 환경 설정", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+
+            // Bottom Button 4: Quit Game Button
+            var quitBtnGo = new GameObject("BtnQuitGame");
+            quitBtnGo.transform.SetParent(_panelRoot.transform, false);
+            var quitRt = quitBtnGo.AddComponent<RectTransform>();
+            quitRt.anchorMin = new Vector2(0.5f, 0f);
+            quitRt.anchorMax = new Vector2(0.5f, 0f);
+            quitRt.pivot = new Vector2(0.5f, 0f);
+            quitRt.anchoredPosition = new Vector2(405f, 35f);
+            quitRt.sizeDelta = new Vector2(250f, 52f);
+
+            var quitImg = quitBtnGo.AddComponent<Image>();
+            quitImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            quitImg.color = new Color(0.45f, 0.16f, 0.20f, 0.95f);
+
+            var quitBtn = quitBtnGo.AddComponent<Button>();
+            quitBtn.targetGraphic = quitImg;
+            quitBtn.onClick.AddListener(QuitGame);
+
+            CreateText(quitBtnGo.transform, "BtnText", "🚪 게임 종료", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
 
             // Version Label (Bottom Right)
-            CreateText(_panelRoot.transform, "VersionLabel", HappyShoot.Domain.Common.AppVersion.FullVersionText, 14, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-24f, 20f), new Vector2(300f, 24f), new Color(0.6f, 0.7f, 0.8f, 0.6f));
+            CreateText(_panelRoot.transform, "VersionLabel", HappyShoot.Domain.Common.AppVersion.FullVersionText, 14, TextAnchor.LowerRight, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-24f, 15f), new Vector2(300f, 24f), new Color(0.6f, 0.7f, 0.8f, 0.6f));
+        }
+
+        private void QuitGame()
+        {
+            Debug.Log("[CharacterSelectUiView] Quitting Application...");
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         private void CreateCharacterCard(

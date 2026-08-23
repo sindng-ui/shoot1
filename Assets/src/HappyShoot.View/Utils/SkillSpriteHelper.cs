@@ -3,55 +3,24 @@ using UnityEngine;
 namespace HappyShoot.View.Utils
 {
     /// <summary>
-    /// Generates procedural pixel-art sprites for combat skills, earthquake shockwaves, bone projectiles, and slash arcs.
+    /// Generates procedural pixel-art sprites for combat skills, bone projectiles, and redirects warrior sprites to WarriorSkillSpriteHelper.
+    /// Strictly under 300 lines for modularity.
     /// </summary>
     public static class SkillSpriteHelper
     {
-        private static Sprite _slashArcSprite;
         private static Sprite _boneSprite;
-        private static Sprite _groundStompSprite;
+        private static Sprite _windGlaiveSprite;
+        private static Sprite _stormArrowSprite;
+        private static Sprite _stormBlastSprite;
 
-        /// <summary>
-        /// 64x64 Golden Melee Crescent Slash Arc for Warrior Greatsword attack.
-        /// </summary>
-        public static Sprite GetOrCreateSlashArcSprite(int size = 64)
-        {
-            if (_slashArcSprite != null) return _slashArcSprite;
-
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            texture.filterMode = FilterMode.Bilinear;
-            texture.wrapMode = TextureWrapMode.Clamp;
-
-            Vector2 center = new Vector2(size * 0.15f, size * 0.5f);
-            float radius = size * 0.75f;
-            float innerRadius = size * 0.45f;
-
-            Color[] pixels = new Color[size * size];
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    Vector2 pos = new Vector2(x + 0.5f, y + 0.5f);
-                    float dist = Vector2.Distance(pos, center);
-                    float angle = Mathf.Atan2(pos.y - center.y, pos.x - center.x) * Mathf.Rad2Deg;
-
-                    if (dist >= innerRadius && dist <= radius && angle >= -60f && angle <= 60f)
-                    {
-                        float edgeFade = Mathf.Sin((angle + 60f) / 120f * Mathf.PI);
-                        pixels[y * size + x] = new Color(1f, 0.95f, 0.35f, edgeFade * 0.95f);
-                    }
-                    else
-                    {
-                        pixels[y * size + x] = Color.clear;
-                    }
-                }
-            }
-
-            texture.SetPixels(pixels);
-            texture.Apply();
-            _slashArcSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.15f, 0.5f), size);
-            return _slashArcSprite;
-        }
+        #region Forwarding Wrappers for Warrior Skills
+        public static Sprite GetOrCreateSlashArcSprite(int size = 128) => WarriorSkillSpriteHelper.GetOrCreateSlashArcSprite(size);
+        public static Sprite GetOrCreateBloodSlashArcSprite(int size = 128) => WarriorSkillSpriteHelper.GetOrCreateBloodSlashArcSprite(size);
+        public static Sprite GetOrCreateGroundStompSprite() => WarriorSkillSpriteHelper.GetOrCreateGroundStompSprite();
+        public static Sprite GetOrCreateWhirlwindBladeSprite() => WarriorSkillSpriteHelper.GetOrCreateWhirlwindBladeSprite();
+        public static Sprite GetOrCreateBloodOrbSprite(int size = 32) => WarriorSkillSpriteHelper.GetOrCreateBloodOrbSprite(size);
+        public static Sprite GetOrCreateBloodSpinSprite(int size = 128) => WarriorSkillSpriteHelper.GetOrCreateBloodSlashArcSprite(size);
+        #endregion
 
         /// <summary>
         /// 24x10 Ivory Flying Bone Arrow projectile sprite for Skeleton Archer.
@@ -101,175 +70,6 @@ namespace HappyShoot.View.Utils
         }
 
         /// <summary>
-        /// 64x64 Earthquake Ground Fracture Shockwave for Warrior Ground Stomp.
-        /// </summary>
-        public static Sprite GetOrCreateGroundStompSprite()
-        {
-            if (_groundStompSprite != null) return _groundStompSprite;
-
-            int size = 64;
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Bilinear;
-            tex.wrapMode = TextureWrapMode.Clamp;
-            Color[] pixels = new Color[size * size];
-
-            float center = size * 0.5f;
-            float outerRadius = size * 0.48f;
-            float innerRadius = size * 0.20f;
-            Color magmaCore = new Color(1.0f, 0.85f, 0.25f, 1f);
-            Color magmaOrange = new Color(1.0f, 0.45f, 0.05f, 0.95f);
-            Color earthDark = new Color(0.28f, 0.15f, 0.08f, 0.95f);
-            Color crackColor = new Color(0.12f, 0.06f, 0.02f, 1f);
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = x - center;
-                    float dy = y - center;
-                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                    float angle = Mathf.Atan2(dy, dx);
-
-                    // 8-directional jagged fracture lines
-                    float crackNoise = Mathf.Sin(angle * 8f) * 4f + Mathf.Cos(angle * 4f) * 2f;
-                    bool isCrack = Mathf.Abs(dist - (size * 0.35f + crackNoise)) < 2.0f && dist <= outerRadius;
-
-                    if (isCrack)
-                    {
-                        pixels[y * size + x] = Color.Lerp(magmaOrange, crackColor, dist / outerRadius);
-                    }
-                    else if (dist >= innerRadius && dist <= outerRadius)
-                    {
-                        float ringT = (dist - innerRadius) / (outerRadius - innerRadius);
-                        float alpha = Mathf.Sin(ringT * Mathf.PI);
-                        Color ringCol = Color.Lerp(magmaOrange, earthDark, ringT);
-                        pixels[y * size + x] = new Color(ringCol.r, ringCol.g, ringCol.b, alpha * 0.95f);
-                    }
-                    else if (dist < innerRadius)
-                    {
-                        float coreT = dist / innerRadius;
-                        pixels[y * size + x] = Color.Lerp(magmaCore, magmaOrange, coreT);
-                    }
-                    else
-                    {
-                        pixels[y * size + x] = Color.clear;
-                    }
-                }
-            }
-
-            tex.SetPixels(pixels);
-            tex.Apply();
-            _groundStompSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16);
-            return _groundStompSprite;
-        }
-
-        private static Sprite _bloodSpinSprite;
-        private static Sprite _bloodOrbSprite;
-
-        /// <summary>
-        /// 128x128 360-degree crimson vortex blood slash ring for Blood Eater ultimate skill.
-        /// </summary>
-        public static Sprite GetOrCreateBloodSpinSprite(int size = 128)
-        {
-            if (_bloodSpinSprite != null) return _bloodSpinSprite;
-
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Bilinear;
-            tex.wrapMode = TextureWrapMode.Clamp;
-
-            float center = size * 0.5f;
-            float outerRadius = size * 0.48f;
-            float innerRadius = size * 0.22f;
-            Color[] pixels = new Color[size * size];
-
-            Color crimson = new Color(0.95f, 0.1f, 0.15f, 0.95f);
-            Color darkBlood = new Color(0.45f, 0.02f, 0.05f, 0.85f);
-            Color brightGlow = new Color(1.0f, 0.4f, 0.45f, 1.0f);
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = x - center;
-                    float dy = y - center;
-                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                    float angle = Mathf.Atan2(dy, dx);
-
-                    // 4-spiral curved blade streak
-                    float swirl = angle * 2.0f + (dist / outerRadius) * Mathf.PI;
-                    float swirlVal = Mathf.Sin(swirl) * 0.5f + 0.5f;
-
-                    if (dist >= innerRadius && dist <= outerRadius)
-                    {
-                        float ringT = (dist - innerRadius) / (outerRadius - innerRadius);
-                        float edgeFade = Mathf.Sin(ringT * Mathf.PI);
-                        Color col = Color.Lerp(darkBlood, crimson, swirlVal);
-                        if (swirlVal > 0.8f) col = Color.Lerp(col, brightGlow, (swirlVal - 0.8f) * 5f);
-
-                        pixels[y * size + x] = new Color(col.r, col.g, col.b, edgeFade * 0.95f);
-                    }
-                    else
-                    {
-                        pixels[y * size + x] = Color.clear;
-                    }
-                }
-            }
-
-            tex.SetPixels(pixels);
-            tex.Apply();
-            _bloodSpinSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16);
-            return _bloodSpinSprite;
-        }
-
-        /// <summary>
-        /// 24x24 Glowing red blood droplet/orb for life-steal visual effect.
-        /// </summary>
-        public static Sprite GetOrCreateBloodOrbSprite(int size = 24)
-        {
-            if (_bloodOrbSprite != null) return _bloodOrbSprite;
-
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Bilinear;
-            tex.wrapMode = TextureWrapMode.Clamp;
-
-            float center = size * 0.5f;
-            float radius = size * 0.45f;
-            Color[] pixels = new Color[size * size];
-
-            Color core = new Color(1.0f, 0.7f, 0.7f, 1.0f);
-            Color rim = new Color(0.9f, 0.05f, 0.1f, 0.9f);
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = x - center;
-                    float dy = y - center;
-                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
-
-                    if (dist <= radius)
-                    {
-                        float t = dist / radius;
-                        Color c = Color.Lerp(core, rim, t);
-                        float alpha = 1.0f - (t * t);
-                        pixels[y * size + x] = new Color(c.r, c.g, c.b, alpha);
-                    }
-                    else
-                    {
-                        pixels[y * size + x] = Color.clear;
-                    }
-                }
-            }
-
-            tex.SetPixels(pixels);
-            tex.Apply();
-            _bloodOrbSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16);
-            return _bloodOrbSprite;
-        }
-
-        private static Sprite _windGlaiveSprite;
-
-        /// <summary>
         /// 32x32 Cyan-Emerald 3-bladed aerodynamic spinning wind glaive boomerang.
         /// </summary>
         public static Sprite GetOrCreateWindGlaiveSprite(int size = 32)
@@ -297,8 +97,7 @@ namespace HappyShoot.View.Utils
                     float dist = Mathf.Sqrt(dx * dx + dy * dy);
                     float angle = Mathf.Atan2(dy, dx);
 
-                    // 3-bladed aerodynamic shape: cos(3 * theta)
-                    float bladeMod = (Mathf.Cos(3f * angle) + 1f) * 0.5f; // 0 to 1
+                    float bladeMod = (Mathf.Cos(3f * angle) + 1f) * 0.5f;
                     float bladeR = maxR * (0.35f + 0.65f * bladeMod);
 
                     if (dist <= bladeR)
@@ -319,8 +118,6 @@ namespace HappyShoot.View.Utils
             _windGlaiveSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16);
             return _windGlaiveSprite;
         }
-
-        private static Sprite _stormArrowSprite;
 
         /// <summary>
         /// 28x12 Glowing Cyan Storm Arrow sprite for Blessed Hammer style typhoon spiral.
@@ -345,7 +142,6 @@ namespace HappyShoot.View.Utils
                     float u = (float)x / width;
                     float v = Mathf.Abs((y + 0.5f) - height * 0.5f) / (height * 0.5f);
 
-                    // Arrowhead shape at front (u > 0.7) and shaft (u <= 0.7)
                     bool isHead = u > 0.65f && v <= (1.0f - (u - 0.65f) / 0.35f);
                     bool isShaft = u <= 0.65f && v <= 0.35f;
                     bool isFletching = u < 0.25f && v <= (0.25f - u) / 0.25f * 0.9f;
@@ -370,8 +166,6 @@ namespace HappyShoot.View.Utils
             _stormArrowSprite = Sprite.Create(tex, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), 16);
             return _stormArrowSprite;
         }
-
-        private static Sprite _stormBlastSprite;
 
         /// <summary>
         /// 32x32 Glowing Cyan & Electric Blue Impact Shockwave Burst with 8-way sparks for Storm Bow hits.
@@ -401,19 +195,16 @@ namespace HappyShoot.View.Utils
                     float dist = Vector2.Distance(pos, center);
                     float angle = Mathf.Atan2(pos.y - center.y, pos.x - center.x);
 
-                    // 8-way star spark modulation
                     float spark = Mathf.Abs(Mathf.Cos(angle * 4f));
                     float ringR = Mathf.Lerp(innerR, maxR, spark * 0.6f + 0.4f);
 
                     if (dist <= innerR)
                     {
-                        // White-cyan bright core
                         float t = dist / innerR;
                         pixels[y * size + x] = Color.Lerp(coreWhite, brightCyan, t);
                     }
                     else if (dist <= ringR)
                     {
-                        // Expanding shockwave glow
                         float t = (dist - innerR) / (ringR - innerR);
                         pixels[y * size + x] = Color.Lerp(brightCyan, outerElectric, t) * (1.0f - t * 0.5f);
                     }
@@ -431,4 +222,3 @@ namespace HappyShoot.View.Utils
         }
     }
 }
-
