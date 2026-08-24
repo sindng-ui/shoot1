@@ -4,6 +4,7 @@ using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Projectiles;
 using HappyShoot.Domain.Spatial;
+using HappyShoot.View.Cameras;
 
 namespace HappyShoot.View.Projectiles
 {
@@ -37,13 +38,15 @@ namespace HappyShoot.View.Projectiles
             {
                 if (entity.HasExplosionOnHit)
                 {
+                    _spriteRenderer.sprite = Utils.SkillSpriteHelper.GetOrCreateStormArrowSprite();
                     _spriteRenderer.color = new Color(0.2f, 1.0f, 0.95f, 1.0f); // Glowing Cyan Storm Arrow
-                    _transform.localScale = new Vector3(0.55f, 0.20f, 1f);
+                    _transform.localScale = new Vector3(0.55f, 0.55f, 1f);
                 }
                 else
                 {
-                    _spriteRenderer.color = entity.Damage >= 40f ? Color.cyan : (entity.RemainingPierce > 1 ? new Color(1f, 0.6f, 0.2f) : Color.yellow);
-                    _transform.localScale = new Vector3(0.4f, 0.15f, 1f);
+                    _spriteRenderer.sprite = Utils.SkillSpriteHelper.GetOrCreatePiercingArrowSprite();
+                    _spriteRenderer.color = new Color(1.0f, 0.90f, 0.35f, 1.0f); // Pure Radiant Golden Amber (Never turns green/cyan on level up)
+                    _transform.localScale = new Vector3(0.52f, 0.52f, 1f);
                 }
             }
 
@@ -91,16 +94,16 @@ namespace HappyShoot.View.Projectiles
         {
             if (_viewPool.Count > 0) return;
 
-            var squareSprite = Utils.SpriteHelper.GetOrCreateSquareSprite();
+            var arrowSprite = Utils.SkillSpriteHelper.GetOrCreatePiercingArrowSprite();
 
             for (int i = 0; i < count; i++)
             {
                 var go = new GameObject($"ProjectileView_{i + 1}");
                 go.transform.SetParent(transform, false);
-                go.transform.localScale = new Vector3(0.4f, 0.15f, 1f);
+                go.transform.localScale = new Vector3(0.52f, 0.52f, 1f);
                 var sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = squareSprite;
-                sr.color = Color.yellow;
+                sr.sprite = arrowSprite;
+                sr.color = new Color(1.0f, 0.90f, 0.35f, 1.0f);
                 sr.sortingOrder = 4;
 
                 var view = go.AddComponent<ProjectileView>();
@@ -127,6 +130,8 @@ namespace HappyShoot.View.Projectiles
 
         public void SpawnProjectileView(ProjectileEntity entity)
         {
+            CameraFollowView.Instance?.TriggerShake("bow", duration: 0.06f, intensity: 0.08f);
+
             for (int i = 0; i < _viewPool.Count; i++)
             {
                 if (!_viewPool[i].gameObject.activeSelf)
@@ -140,9 +145,10 @@ namespace HappyShoot.View.Projectiles
             {
                 var go = new GameObject($"ProjectileView_{_viewPool.Count + 1}");
                 go.transform.SetParent(transform, false);
-                go.transform.localScale = new Vector3(0.4f, 0.15f, 1f);
+                go.transform.localScale = new Vector3(0.52f, 0.52f, 1f);
                 var sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = Utils.SpriteHelper.GetOrCreateSquareSprite();
+                sr.sprite = Utils.SkillSpriteHelper.GetOrCreatePiercingArrowSprite();
+                sr.color = new Color(1.0f, 0.90f, 0.35f, 1.0f);
                 sr.sortingOrder = 4;
 
                 var view = go.AddComponent<ProjectileView>();

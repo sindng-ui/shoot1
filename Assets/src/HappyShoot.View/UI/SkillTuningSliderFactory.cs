@@ -30,7 +30,7 @@ namespace HappyShoot.View.UI
             rowRt.anchorMax = new Vector2(1f, 1f);
             rowRt.pivot = new Vector2(0.5f, 1f);
             rowRt.anchoredPosition = new Vector2(0f, yOffset);
-            rowRt.sizeDelta = new Vector2(0f, 68f);
+            rowRt.sizeDelta = new Vector2(0f, 34f);
 
             var bgCard = rowGo.AddComponent<Image>();
             bgCard.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -40,24 +40,27 @@ namespace HappyShoot.View.UI
             outline.effectColor = new Color(0.18f, 0.28f, 0.42f, 0.6f);
             outline.effectDistance = new Vector2(1f, -1f);
 
-            CreateText(rowGo.transform, "Title", title, 13, TextAnchor.MiddleLeft, new Vector2(0f, 1f), new Vector2(0.65f, 1f), new Vector2(0f, 1f), new Vector2(14f, -14f), new Vector2(0f, 20f), new Color(0.92f, 0.96f, 1f));
-            var valTxt = CreateText(rowGo.transform, "Value", isInt ? $"{Mathf.RoundToInt(curVal)}" : $"{curVal:F2}", 14, TextAnchor.MiddleRight, new Vector2(0.65f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-14f, -14f), new Vector2(0f, 20f), new Color(0.35f, 1f, 0.65f));
+            // 1. Title (Left)
+            CreateText(rowGo.transform, "Title", title, 11, TextAnchor.MiddleLeft,
+                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(8f, 0f), new Vector2(210f, 30f), new Color(0.92f, 0.96f, 1f));
 
-            float controlY = -44f;
-            float btnW = 34f;
-            float btnH = 26f;
+            // 2. Minus Button
+            float btnW = 24f;
+            float btnH = 22f;
+            var minusBtnGo = CreateButton(rowGo.transform, "BtnMinus", "-",
+                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(224f, 0f), new Vector2(btnW, btnH), new Color(0.20f, 0.28f, 0.42f, 1f));
 
-            var minusBtnGo = CreateButton(rowGo.transform, "BtnMinus", "-", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0.5f, 0.5f), new Vector2(28f, controlY), new Vector2(btnW, btnH), new Color(0.20f, 0.28f, 0.42f, 1f));
-            var plusBtnGo = CreateButton(rowGo.transform, "BtnPlus", "+", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 0.5f), new Vector2(-28f, controlY), new Vector2(btnW, btnH), new Color(0.20f, 0.28f, 0.42f, 1f));
-
+            // 3. Slider
             var sliderGo = new GameObject("Slider");
             sliderGo.transform.SetParent(rowGo.transform, false);
             var sliderRt = sliderGo.AddComponent<RectTransform>();
-            sliderRt.anchorMin = new Vector2(0f, 1f);
-            sliderRt.anchorMax = new Vector2(1f, 1f);
-            sliderRt.pivot = new Vector2(0.5f, 0.5f);
-            sliderRt.anchoredPosition = new Vector2(0f, controlY);
-            sliderRt.sizeDelta = new Vector2(-124f, 20f);
+            sliderRt.anchorMin = new Vector2(0f, 0.5f);
+            sliderRt.anchorMax = new Vector2(0f, 0.5f);
+            sliderRt.pivot = new Vector2(0f, 0.5f);
+            sliderRt.anchoredPosition = new Vector2(254f, 0f);
+            sliderRt.sizeDelta = new Vector2(120f, 14f);
 
             var bgGo = new GameObject("Background");
             bgGo.transform.SetParent(sliderGo.transform, false);
@@ -75,8 +78,8 @@ namespace HappyShoot.View.UI
             var fillAreaRt = fillAreaGo.AddComponent<RectTransform>();
             fillAreaRt.anchorMin = new Vector2(0f, 0f);
             fillAreaRt.anchorMax = new Vector2(1f, 1f);
-            fillAreaRt.offsetMin = new Vector2(5f, 0f);
-            fillAreaRt.offsetMax = new Vector2(-5f, 0f);
+            fillAreaRt.offsetMin = new Vector2(3f, 0f);
+            fillAreaRt.offsetMax = new Vector2(-3f, 0f);
 
             var fillGo = new GameObject("Fill");
             fillGo.transform.SetParent(fillAreaGo.transform, false);
@@ -94,15 +97,15 @@ namespace HappyShoot.View.UI
             var handleAreaRt = handleAreaGo.AddComponent<RectTransform>();
             handleAreaRt.anchorMin = new Vector2(0f, 0f);
             handleAreaRt.anchorMax = new Vector2(1f, 1f);
-            handleAreaRt.offsetMin = new Vector2(8f, 0f);
-            handleAreaRt.offsetMax = new Vector2(-8f, 0f);
+            handleAreaRt.offsetMin = new Vector2(6f, 0f);
+            handleAreaRt.offsetMax = new Vector2(-6f, 0f);
 
             var handleGo = new GameObject("Handle");
             handleGo.transform.SetParent(handleAreaGo.transform, false);
             var handleRt = handleGo.AddComponent<RectTransform>();
             handleRt.anchorMin = new Vector2(0f, 0.5f);
             handleRt.anchorMax = new Vector2(0f, 0.5f);
-            handleRt.sizeDelta = new Vector2(16f, 24f);
+            handleRt.sizeDelta = new Vector2(10f, 16f);
             var handleImg = handleGo.AddComponent<Image>();
             handleImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
             handleImg.color = Color.white;
@@ -117,6 +120,16 @@ namespace HappyShoot.View.UI
             slider.wholeNumbers = isInt;
             slider.value = curVal;
 
+            // 4. Plus Button
+            var plusBtnGo = CreateButton(rowGo.transform, "BtnPlus", "+",
+                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(380f, 0f), new Vector2(btnW, btnH), new Color(0.20f, 0.28f, 0.42f, 1f));
+
+            // 5. Value Text (Right)
+            var valTxt = CreateText(rowGo.transform, "Value", isInt ? $"{Mathf.RoundToInt(curVal)}" : $"{curVal:F2}", 11, TextAnchor.MiddleRight,
+                new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
+                new Vector2(-8f, 0f), new Vector2(55f, 30f), new Color(0.35f, 1f, 0.65f));
+
             slider.onValueChanged.AddListener(v =>
             {
                 valTxt.text = isInt ? $"{Mathf.RoundToInt(v)}" : $"{v:F2}";
@@ -126,7 +139,11 @@ namespace HappyShoot.View.UI
             minusBtnGo.GetComponent<Button>().onClick.AddListener(() => slider.value = Mathf.Max(min, slider.value - step));
             plusBtnGo.GetComponent<Button>().onClick.AddListener(() => slider.value = Mathf.Min(max, slider.value + step));
 
-            yOffset -= 74f;
+            yOffset -= 38f;
+            if (parent is RectTransform pRt)
+            {
+                pRt.sizeDelta = new Vector2(pRt.sizeDelta.x, Mathf.Max(pRt.sizeDelta.y, Mathf.Abs(yOffset) + 10f));
+            }
             return rowGo;
         }
 

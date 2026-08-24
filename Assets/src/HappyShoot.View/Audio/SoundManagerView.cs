@@ -12,11 +12,14 @@ namespace HappyShoot.View.Audio
     /// </summary>
     public class SoundManagerView : MonoBehaviour
     {
-        private const int SfxPoolSize = 16;
-        private const float DefaultDebounceTime = 0.05f;
+        private const int SfxPoolSize = 32; // Expanded for mass-piercing simultaneous multi-hits
+        private const int MaxHitsPerFrame = 4; // 한 프레임당 최대 피격음 개수 캡핑 (100마리 피격 시 과밀/소리 찢어짐 원천 차단)
+        private const float DefaultDebounceTime = 0.02f;
 
         private readonly AudioSource[] _sfxSources = new AudioSource[SfxPoolSize];
         private int _currentSourceIndex = 0;
+        private int _lastHitFrame = -1;
+        private int _currentFrameHitCount = 0;
 
         private AudioSource _bgmSource;
         private EventBus _eventBus;
@@ -45,7 +48,7 @@ namespace HappyShoot.View.Audio
                 _bgmSource.volume = 0.35f;
             }
 
-            // Create SFX pool
+            // Create SFX pool (32 channels)
             var sfxRoot = new GameObject("SfxPool");
             sfxRoot.transform.SetParent(transform, false);
             for (int i = 0; i < SfxPoolSize; i++)
@@ -78,10 +81,10 @@ namespace HappyShoot.View.Audio
             _eventBus.Subscribe<PlayBgmEvent>(OnPlayBgm);
             _eventBus.Subscribe<StopBgmEvent>(OnStopBgm);
 
-            // Gameplay reactive audio hooks
-            _eventBus.Subscribe<MonsterDamagedEvent>(evt => PlaySfx(SoundEffectType.MonsterHit, 0.4f, 0.04f));
-            _eventBus.Subscribe<MonsterDiedEvent>(evt => PlaySfx(SoundEffectType.MonsterDeath, 0.5f, 0.06f));
-            _eventBus.Subscribe<ExpGainedEvent>(evt => PlaySfx(SoundEffectType.GemCollect, 0.4f, 0.03f));
+            // Gameplay reactive audio hooks: Smart Throttling for mass combat (crisp punch without ear fatigue)
+            _eventBus.Subscribe<MonsterDamagedEvent>(evt => HandleMonsterDamagedAudio(evt.IsCritical));
+            _eventBus.Subscribe<MonsterDiedEvent>(evt => PlaySfx(SoundEffectType.MonsterDeath, 0.50f, 0.03f));
+            _eventBus.Subscribe<ExpGainedEvent>(evt => PlaySfx(SoundEffectType.GemCollect, 0.35f, 0.02f));
             _eventBus.Subscribe<PlayerLevelUpEvent>(evt => PlaySfx(SoundEffectType.LevelUp, 0.9f, 0.2f));
             _eventBus.Subscribe<SkillEvolvedEvent>(evt => PlaySfx(SoundEffectType.WeaponEvolve, 1.0f, 0.3f));
             _eventBus.Subscribe<BossSpawnedEvent>(evt => PlaySfx(SoundEffectType.BossSpawn, 1.0f, 0.5f));
@@ -94,6 +97,29 @@ namespace HappyShoot.View.Audio
             _eventBus.Subscribe<GameStateChangedEvent>(OnGameStateChanged);
 
             Domain.Settings.GameSettings.OnSettingsChanged += ApplySettingsVolume;
+        }
+
+        private void HandleMonsterDamagedAudio(bool isCritical)
+        {
+            int currentFrame = Time.frameCount;
+            if (_lastHitFrame != currentFrame)
+            {
+                _lastHitFrame = currentFrame;
+                _currentFrameHitCount = 0;
+            }
+
+            // Frame-level cap: max 4 hits per frame to prevent audio clipping when hitting 50-100 mobs
+            if (_currentFrameHitCount >= MaxHitsPerFrame)
+            {
+                return;
+            }
+
+            _currentFrameHitCount++;
+
+            // Rich & audible punchy volume with slight side-chain compression
+            float baseVol = isCritical ? 1.0f : 0.85f;
+            float volume = baseVol * (1.0f - (_currentFrameHitCount - 1) * 0.04f);
+            PlaySfx(SoundEffectType.MonsterHit, volume, 0.004f);
         }
 
         private void OnDestroy()
@@ -118,11 +144,6 @@ namespace HappyShoot.View.Audio
                 return;
             }
 
-            if (type == SoundEffectType.MonsterHit || type == SoundEffectType.PlayerHurt)
-            {
-                debounceSeconds = 0.06f; // Higher debounce for mass combat hits
-            }
-
             float now = Time.unscaledTime;
             if (_lastPlayTimes.TryGetValue(type, out float lastTime) && (now - lastTime < debounceSeconds))
             {
@@ -137,6 +158,17 @@ namespace HappyShoot.View.Audio
 
                 src.clip = clip;
                 src.volume = Mathf.Clamp01(volume * Domain.Settings.GameSettings.SfxVolume);
+
+                // Add subtle pitch variation for high-frequency hit juice (eliminates robotic sound)
+                if (type == SoundEffectType.MonsterHit || type == SoundEffectType.MonsterDeath)
+                {
+                    src.pitch = UnityEngine.Random.Range(0.90f, 1.15f);
+                }
+                else
+                {
+                    src.pitch = 1.0f;
+                }
+
                 src.Play();
             }
         }

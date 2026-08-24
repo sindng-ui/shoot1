@@ -168,6 +168,7 @@ namespace HappyShoot.View.UI
                         pg.MaxDistance = config.PhantomGlaive.Distance;
                         pg.Speed = config.PhantomGlaive.Speed;
                         pg.PhantomCount = config.PhantomGlaive.PhantomCount;
+                        pg.BladeScale = config.PhantomGlaive.BladeScale;
                     }
                     if (skill.Trigger is CooldownTrigger cdPg) cdPg.Cooldown = cooldown(config.PhantomGlaive.Cooldown);
                     break;
@@ -176,6 +177,7 @@ namespace HappyShoot.View.UI
                     {
                         sr.BaseDamage = config.StellarRain.Damage;
                         sr.Radius = config.StellarRain.Radius;
+                        sr.Duration = config.StellarRain.Duration;
                         sr.ArrowCount = config.StellarRain.ArrowCount;
                     }
                     if (skill.Trigger is CooldownTrigger cdSr) cdSr.Cooldown = cooldown(config.StellarRain.Cooldown);
@@ -357,6 +359,7 @@ namespace HappyShoot.View.UI
                         config.PhantomGlaive.Distance = pg.MaxDistance;
                         config.PhantomGlaive.Speed = pg.Speed;
                         config.PhantomGlaive.PhantomCount = pg.PhantomCount;
+                        config.PhantomGlaive.BladeScale = pg.BladeScale;
                     }
                     if (skill.Trigger is CooldownTrigger cdPgPull) config.PhantomGlaive.Cooldown = cdPgPull.Cooldown;
                     break;
@@ -365,6 +368,7 @@ namespace HappyShoot.View.UI
                     {
                         config.StellarRain.Damage = sr.BaseDamage;
                         config.StellarRain.Radius = sr.Radius;
+                        config.StellarRain.Duration = sr.Duration;
                         config.StellarRain.ArrowCount = sr.ArrowCount;
                     }
                     if (skill.Trigger is CooldownTrigger cdSrPull) config.StellarRain.Cooldown = cdSrPull.Cooldown;

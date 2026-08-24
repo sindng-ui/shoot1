@@ -12,6 +12,7 @@ namespace HappyShoot.View.Utils
         private static Sprite _windGlaiveSprite;
         private static Sprite _stormArrowSprite;
         private static Sprite _stormBlastSprite;
+        private static Sprite _piercingArrowSprite;
 
         #region Forwarding Wrappers for Warrior Skills
         public static Sprite GetOrCreateSlashArcSprite(int size = 128) => WarriorSkillSpriteHelper.GetOrCreateSlashArcSprite(size);
@@ -219,6 +220,85 @@ namespace HappyShoot.View.Utils
             tex.Apply();
             _stormBlastSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
             return _stormBlastSprite;
+        }
+
+        /// <summary>
+        /// 32x10 Sleek, slender, aerodynamic Piercing Arrow sprite with a sharp arrowhead and fletching.
+        /// </summary>
+        public static Sprite GetOrCreatePiercingArrowSprite(int width = 32, int height = 10)
+        {
+            if (_piercingArrowSprite != null) return _piercingArrowSprite;
+
+            var tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode = TextureWrapMode.Clamp;
+
+            Color[] pixels = new Color[width * height];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+
+            Color whiteCore = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+            Color brightGold = new Color(1.0f, 0.90f, 0.40f, 1.0f);
+            Color edgeAmber = new Color(0.95f, 0.65f, 0.15f, 0.95f);
+            Color fletchCol = new Color(1.0f, 0.80f, 0.30f, 0.85f);
+
+            int cy = height / 2; // 5
+
+            for (int x = 0; x < width; x++)
+            {
+                // 1. Sharp Diamond Arrowhead (x: 22 ~ 31)
+                if (x >= 22)
+                {
+                    int tipDist = width - 1 - x; // 0 at tip (x=31), 9 at base (x=22)
+                    int halfH = Mathf.Clamp(tipDist / 2, 0, 4);
+
+                    for (int dy = -halfH; dy <= halfH; dy++)
+                    {
+                        int y = cy + dy;
+                        if (y >= 0 && y < height)
+                        {
+                            if (dy == 0)
+                                pixels[y * width + x] = (tipDist <= 2) ? whiteCore : brightGold;
+                            else if (Mathf.Abs(dy) == halfH)
+                                pixels[y * width + x] = edgeAmber;
+                            else
+                                pixels[y * width + x] = brightGold;
+                        }
+                    }
+                }
+                // 2. Slender Arrow Shaft (x: 6 ~ 21)
+                else if (x >= 6)
+                {
+                    // 2px thick shaft
+                    pixels[cy * width + x] = whiteCore;
+                    if (cy - 1 >= 0) pixels[(cy - 1) * width + x] = edgeAmber;
+                    if (cy + 1 < height && x % 4 == 0) pixels[(cy + 1) * width + x] = brightGold;
+                }
+                // 3. Aerodynamic V-shape Fletching Feathers (x: 0 ~ 7)
+                if (x <= 7)
+                {
+                    int wingSpread = (7 - x) / 2 + 1; // Expands backwards
+                    for (int dy = -wingSpread; dy <= wingSpread; dy++)
+                    {
+                        int y = cy + dy;
+                        if (y >= 0 && y < height)
+                        {
+                            if (Mathf.Abs(dy) == wingSpread || Mathf.Abs(dy) == wingSpread - 1)
+                            {
+                                pixels[y * width + x] = (Mathf.Abs(dy) == wingSpread) ? edgeAmber : fletchCol;
+                            }
+                            else if (dy == 0)
+                            {
+                                pixels[y * width + x] = whiteCore;
+                            }
+                        }
+                    }
+                }
+            }
+
+            tex.SetPixels(pixels);
+            tex.Apply();
+            _piercingArrowSprite = Sprite.Create(tex, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), 16);
+            return _piercingArrowSprite;
         }
     }
 }

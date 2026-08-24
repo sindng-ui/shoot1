@@ -115,6 +115,8 @@ namespace HappyShoot.View.Projectiles
                     break;
                 }
             }
+
+            CameraFollowView.Instance?.TriggerShake("frost_nova", duration: 0.14f, intensity: 0.18f);
         }
 
         private void OnBlizzardNovaExecuted(BlizzardNovaExecutedEvent e)
@@ -165,7 +167,7 @@ namespace HappyShoot.View.Projectiles
                 }
             }
 
-            CameraFollowView.Instance?.TriggerShake("magic", duration: 0.15f, intensity: 0.20f);
+            CameraFollowView.Instance?.TriggerShake("blizzard_nova", duration: 0.18f, intensity: 0.25f);
         }
 
         private void OnGigastormLightningExecuted(GigastormLightningExecutedEvent e)
@@ -184,7 +186,7 @@ namespace HappyShoot.View.Projectiles
                 prevPos = currentPos;
             }
 
-            CameraFollowView.Instance?.TriggerShake("magic", duration: 0.12f, intensity: 0.16f);
+            CameraFollowView.Instance?.TriggerShake("gigastorm_lightning", duration: 0.15f, intensity: 0.22f);
         }
 
         private void SpawnGigastormLightning(Vector3 from, Vector3 to)
@@ -284,6 +286,8 @@ namespace HappyShoot.View.Projectiles
                 SpawnFractalLightning(prevPos, currentPos);
                 prevPos = currentPos;
             }
+
+            CameraFollowView.Instance?.TriggerShake("chain_lightning", duration: 0.10f, intensity: 0.14f);
         }
 
         private void SpawnFractalLightning(Vector3 from, Vector3 to)

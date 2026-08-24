@@ -19,9 +19,11 @@ namespace HappyShoot.View.Audio
                 case SoundEffectType.SlashAttack:
                     return GenerateNoiseSweep(0.12f, 800f, 200f);
                 case SoundEffectType.BowShoot:
-                    return GeneratePitchDrop(0.10f, 900f, 300f);
+                    return GenerateBowArrowWhoosh(0.22f);
                 case SoundEffectType.MagicExplosion:
                     return GenerateExplosion(0.35f);
+                case SoundEffectType.Fireball:
+                    return GenerateFireball(0.28f);
                 case SoundEffectType.BladeOrbit:
                     return GenerateMetallicPing(0.15f, 1200f);
                 case SoundEffectType.MonsterHit:
@@ -84,17 +86,37 @@ namespace HappyShoot.View.Audio
             return clip;
         }
 
-        private static AudioClip GeneratePunchHit(float duration)
+        private static AudioClip GeneratePunchHit(float duration = 0.085f)
         {
             int count = (int)(SampleRate * duration);
             float[] samples = new float[count];
+
             for (int i = 0; i < count; i++)
             {
                 float t = (float)i / count;
-                float env = 1f - t;
-                float freq = Mathf.Lerp(220f, 60f, t);
-                samples[i] = (Mathf.Sin(2f * Mathf.PI * freq * (i / (float)SampleRate)) + (UnityEngine.Random.value * 0.4f - 0.2f)) * env * 0.7f;
+
+                // Punchy Attack (0.008s) + Rich Juicy Sustain + Smooth Decay
+                float env = Mathf.Sin(Mathf.Clamp01(t * 6.0f) * Mathf.PI * 0.5f) * Mathf.Pow(1f - t, 1.2f);
+
+                // 1. Ultra-Juicy Slap Snap / Pop Crack (1450Hz down to 320Hz)
+                float snapEnv = Mathf.Exp(-t * 32f);
+                float snapFreq = Mathf.Lerp(1450f, 320f, t * 5f);
+                float snap = Mathf.Sin(2f * Mathf.PI * snapFreq * (i / (float)SampleRate)) * snapEnv;
+                float snapHarmonic = Mathf.Sin(4f * Mathf.PI * snapFreq * (i / (float)SampleRate)) * snapEnv * 0.40f;
+
+                // 2. Solid Meat Thud Body (240Hz down to 60Hz)
+                float thudFreq = Mathf.Lerp(240f, 60f, t);
+                float thud = Mathf.Sin(2f * Mathf.PI * thudFreq * (i / (float)SampleRate));
+
+                // 3. Crispy Flesh Texture Noise (0.025s initial crunch)
+                float noiseEnv = Mathf.Exp(-t * 26f);
+                float noise = (UnityEngine.Random.value * 2f - 1f) * noiseEnv * 0.45f;
+
+                // Master saturated mix with maximum punch & juicy bite
+                float mixed = (snap * 0.50f + snapHarmonic + thud * 0.45f + noise) * env * 1.35f;
+                samples[i] = Mathf.Clamp(mixed, -1f, 1f);
             }
+
             var clip = AudioClip.Create("Hit", count, 1, SampleRate, false);
             clip.SetData(samples, 0);
             return clip;
@@ -232,6 +254,72 @@ namespace HappyShoot.View.Audio
                 samples[i] = Mathf.Sin(2f * Mathf.PI * freq * (i / (float)SampleRate)) * 0.6f;
             }
             var clip = AudioClip.Create("Siren", count, 1, SampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        private static AudioClip GenerateFireball(float duration)
+        {
+            int count = (int)(SampleRate * duration);
+            float[] samples = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                float t = (float)i / count;
+                float env = Mathf.Sin(Mathf.Clamp01(t * 2.0f) * Mathf.PI * 0.5f) * Mathf.Pow(1f - t, 1.4f);
+
+                // 1. Fiery Whoosh Pitch Sweep (520Hz down to 100Hz)
+                float sweepFreq = Mathf.Lerp(520f, 100f, t);
+                float whoosh = Mathf.Sin(2f * Mathf.PI * sweepFreq * (i / (float)SampleRate));
+
+                // 2. Combustion Low Rumble (85Hz down to 40Hz)
+                float rumbleFreq = Mathf.Lerp(85f, 40f, t);
+                float rumble = Mathf.Sin(2f * Mathf.PI * rumbleFreq * (i / (float)SampleRate));
+
+                // 3. Fiery Flame Noise & Flame Crackle
+                float noise = UnityEngine.Random.value * 2f - 1f;
+                float crackle = (UnityEngine.Random.value > 0.88f) ? (UnityEngine.Random.value * 1.5f - 0.75f) : 0f;
+
+                samples[i] = (whoosh * 0.35f + rumble * 0.35f + noise * 0.20f + crackle * 0.10f) * env * 0.85f;
+            }
+            var clip = AudioClip.Create("Fireball", count, 1, SampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        private static AudioClip GenerateBowArrowWhoosh(float duration = 0.24f)
+        {
+            int count = (int)(SampleRate * duration);
+            float[] samples = new float[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                float t = (float)i / count; // 0.0 to 1.0
+
+                // Fast punchy attack (0.01s), strong sustain, crisp tail
+                float env = Mathf.Sin(Mathf.Clamp01(t * 4.0f) * Mathf.PI * 0.5f) * Mathf.Pow(1f - t, 1.1f);
+
+                // 1. Bowstring Twang Snap (Crisp elastic release tone)
+                float twangEnv = Mathf.Exp(-t * 22f);
+                float twangFreq = Mathf.Lerp(850f, 320f, t * 4f);
+                float twang = Mathf.Sin(2f * Mathf.PI * twangFreq * (i / (float)SampleRate)) * twangEnv;
+
+                // 2. High-speed Piercing Wind Whistle ("휘이잉~" 1650Hz down to 260Hz)
+                float whistleFreq = 260f + 1390f * Mathf.Pow(1f - t, 1.6f);
+                float whistle = Mathf.Sin(2f * Mathf.PI * whistleFreq * (i / (float)SampleRate));
+                float harmonic = Mathf.Sin(4f * Mathf.PI * whistleFreq * (i / (float)SampleRate)) * 0.40f;
+
+                // 3. Fletching Flutter (24Hz aerodynamic vibration)
+                float flutter = 1.0f + 0.35f * Mathf.Sin(2f * Mathf.PI * 24f * (i / (float)SampleRate));
+
+                // 4. White/Pink Wind Turbulence Noise
+                float noise = (UnityEngine.Random.value * 2f - 1f) * (0.9f - t * 0.6f);
+
+                // Full mix with punchy amplification
+                float mixed = (twang * 0.55f + (whistle + harmonic) * flutter * 0.60f + noise * 0.25f) * env;
+                samples[i] = Mathf.Clamp(mixed * 1.15f, -1f, 1f);
+            }
+
+            var clip = AudioClip.Create("BowArrowWhoosh", count, 1, SampleRate, false);
             clip.SetData(samples, 0);
             return clip;
         }

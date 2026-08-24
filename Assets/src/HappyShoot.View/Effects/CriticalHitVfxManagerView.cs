@@ -54,6 +54,14 @@ namespace HappyShoot.View.Effects
             if (evt.IsCritical)
             {
                 SpawnCritVfx(evt.Position);
+
+                var expCfg = Config.SkillConfigRepository.Instance.GetConfig()?.Exp;
+                if (expCfg == null || expCfg.EnableHitStop)
+                {
+                    float duration = expCfg != null ? expCfg.HitStopDuration : 0.04f;
+                    float slowScale = expCfg != null ? expCfg.HitStopSlowScale : 0.05f;
+                    Utils.HitStopManager.Instance?.TriggerHitStop(duration, slowScale);
+                }
             }
         }
 

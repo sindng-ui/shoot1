@@ -81,7 +81,7 @@ namespace HappyShoot.View.Projectiles
             _activeBlasts.Add(blast);
 
             // Subtle punch shake
-            CameraFollowView.Instance?.TriggerShake("bow", duration: 0.08f, intensity: 0.08f);
+            CameraFollowView.Instance?.TriggerShake("storm_bow", duration: 0.08f, intensity: 0.12f);
         }
 
         private void Update()

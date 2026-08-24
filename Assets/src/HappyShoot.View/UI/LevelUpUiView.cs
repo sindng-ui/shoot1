@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Events;
@@ -222,7 +223,7 @@ namespace HappyShoot.View.UI
             btnOutline.effectColor = new Color(1f, 0.85f, 0.2f, 0.8f);
             btnOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
-            var sTxt = CreateTextChild(selectBtnBg.transform, "선 택 하 기", 17, Color.yellow, koreanFont);
+            var sTxt = CreateTextChild(selectBtnBg.transform, $"[ {index + 1} ]  선 택", 18, Color.yellow, koreanFont);
 
             cardGo.SetActive(true);
             return cardGo;
@@ -380,6 +381,47 @@ namespace HappyShoot.View.UI
 
             HitStopManager.Instance?.CancelHitStop();
             Time.timeScale = 1f;
+        }
+
+        private void Update()
+        {
+            if (_panelRoot == null || !_panelRoot.activeSelf || _currentOptions == null || _currentOptions.Count == 0)
+                return;
+
+            bool key1 = false;
+            bool key2 = false;
+            bool key3 = false;
+
+            // 1. Unity New Input System (Q, W, E above 1, 2, 3 digits & Numpad)
+            var kb = Keyboard.current;
+            if (kb != null)
+            {
+                if (kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame) key1 = true;
+                if (kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame) key2 = true;
+                if (kb.digit3Key.wasPressedThisFrame || kb.numpad3Key.wasPressedThisFrame) key3 = true;
+            }
+
+            // 2. Legacy Input Fallback
+            try
+            {
+                if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) key1 = true;
+                if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) key2 = true;
+                if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) key3 = true;
+            }
+            catch { /* Ignore if legacy input is disabled */ }
+
+            if (key1 && _currentOptions.Count >= 1)
+            {
+                SelectOption(0);
+            }
+            else if (key2 && _currentOptions.Count >= 2)
+            {
+                SelectOption(1);
+            }
+            else if (key3 && _currentOptions.Count >= 3)
+            {
+                SelectOption(2);
+            }
         }
 
         private void OnDestroy()

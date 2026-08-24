@@ -32,31 +32,78 @@ namespace HappyShoot.View.Cameras
         public void TriggerShake(string skillId = null, float duration = 0.15f, float intensity = 0.2f)
         {
             if (!Domain.Settings.GameSettings.ScreenShake) return;
-            if (!string.IsNullOrEmpty(skillId) && !IsSkillShakeEnabled(skillId)) return;
 
-            _shakeTimer = duration;
-            _shakeIntensity = intensity;
+            float skillScale = GetSkillShakeScale(skillId);
+            float masterScale = GetMasterShakeScale();
+            float finalIntensity = intensity * (skillScale / 100f) * (masterScale / 100f);
+
+            if (finalIntensity <= 0.001f) return;
+
+            // 🎯 When not currently shaking, immediately set new intensity.
+            // When already shaking, apply Max Clamping & Hard Ceiling.
+            if (_shakeTimer <= 0f)
+            {
+                _shakeIntensity = Mathf.Min(0.38f, finalIntensity);
+                _shakeTimer = duration;
+            }
+            else
+            {
+                _shakeIntensity = Mathf.Min(0.38f, Mathf.Max(_shakeIntensity, finalIntensity));
+                _shakeTimer = Mathf.Max(_shakeTimer, duration);
+            }
+        }
+
+        public static float GetMasterShakeScale()
+        {
+            var cfg = SkillConfigRepository.Instance.GetConfig();
+            return cfg?.Exp?.MasterCameraShakeScale ?? 100f;
+        }
+
+        public static float GetSkillShakeScale(string skillId)
+        {
+            if (string.IsNullOrEmpty(skillId)) return 100f;
+
+            var cfg = SkillConfigRepository.Instance.GetConfig();
+            if (cfg == null) return 100f;
+
+            switch (skillId)
+            {
+                // 1. Warrior
+                case "slash": return cfg.Slash?.CameraShakeScale ?? 0f;
+                case "ground_stomp": return cfg.GroundStomp?.CameraShakeScale ?? 0f;
+                case "whirlwind": return cfg.Whirlwind?.CameraShakeScale ?? 0f;
+
+                // 2. Ranger
+                case "bow": return cfg.Bow?.CameraShakeScale ?? 0f;
+                case "glaive": return cfg.Glaive?.CameraShakeScale ?? 0f;
+                case "arrow_rain": return cfg.ArrowRain?.CameraShakeScale ?? 0f;
+
+                // 3. Wizard
+                case "fireball": return cfg.Fireball?.CameraShakeScale ?? 0f;
+                case "frost_nova": return cfg.FrostNova?.CameraShakeScale ?? 0f;
+                case "chain_lightning": return cfg.ChainLightning?.CameraShakeScale ?? 0f;
+
+                // 4. Shared
+                case "orbital": return cfg.Orbital?.CameraShakeScale ?? 0f;
+
+                // 5. Ultimate Evolutions (9 Total)
+                case "blood_eater": return cfg.BloodEater?.CameraShakeScale ?? 0f;
+                case "tempest_whirlwind": return cfg.TempestWhirlwind?.CameraShakeScale ?? 0f;
+                case "earthshaker": return cfg.Earthshaker?.CameraShakeScale ?? 0f;
+                case "storm_bow": return cfg.StormBow?.CameraShakeScale ?? 0f;
+                case "phantom_glaive": return cfg.PhantomGlaive?.CameraShakeScale ?? 0f;
+                case "stellar_rain": return cfg.StellarRain?.CameraShakeScale ?? 0f;
+                case "meteor_strike": return cfg.MeteorStrike?.CameraShakeScale ?? 0f;
+                case "gigastorm_lightning": return cfg.GigastormLightning?.CameraShakeScale ?? 0f;
+                case "blizzard_nova": return cfg.BlizzardNova?.CameraShakeScale ?? 0f;
+
+                default: return 100f;
+            }
         }
 
         public static bool IsSkillShakeEnabled(string skillId)
         {
-            var cfg = SkillConfigRepository.Instance.GetConfig();
-            if (cfg == null) return false;
-
-            switch (skillId)
-            {
-                case "slash": return cfg.Slash.EnableCameraShake;
-                case "ground_stomp": return cfg.GroundStomp.EnableCameraShake;
-                case "whirlwind": return cfg.Whirlwind.EnableCameraShake;
-                case "bow": return cfg.Bow.EnableCameraShake;
-                case "glaive": return cfg.Glaive.EnableCameraShake;
-                case "arrow_rain": return cfg.ArrowRain.EnableCameraShake;
-                case "fireball": return cfg.Fireball.EnableCameraShake;
-                case "frost_nova": return cfg.FrostNova.EnableCameraShake;
-                case "chain_lightning": return cfg.ChainLightning.EnableCameraShake;
-                case "orbital": return cfg.Orbital.EnableCameraShake;
-                default: return true;
-            }
+            return GetSkillShakeScale(skillId) > 0.001f;
         }
 
         private void LateUpdate()
@@ -64,6 +111,7 @@ namespace HappyShoot.View.Cameras
             if (_target == null) return;
 
             Vector3 desiredPosition = _target.position + _offset;
+            transform.position = Vector3.Lerp(transform.position, desiredPosition, _smoothSpeed * Time.deltaTime);
 
             if (_shakeTimer > 0f)
             {
@@ -73,10 +121,14 @@ namespace HappyShoot.View.Cameras
                     Random.Range(-_shakeIntensity, _shakeIntensity),
                     0f
                 );
-                desiredPosition += shakeOffset;
-            }
+                transform.position += shakeOffset;
 
-            transform.position = Vector3.Lerp(transform.position, desiredPosition, _smoothSpeed * Time.deltaTime);
+                if (_shakeTimer <= 0f)
+                {
+                    _shakeTimer = 0f;
+                    _shakeIntensity = 0f;
+                }
+            }
         }
     }
 }

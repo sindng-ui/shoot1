@@ -97,7 +97,7 @@ namespace HappyShoot.Domain.Skills.Effects
 
                 // Publish Domain Event for Wizard Fireball flight (explosion & damage trigger upon arrival)
                 context.EventBus?.Publish(new FireballLaunchedEvent(context.CasterPosition, targetPos, effectiveRadius, effectiveDamage, Speed));
-                context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.BowShoot, volume: 0.70f));
+                context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.Fireball, volume: 0.85f));
             }
         }
     }

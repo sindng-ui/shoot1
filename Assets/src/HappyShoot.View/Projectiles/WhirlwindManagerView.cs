@@ -119,7 +119,7 @@ namespace HappyShoot.View.Projectiles
         public void SpawnWhirlwindVisual(Vector2 position, float diameter, bool isTempest = false)
         {
             // Subtle camera slash vibration
-            CameraFollowView.Instance?.TriggerShake("whirlwind", duration: isTempest ? 0.16f : 0.12f, intensity: isTempest ? 0.22f : 0.15f);
+            CameraFollowView.Instance?.TriggerShake(isTempest ? "tempest_whirlwind" : "whirlwind", duration: isTempest ? 0.16f : 0.12f, intensity: isTempest ? 0.22f : 0.15f);
 
             for (int i = 0; i < _pool.Count; i++)
             {

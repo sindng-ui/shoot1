@@ -241,15 +241,18 @@ namespace HappyShoot.View.UI
             var scrollGo = new GameObject("SlidersScrollView");
             scrollGo.transform.SetParent(contentBox, false);
             var scrollRt = scrollGo.AddComponent<RectTransform>();
-            scrollRt.anchorMin = new Vector2(0.5f, 0.5f);
-            scrollRt.anchorMax = new Vector2(0.5f, 0.5f);
+            scrollRt.anchorMin = new Vector2(0f, 0f);
+            scrollRt.anchorMax = new Vector2(1f, 1f);
             scrollRt.pivot = new Vector2(0.5f, 0.5f);
-            scrollRt.anchoredPosition = new Vector2(0f, -30f);
-            scrollRt.sizeDelta = new Vector2(476f, 370f);
+            scrollRt.offsetMin = new Vector2(12f, 105f); // 105px above bottom buttons
+            scrollRt.offsetMax = new Vector2(-12f, -218f); // 218px below top toolbar
 
             var scrollImg = scrollGo.AddComponent<Image>();
             scrollImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            scrollImg.color = new Color(0.05f, 0.07f, 0.10f, 0.85f);
+            scrollImg.color = new Color(0.04f, 0.06f, 0.09f, 0.88f);
+
+            // 🛡️ RectMask2D prevents any slider from overflowing outside viewport
+            scrollGo.AddComponent<RectMask2D>();
 
             var contentObj = new GameObject("ScrollContent");
             contentObj.transform.SetParent(scrollGo.transform, false);
@@ -259,6 +262,14 @@ namespace HappyShoot.View.UI
             contentRect.pivot = new Vector2(0f, 1f);
             contentRect.anchoredPosition = Vector2.zero;
             contentRect.sizeDelta = new Vector2(0f, 400f);
+
+            var scrollRect = scrollGo.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.scrollSensitivity = 25f;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.viewport = scrollRt;
+            scrollRect.content = contentRect;
 
             return contentObj.transform;
         }

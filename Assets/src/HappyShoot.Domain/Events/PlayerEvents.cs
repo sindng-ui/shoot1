@@ -252,8 +252,9 @@ namespace HappyShoot.Domain.Events
         public readonly float MaxDistance;
         public readonly float Speed;
         public readonly int PhantomCount;
+        public readonly float BladeScale;
 
-        public PhantomGlaiveExecutedEvent(Vector2D origin, Vector2D targetDirection, float damage, float maxDistance, float speed, int phantomCount = 2)
+        public PhantomGlaiveExecutedEvent(Vector2D origin, Vector2D targetDirection, float damage, float maxDistance, float speed, int phantomCount = 2, float bladeScale = 1.0f)
         {
             Origin = origin;
             TargetDirection = targetDirection;
@@ -261,6 +262,7 @@ namespace HappyShoot.Domain.Events
             MaxDistance = maxDistance;
             Speed = speed;
             PhantomCount = phantomCount;
+            BladeScale = bladeScale;
         }
     }
 
@@ -270,13 +272,15 @@ namespace HappyShoot.Domain.Events
         public readonly float Radius;
         public readonly float Damage;
         public readonly int ArrowCount;
+        public readonly float Duration;
 
-        public StellarRainExecutedEvent(Vector2D targetCenter, float radius, float damage, int arrowCount = 60)
+        public StellarRainExecutedEvent(Vector2D targetCenter, float radius, float damage, int arrowCount = 60, float duration = 2.0f)
         {
             TargetCenter = targetCenter;
             Radius = radius;
             Damage = damage;
             ArrowCount = arrowCount;
+            Duration = duration;
         }
     }
 }

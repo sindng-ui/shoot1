@@ -107,6 +107,7 @@
         "Damage": 60.0,
         "Distance": 11.0,
         "Speed": 17.0,
+        "BladeScale": 1.0,
         "PhantomCount": 2,
         "Cooldown": 1.2999999523162842,
         "EnableCameraShake": false
@@ -114,6 +115,7 @@
     "StellarRain": {
         "Damage": 75.0,
         "Radius": 5.0,
+        "Duration": 2.0,
         "ArrowCount": 60,
         "Cooldown": 2.200000047683716,
         "EnableCameraShake": false
@@ -142,7 +144,13 @@
     "Exp": {
         "GemExpMultiplier": 1.0,
         "BaseRequiredExp": 4,
-        "ExpGrowthFactor": 1.005180835723877
+        "ExpGrowthFactor": 1.005180835723877,
+        "MobHpScalingRatio": 0.10,
+        "MobHpMaxCapMultiplier": 5.0,
+        "EnableHitStop": true,
+        "HitStopDuration": 0.035,
+        "HitStopSlowScale": 0.20,
+        "MasterCameraShakeScale": 100.0
     },
     "Monsters": {
         "Slime": {

@@ -82,7 +82,8 @@ namespace HappyShoot.Domain.Skills
         public float Radius = 2.5f;
         public float ArcAngle = 150f;
         public float Cooldown = 1.2f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -91,7 +92,8 @@ namespace HappyShoot.Domain.Skills
         public float Damage = 32f;
         public float Radius = 2.2f;
         public float Cooldown = 1.4f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -100,7 +102,8 @@ namespace HappyShoot.Domain.Skills
         public float Damage = 30f;
         public float Radius = 2.2f;
         public float Cooldown = 1.8f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -111,7 +114,8 @@ namespace HappyShoot.Domain.Skills
         public int ArrowCount = 1;
         public float SpreadAngle = 28f;
         public float Cooldown = 0.8f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -122,7 +126,8 @@ namespace HappyShoot.Domain.Skills
         public float Distance = 8.5f;
         public int GlaiveCount = 1;
         public float Cooldown = 2.0f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -133,7 +138,8 @@ namespace HappyShoot.Domain.Skills
         public float Duration = 1.5f;
         public int ArrowCount = 20;
         public float Cooldown = 2.2f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -144,7 +150,8 @@ namespace HappyShoot.Domain.Skills
         public float Speed = 14f;
         public int FireballCount = 1;
         public float Cooldown = 1.2f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -154,7 +161,8 @@ namespace HappyShoot.Domain.Skills
         public float Radius = 2.8f;
         public float ChillDuration = 3.5f;
         public float Cooldown = 1.8f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -164,7 +172,8 @@ namespace HappyShoot.Domain.Skills
         public int ChainCount = 4;
         public float JumpRadius = 4.0f;
         public float Cooldown = 2.0f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -175,7 +184,8 @@ namespace HappyShoot.Domain.Skills
         public float RotationSpeed = 4.18879f;
         public int BladeCount = 2;
         public float Cooldown = 0.20f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -185,7 +195,8 @@ namespace HappyShoot.Domain.Skills
         public float Radius = 4.8f;
         public float HealAmount = 2.0f;
         public float Cooldown = 0.85f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -198,16 +209,18 @@ namespace HappyShoot.Domain.Skills
         public int ArrowCount = 5;
         public float SpreadAngle = 36f;
         public float Cooldown = 1.6f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
     public class MeteorStrikeConfig
     {
         public float Damage = 220f;
-        public float Radius = 6.0f;
+        public float Radius = 7.5f;
         public float Cooldown = 1.0f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -217,7 +230,8 @@ namespace HappyShoot.Domain.Skills
         public float Radius = 4.2f;
         public int SlashWaveCount = 4;
         public float Cooldown = 1.1f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -227,7 +241,8 @@ namespace HappyShoot.Domain.Skills
         public float Radius = 4.8f;
         public int FissureCount = 4;
         public float Cooldown = 1.6f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -236,9 +251,11 @@ namespace HappyShoot.Domain.Skills
         public float Damage = 60f;
         public float Distance = 11.0f;
         public float Speed = 17.0f;
+        public float BladeScale = 1.0f;
         public int PhantomCount = 2;
         public float Cooldown = 1.3f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -246,9 +263,11 @@ namespace HappyShoot.Domain.Skills
     {
         public float Damage = 75f;
         public float Radius = 5.0f;
+        public float Duration = 2.0f;
         public int ArrowCount = 60;
         public float Cooldown = 2.2f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -259,7 +278,8 @@ namespace HappyShoot.Domain.Skills
         public float JumpRadius = 7.5f;
         public float SparkRadius = 2.2f;
         public float Cooldown = 1.2f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -269,7 +289,8 @@ namespace HappyShoot.Domain.Skills
         public float Radius = 5.2f;
         public int ShardCount = 8;
         public float Cooldown = 1.8f;
-        public bool EnableCameraShake = false;
+        public float CameraShakeScale = 0f;
+        public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 
     [Serializable]
@@ -280,6 +301,14 @@ namespace HappyShoot.Domain.Skills
         public float ExpGrowthFactor = 0.85f; // 레벨별 필요 경험치 증가율
         public bool EnableLevelExpScaling = true; // 레벨업 경험치 증가율 비례 최대 몹 수 증가 활성화
         public float MobScalingRatio = 0.30f;     // 경험치 증가량 중 몹 수 반영 비율 (30%)
+        public float MobHpScalingRatio = 0.10f;    // 경험치 증가량 중 몹 체력 감쇠 반영 비율 (0%~50%, 기본 10%)
+        public float MobHpMaxCapMultiplier = 5.0f; // 몹 최대 체력 배율 상한선 (1.0x ~ 10.0x, 기본 5.0x)
         public int MaxMonsterCapLimit = 1200; // 최대 몬스터 수 상한선 (기본 1200)
+
+        // Juice & Game Feel Tuning
+        public bool EnableHitStop = true;         // 타격 역경직(Hit-Stop) 활성화
+        public float HitStopDuration = 0.035f;    // 역경직 지속 시간 (초, 0.00~0.15s)
+        public float HitStopSlowScale = 0.20f;    // 역경직 슬로우 강도 (0.00~0.50, 부드러운 슬로우 모션)
+        public float MasterCameraShakeScale = 100f; // 📳 마스터 카메라 셰이크 강도 배율 (0~100%)
     }
 }

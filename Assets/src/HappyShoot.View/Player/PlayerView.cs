@@ -3,6 +3,7 @@ using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Projectiles;
 using HappyShoot.Domain.Spatial;
+using HappyShoot.View.Cameras;
 
 namespace HappyShoot.View.Player
 {
@@ -375,6 +376,7 @@ namespace HappyShoot.View.Player
         {
             _slashBaseAngle = evt.DirectionAngleDegrees;
             _slashVisualTimer = SlashDuration;
+            CameraFollowView.Instance?.TriggerShake("slash", duration: 0.12f, intensity: 0.18f);
             if (_slashVisualSr != null)
             {
                 _slashVisualSr.sprite = Utils.SpriteHelper.GetOrCreateSlashArcSprite();

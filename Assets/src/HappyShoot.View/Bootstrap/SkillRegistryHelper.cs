@@ -187,14 +187,14 @@ namespace HappyShoot.View.Bootstrap
                 "glaive", "passive_crit", "phantom_glaive", "팬텀 글레이브",
                 () => {
                     var cfg = SkillConfigRepository.Instance.GetConfig();
-                    return new CompositeSkill("phantom_glaive", "팬텀 글레이브", new CooldownTrigger(cfg.PhantomGlaive.Cooldown), new ClosestEnemyTargeter(), new PhantomGlaiveEffect(cfg.PhantomGlaive.Damage, cfg.PhantomGlaive.Distance, cfg.PhantomGlaive.Speed, cfg.PhantomGlaive.PhantomCount), range: cfg.PhantomGlaive.Distance);
+                    return new CompositeSkill("phantom_glaive", "팬텀 글레이브", new CooldownTrigger(cfg.PhantomGlaive.Cooldown), new ClosestEnemyTargeter(), new PhantomGlaiveEffect(cfg.PhantomGlaive.Damage, cfg.PhantomGlaive.Distance, cfg.PhantomGlaive.Speed, cfg.PhantomGlaive.PhantomCount, cfg.PhantomGlaive.BladeScale), range: cfg.PhantomGlaive.Distance);
                 }));
 
             evolutionManager.RegisterRecipe(new SkillEvolutionRecipe(
                 "arrow_rain", "passive_ring", "stellar_rain", "스텔라 레인",
                 () => {
                     var cfg = SkillConfigRepository.Instance.GetConfig();
-                    return new CompositeSkill("stellar_rain", "스텔라 레인", new CooldownTrigger(cfg.StellarRain.Cooldown), new ClosestEnemyTargeter(), new StellarRainEffect(cfg.StellarRain.Damage, cfg.StellarRain.Radius, cfg.StellarRain.ArrowCount), range: 8.0f);
+                    return new CompositeSkill("stellar_rain", "스텔라 레인", new CooldownTrigger(cfg.StellarRain.Cooldown), new ClosestEnemyTargeter(), new StellarRainEffect(cfg.StellarRain.Damage, cfg.StellarRain.Radius, cfg.StellarRain.ArrowCount, cfg.StellarRain.Duration), range: 8.0f);
                 }));
 
             // Wizard Evolutions (3)

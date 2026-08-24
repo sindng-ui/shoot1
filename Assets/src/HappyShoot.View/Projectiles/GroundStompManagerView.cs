@@ -127,7 +127,7 @@ namespace HappyShoot.View.Projectiles
         public void SpawnStompVisual(Vector2 position, float diameter, bool isEarthshaker = false)
         {
             // Camera impact shake (filtered by ground_stomp shake setting)
-            CameraFollowView.Instance?.TriggerShake("ground_stomp", duration: isEarthshaker ? 0.24f : 0.18f, intensity: isEarthshaker ? 0.32f : 0.26f);
+            CameraFollowView.Instance?.TriggerShake(isEarthshaker ? "earthshaker" : "ground_stomp", duration: isEarthshaker ? 0.24f : 0.18f, intensity: isEarthshaker ? 0.32f : 0.26f);
 
             for (int i = 0; i < _pool.Count; i++)
             {

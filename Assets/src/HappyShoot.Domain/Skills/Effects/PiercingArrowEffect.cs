@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Spatial;
 
 namespace HappyShoot.Domain.Skills.Effects
@@ -81,6 +82,9 @@ namespace HappyShoot.Domain.Skills.Effects
                         critDamageMultiplier: critDmgMult
                     );
                 }
+
+                // Audio feedback: Crisply audible bowstring release and aerodynamic whoosh
+                context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.BowShoot, volume: 1.0f));
             }
         }
     }

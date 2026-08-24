@@ -5,6 +5,7 @@ namespace HappyShoot.Domain.Events
         SlashAttack,
         BowShoot,
         MagicExplosion,
+        Fireball,
         BladeOrbit,
         MonsterHit,
         MonsterDeath,

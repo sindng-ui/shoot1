@@ -85,7 +85,7 @@ namespace HappyShoot.View.Projectiles
         private void OnBloodEaterExecuted(BloodEaterExecutedEvent evt)
         {
             // 1. Camera Slash Shake
-            CameraFollowView.Instance?.TriggerShake("slash", duration: 0.18f, intensity: 0.24f);
+            CameraFollowView.Instance?.TriggerShake("blood_eater", duration: 0.18f, intensity: 0.24f);
 
             // 2. Spawn crimson blood essence orbs from each hit enemy position
             if (evt.HitPositions != null && evt.HitPositions.Count > 0 && _playerTransform != null)

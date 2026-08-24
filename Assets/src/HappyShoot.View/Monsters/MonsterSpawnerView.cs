@@ -174,7 +174,8 @@ namespace HappyShoot.View.Monsters
                     ? _phaseCtrl.RollPhase2Archetype(monsterCfg)
                     : _phaseCtrl.RollPhase1Archetype(_elapsedTime, monsterCfg);
 
-                var monster = _domainSpawner.SpawnDefinitionAroundPlayer(playerPos, _spawnRadius, spawnAngle, archetype);
+                float hpScale = GetExpGrowthHpScale();
+                var monster = _domainSpawner.SpawnDefinitionAroundPlayer(playerPos, _spawnRadius, spawnAngle, archetype, hpMultiplier: hpScale);
                 GetOrCreateView(monster);
             }
 
@@ -212,12 +213,13 @@ namespace HappyShoot.View.Monsters
         private void CheckBossSpawns(Vector2D playerPos)
         {
             var monsterCfg = Config.SkillConfigRepository.Instance.GetConfig()?.Monsters;
+            float hpScale = GetExpGrowthHpScale();
 
             // Phase 1: 60s Boss 1
             if (_elapsedTime >= 60f && !_spawnedBoss1)
             {
                 _spawnedBoss1 = true;
-                float bossHp = monsterCfg != null ? monsterCfg.Boss.MaxHealth : 800f;
+                float bossHp = (monsterCfg != null ? monsterCfg.Boss.MaxHealth : 800f) * hpScale;
                 float bossSpd = monsterCfg != null ? monsterCfg.Boss.MoveSpeed : 2.2f;
                 float bossDmg = monsterCfg != null ? monsterCfg.Boss.ContactDamage : 25f;
                 int bossExp = monsterCfg != null ? monsterCfg.Boss.ExpValue : 30;
@@ -234,7 +236,7 @@ namespace HappyShoot.View.Monsters
             {
                 _spawnedBoss2 = true;
                 var boss = _domainSpawner.SpawnBoss(playerPos, "Dragon Fiend",
-                    hp: 7500f, speed: 2.6f, damage: 50f, exp: 200, gold: 800);
+                    hp: 7500f * hpScale, speed: 2.6f, damage: 50f, exp: 200, gold: 800);
                 GetOrCreateView(boss);
                 _activeBoss = boss;
                 _laserManager.SetActiveBoss(boss);
@@ -285,6 +287,29 @@ namespace HappyShoot.View.Monsters
 
             float effectiveScale = 1.0f + (expIncrease * ratio);
             return Mathf.Max(1.0f, effectiveScale);
+        }
+
+        private float GetExpGrowthHpScale()
+        {
+            var expCfg = Config.SkillConfigRepository.Instance.GetConfig()?.Exp;
+            if (expCfg == null || !expCfg.EnableLevelExpScaling || _levelSystem == null)
+                return 1.0f;
+
+            int currentLevel = _levelSystem.Level;
+            if (currentLevel <= 1) return 1.0f;
+
+            int baseExp = _levelSystem.CalculateRequiredExp(1);
+            int currentReqExp = _levelSystem.CalculateRequiredExp(currentLevel);
+            if (baseExp <= 0) return 1.0f;
+
+            float rawExpScale = (float)currentReqExp / baseExp;
+            float expIncrease = Mathf.Max(0f, rawExpScale - 1.0f);
+            float ratio = expCfg.MobHpScalingRatio; // 0.0f ~ 0.50f (default 0.10f)
+            float maxCap = expCfg.MobHpMaxCapMultiplier > 1.0f ? expCfg.MobHpMaxCapMultiplier : 5.0f;
+
+            // Square Root Soft Cap Scaling (prevents compound exponential HP bloat at high levels)
+            float effectiveScale = 1.0f + (Mathf.Sqrt(expIncrease) * ratio);
+            return Mathf.Clamp(effectiveScale, 1.0f, maxCap);
         }
 
         private float GetSpawnInterval(float time)

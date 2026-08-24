@@ -172,7 +172,7 @@ namespace HappyShoot.View.Projectiles
         private void SpawnExplosion(Vector2 pos, float radius)
         {
             // 1. Camera Shake
-            CameraFollowView.Instance?.TriggerShake("magic", duration: 0.14f, intensity: 0.18f);
+            CameraFollowView.Instance?.TriggerShake("fireball", duration: 0.14f, intensity: 0.22f);
 
             // 2. High-Res Fiery Burst Nebula
             for (int i = 0; i < _explosionPool.Count; i++)
@@ -276,7 +276,7 @@ namespace HappyShoot.View.Projectiles
                     c.Root.SetActive(false);
                     SpawnExplosion(c.TargetPos, c.Radius);
                     ApplyExplosionDamage(c.TargetPos, c.Radius, c.Damage);
-                    _eventBus?.Publish(new PlaySoundEvent(SoundEffectType.MagicExplosion, volume: 0.85f));
+                    _eventBus?.Publish(new PlaySoundEvent(SoundEffectType.Fireball, volume: 0.90f));
                 }
 
                 _cometPool[i] = c;

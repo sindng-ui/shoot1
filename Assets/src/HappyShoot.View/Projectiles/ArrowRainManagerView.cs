@@ -3,6 +3,7 @@ using UnityEngine;
 using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Spatial;
+using HappyShoot.View.Cameras;
 using HappyShoot.View.Monsters;
 using HappyShoot.View.Utils;
 
@@ -43,6 +44,7 @@ namespace HappyShoot.View.Projectiles
 
         private const int MaxZones = 6;
         private const int ArrowsPerZone = 64;
+        private const float IndicatorDuration = 0.60f; // 바닥 마법진/인디케이터 무늬 0.6초 후 페이드아웃 및 자동 제거
         private readonly List<RainZone> _zones = new List<RainZone>(MaxZones);
         private readonly List<MonsterEntity> _hitBuffer = new List<MonsterEntity>(32);
         private MonsterSpawnerView _spawnerView;
@@ -131,7 +133,7 @@ namespace HappyShoot.View.Projectiles
 
         private void OnStellarRainExecuted(StellarRainExecutedEvent evt)
         {
-            SpawnRainZone(evt.TargetCenter, evt.Radius, 1.8f, evt.ArrowCount, evt.Damage, isStellar: true);
+            SpawnRainZone(evt.TargetCenter, evt.Radius, evt.Duration, evt.ArrowCount, evt.Damage, isStellar: true);
         }
 
         private void SpawnRainZone(Vector2D center, float radius, float duration, int arrowCount, float damagePerArrow, bool isStellar = false)
@@ -150,8 +152,11 @@ namespace HappyShoot.View.Projectiles
 
                     zone.ZoneIndicator.position = zone.Center;
                     zone.ZoneIndicator.localScale = Vector3.one * (radius * 2f);
+                    zone.IndicatorRenderer.color = new Color(0.2f, 0.8f, 0.4f, 0.25f);
                     zone.ZoneIndicator.gameObject.SetActive(true);
                     zone.ZoneIndicator.parent.gameObject.SetActive(true);
+
+                    CameraFollowView.Instance?.TriggerShake(isStellar ? "stellar_rain" : "arrow_rain", duration: isStellar ? 0.16f : 0.12f, intensity: isStellar ? 0.20f : 0.14f);
 
                     int activeArrowCount = Mathf.Clamp(arrowCount > 0 ? arrowCount : 32, 16, ArrowsPerZone);
                     float staggerDuration = zone.Duration * 0.90f;
@@ -206,6 +211,21 @@ namespace HappyShoot.View.Projectiles
                 {
                     zone.Elapsed += dt;
                     bool anyArrowAlive = false;
+
+                    // 1. Zone Indicator Fadeout & Disappear in 0.6 seconds
+                    if (zone.ZoneIndicator != null && zone.ZoneIndicator.gameObject.activeSelf)
+                    {
+                        if (zone.Elapsed < IndicatorDuration)
+                        {
+                            float t = zone.Elapsed / IndicatorDuration;
+                            float alpha = Mathf.Lerp(0.25f, 0.0f, t);
+                            zone.IndicatorRenderer.color = new Color(0.2f, 0.8f, 0.4f, alpha);
+                        }
+                        else
+                        {
+                            zone.ZoneIndicator.gameObject.SetActive(false);
+                        }
+                    }
 
                     for (int a = 0; a < zone.Arrows.Count; a++)
                     {

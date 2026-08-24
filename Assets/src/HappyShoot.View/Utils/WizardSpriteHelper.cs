@@ -358,127 +358,110 @@ namespace HappyShoot.View.Utils
 
         private static Sprite _meteorSprite;
         private static Sprite _iceShardSprite;
-        private static Sprite _lightningSparkSprite;
+        private static Sprite _targetIndicatorSprite;
+        private static Sprite _novaFlashSprite;
+        private static Sprite _magmaCraterSprite;
 
-        /// <summary>
-        /// 48x48 Massive Fiery Meteor Rock with magma cracks.
-        /// </summary>
         public static Sprite GetOrCreateMeteorSprite(int size = 48)
         {
             if (_meteorSprite != null) return _meteorSprite;
-
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Point;
-            Color[] pixels = new Color[size * size];
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
-
-            Color rockDark = new Color(0.22f, 0.14f, 0.10f);
-            Color rockMid = new Color(0.42f, 0.22f, 0.12f);
-            Color magmaGold = new Color(1.0f, 0.85f, 0.2f);
-            Color flameRed = new Color(0.95f, 0.25f, 0.1f);
-
-            int cx = size / 2;
-            int cy = size / 2;
-
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+            Color[] p = new Color[size * size];
+            Color rDark = new Color(0.22f, 0.14f, 0.10f), rMid = new Color(0.55f, 0.28f, 0.14f), magma = new Color(1.0f, 0.85f, 0.25f), flame = new Color(1.0f, 0.40f, 0.1f);
+            int cx = size / 2, cy = size / 2;
             for (int y = 0; y < size; y++)
             {
                 for (int x = 0; x < size; x++)
                 {
-                    float dist = Vector2.Distance(new Vector2(x, y), new Vector2(cx, cy));
-                    if (dist <= 18f)
+                    float d = Vector2.Distance(new Vector2(x, y), new Vector2(cx, cy));
+                    if (d <= 18f) p[y * size + x] = ((x * 3 + y * 5) % 9 == 0) ? magma : (d <= 11f ? rMid : rDark);
+                    else if (d <= 22f && (x + y) % 2 == 0) p[y * size + x] = flame;
+                }
+            }
+            tex.SetPixels(p); tex.Apply();
+            return _meteorSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        }
+
+        public static Sprite GetOrCreateNovaFlashSprite(int size = 32)
+        {
+            if (_novaFlashSprite != null) return _novaFlashSprite;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear };
+            Color[] p = new Color[size * size];
+            float c = size * 0.5f;
+            Color core = new Color(1f, 1f, 1f, 1f), gold = new Color(1.0f, 0.85f, 0.35f, 0.85f);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = Mathf.Abs(x + 0.5f - c), dy = Mathf.Abs(y + 0.5f - c), d = Mathf.Sqrt(dx * dx + dy * dy);
+                    float cross = Mathf.Max(0f, 1f - (dx * 0.15f + dy * 1.2f)) + Mathf.Max(0f, 1f - (dx * 1.2f + dy * 0.15f));
+                    float diag = Mathf.Max(0f, 1f - (Mathf.Abs(dx - dy) * 0.8f + (dx + dy) * 0.3f));
+                    float intensity = Mathf.Clamp01(Mathf.Exp(-d * 0.45f) * 1.5f + cross * 0.8f + diag * 0.4f);
+                    p[y * size + x] = (intensity > 0.01f) ? Color.Lerp(gold, core, Mathf.Clamp01(intensity * 1.4f)) * intensity : Color.clear;
+                }
+            }
+            tex.SetPixels(p); tex.Apply();
+            return _novaFlashSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        }
+
+        public static Sprite GetOrCreateMagmaCraterSprite(int size = 64)
+        {
+            if (_magmaCraterSprite != null) return _magmaCraterSprite;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear };
+            Color[] p = new Color[size * size];
+            float c = size * 0.5f;
+            Color magma = new Color(1.0f, 0.55f, 0.12f, 0.75f), rim = new Color(0.85f, 0.25f, 0.05f, 0.50f);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(c, c));
+                    if (d <= 28f)
                     {
-                        if ((x * 3 + y * 5) % 11 == 0) pixels[y * size + x] = magmaGold; // Glowing magma veins
-                        else if (dist <= 12f) pixels[y * size + x] = rockMid;
-                        else pixels[y * size + x] = rockDark;
-                    }
-                    else if (dist <= 22f && (x + y) % 2 == 0)
-                    {
-                        pixels[y * size + x] = flameRed; // Outer flame corona
+                        float t = 1.0f - (d / 28f);
+                        float crack = (Mathf.Sin(x * 0.8f) * Mathf.Cos(y * 0.8f) > 0.1f) ? 0.3f : 0f;
+                        p[y * size + x] = Color.Lerp(rim, magma, t + crack) * Mathf.Clamp01(t * 1.5f);
                     }
                 }
             }
-
-            tex.SetPixels(pixels);
-            tex.Apply();
-            _meteorSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-            return _meteorSprite;
+            tex.SetPixels(p); tex.Apply();
+            return _magmaCraterSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
         }
 
-        /// <summary>
-        /// 16x16 Sharp translucent Ice Shard for Shatter particle explosion.
-        /// </summary>
         public static Sprite GetOrCreateIceShardSprite(int size = 16)
         {
             if (_iceShardSprite != null) return _iceShardSprite;
-
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Point;
-            Color[] pixels = new Color[size * size];
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
-
-            Color iceWhite = new Color(1f, 1f, 1f, 0.95f);
-            Color iceCyan = new Color(0.35f, 0.85f, 1.0f, 0.9f);
-            Color iceBlue = new Color(0.12f, 0.55f, 0.95f, 0.8f);
-
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+            Color[] p = new Color[size * size];
+            Color iceW = new Color(1f, 1f, 1f, 0.95f), iceC = new Color(0.35f, 0.85f, 1.0f, 0.9f), iceB = new Color(0.12f, 0.55f, 0.95f, 0.8f);
             for (int y = 0; y < size; y++)
-            {
                 for (int x = 0; x < size; x++)
-                {
-                    int dx = Mathf.Abs(x - 8);
-                    int dy = y;
-                    if (dx <= (size - dy) / 2)
-                    {
-                        pixels[y * size + x] = (dx <= 1) ? iceWhite : ((dx <= 3) ? iceCyan : iceBlue);
-                    }
-                }
-            }
-
-            tex.SetPixels(pixels);
-            tex.Apply();
-            _iceShardSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-            return _iceShardSprite;
+                    if (Mathf.Abs(x - 8) <= (size - y) / 2) p[y * size + x] = (Mathf.Abs(x - 8) <= 1) ? iceW : ((Mathf.Abs(x - 8) <= 3) ? iceC : iceB);
+            tex.SetPixels(p); tex.Apply();
+            return _iceShardSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
         }
 
-        private static Sprite _targetIndicatorSprite;
-
-        /// <summary>
-        /// 128x128 Clean, soft circular AOE target indicator with subtle magma glow and soft crosshair markings.
-        /// </summary>
         public static Sprite GetOrCreateTargetIndicatorSprite(int size = 128)
         {
             if (_targetIndicatorSprite != null) return _targetIndicatorSprite;
-
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
             float center = size * 0.5f, outerRadius = size * 0.48f, innerRadius = size * 0.44f;
             Color[] pixels = new Color[size * size];
-            Color borderGlow = new Color(0.95f, 0.42f, 0.10f, 0.65f), crosshairCol = new Color(1.0f, 0.68f, 0.22f, 0.70f), innerFill = new Color(0.85f, 0.20f, 0.05f, 0.06f);
-
+            Color borderGlow = new Color(0.95f, 0.42f, 0.10f, 0.65f), crossCol = new Color(1.0f, 0.68f, 0.22f, 0.70f), innerFill = new Color(0.85f, 0.20f, 0.05f, 0.06f);
             for (int y = 0; y < size; y++)
             {
                 for (int x = 0; x < size; x++)
                 {
                     float dx = x - center, dy = y - center, dist = Mathf.Sqrt(dx * dx + dy * dy);
                     if (dist >= innerRadius && dist <= outerRadius)
-                    {
-                        float ringT = (dist - innerRadius) / (outerRadius - innerRadius);
-                        pixels[y * size + x] = new Color(borderGlow.r, borderGlow.g, borderGlow.b, Mathf.Sin(ringT * Mathf.PI) * borderGlow.a);
-                    }
+                        pixels[y * size + x] = new Color(borderGlow.r, borderGlow.g, borderGlow.b, Mathf.Sin((dist - innerRadius) / (outerRadius - innerRadius) * Mathf.PI) * borderGlow.a);
                     else if (dist <= outerRadius && (Mathf.Abs(dx) < 1.5f || Mathf.Abs(dy) < 1.5f) && dist >= outerRadius * 0.7f)
-                    {
-                        pixels[y * size + x] = crosshairCol;
-                    }
-                    else if (dist < innerRadius)
-                    {
-                        pixels[y * size + x] = innerFill;
-                    }
-                    else pixels[y * size + x] = Color.clear;
+                        pixels[y * size + x] = crossCol;
+                    else if (dist < innerRadius) pixels[y * size + x] = innerFill;
                 }
             }
-
-            tex.SetPixels(pixels);
-            tex.Apply();
-            _targetIndicatorSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-            return _targetIndicatorSprite;
+            tex.SetPixels(pixels); tex.Apply();
+            return _targetIndicatorSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
         }
     }
 }

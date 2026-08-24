@@ -17,15 +17,17 @@ namespace HappyShoot.Domain.Skills.Effects
         public float MaxDistance { get; set; }
         public float Speed { get; set; }
         public int PhantomCount { get; set; }
+        public float BladeScale { get; set; }
 
         private readonly List<ISpatialEntity> _hitBuffer = new List<ISpatialEntity>(64);
 
-        public PhantomGlaiveEffect(float baseDamage = 60f, float maxDistance = 11.0f, float speed = 17.0f, int phantomCount = 2)
+        public PhantomGlaiveEffect(float baseDamage = 60f, float maxDistance = 11.0f, float speed = 17.0f, int phantomCount = 2, float bladeScale = 1.0f)
         {
             BaseDamage = baseDamage;
             MaxDistance = maxDistance;
             Speed = speed;
             PhantomCount = phantomCount;
+            BladeScale = bladeScale;
         }
 
         public void ApplyEffect(SkillContext context, IList<Vector2D> targetPositions)
@@ -48,13 +50,17 @@ namespace HappyShoot.Domain.Skills.Effects
                 effectiveDamage,
                 effectiveDistance,
                 effectiveSpeed,
-                PhantomCount
+                PhantomCount,
+                BladeScale
             ));
 
             context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.BowShoot, volume: 0.95f));
 
             // Immediate domain damage over line trajectory
             int count = context.TargetGrid.QueryRadiusNonAlloc(context.CasterPosition, effectiveDistance, _hitBuffer);
+            float baseWidth = 1.5f * BladeScale;
+            float maxPerpDistSq = baseWidth * baseWidth;
+
             for (int i = 0; i < count; i++)
             {
                 if (_hitBuffer[i] is MonsterEntity monster && monster.IsActive && !monster.IsDead)
@@ -65,7 +71,7 @@ namespace HappyShoot.Domain.Skills.Effects
                     if (projAlongDir >= 0f && projAlongDir <= effectiveDistance)
                     {
                         float perpDistSq = (float)(toMonster.SqrMagnitude - projAlongDir * projAlongDir);
-                        if (perpDistSq <= 2.25f) // Width hitbox (1.5m radius)
+                        if (perpDistSq <= maxPerpDistSq)
                         {
                             var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
                             monster.TakeDamage(hitDmg, isCrit);
