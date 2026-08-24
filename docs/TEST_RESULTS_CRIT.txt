@@ -88,6 +88,8 @@
    [PASS] WhirlwindEffect_Deals360DegreeDamageAndPublishesWhirlwindExecutedEvent
    [PASS] WhirlwindEffect_LevelUp_IncreasesDamageAndRadius
    [PASS] BloodEaterEffect_DealsForwardSectorDamageAndLifeSteals
+   [PASS] TempestWhirlwindEffect_Deals360DamageAndPublishesTempestWhirlwindExecutedEvent
+   [PASS] EarthshakerEffect_DealsDamageAndPublishesEarthshakerExecutedEvent
 
 [Fixture] HappyShoot.Domain.Tests.Skills.WizardSkillsTests
    [PASS] Fireball_ExplodesAndDealsSplashDamage_ToEnemiesInRadius
@@ -95,10 +97,14 @@
    [PASS] ChainLightning_ChainsAcrossMultipleNearbyEnemies
    [PASS] Wizard_Factory_InitializesWithCorrectStats_AndFireballStartingSkill
    [PASS] SkillRewardManager_RollsWizardSkills_ExcludesWarriorAndRangerSkills_IncludesOrbital
+   [PASS] GigastormLightning_ChainsAndAppliesGuaranteedShock
+   [PASS] BlizzardNova_FreezesAndDamagesSurroundingEnemies
 
 [Fixture] HappyShoot.Domain.Tests.Skills.RangerReworkSkillsTests
    [PASS] PiercingArrowEffect_GainsArrowsOnLevelUp
    [PASS] WindGlaiveEffect_PublishesDomainEventAndDamagesTargets
+   [PASS] PhantomGlaiveEffect_PublishesPhantomGlaiveExecutedEventAndDamagesTargets
+   [PASS] StellarRainEffect_PublishesStellarRainExecutedEventAndDamagesTargets
 
 [Fixture] HappyShoot.Domain.Tests.Skills.SkillCompositionTests
    [PASS] CompositeSkill_FiresWhenCooldownReadyAndTargetFound
@@ -111,6 +117,7 @@
    [PASS] EvolveSkill_ReplacesBaseSkillWithEvolvedSkill_WhenConditionsMet
    [PASS] RollRewards_PrioritizesEvolutionOption_WhenConditionSatisfied
    [PASS] RollRewards_ExcludesBaseSkill_AfterEvolution
+   [PASS] AllNineSkillEvolutionRecipes_RegisterAndEvolveCorrectly
 
 [Fixture] HappyShoot.Domain.Tests.Skills.GreatswordSlashTests
    [PASS] Slash_DealsDamageToEnemies_WithinFrontArcTrajectory
@@ -162,6 +169,7 @@
 [Fixture] HappyShoot.Domain.Tests.Leveling.LevelSystemTests
    [PASS] AddExp_TriggersLevelUp_WhenThresholdMet
    [PASS] AddExp_MultiLevelUp_CarriesOverOverflowExp
+   [PASS] ExpGrowthScale_CalculatesCorrectProportion_WithConfig
 
 [Fixture] HappyShoot.Domain.Tests.Leveling.SkillRewardTests
    [PASS] RollRewards_OffersUpgradeForExistingSkills_AndNewForUnowned
@@ -179,5 +187,5 @@
    [PASS] AddGold_PersistsCorrectly
 
 =================================================
- Total Tests: 115 | Passed: 115 | Failed: 0
+ Total Tests: 123 | Passed: 123 | Failed: 0
 =================================================

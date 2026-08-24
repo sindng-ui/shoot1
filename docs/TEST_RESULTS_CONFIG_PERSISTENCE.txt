@@ -1,0 +1,31 @@
+=================================================
+ HappyShoot - Config Persistence Verification
+ Date: 2026-08-25
+ Target: Assets/Config/skill_configs.json & SkillConfigRepository
+=================================================
+
+[1] File Placement & Git Tracking Check
+- Target Path: c:\AntigravityWorkspace\shoot1\Assets\Config\skill_configs.json
+- Status: Exists (580 lines, 15.7 KB)
+- Git Tracking: Confirmed in untracked/modified set (Assets/Config/ folder included)
+
+[2] Custom Toned Data Verification
+- Blood Eater (Lv1~Lv5): Damage=95.0, Radius=5.4 (Verified)
+- Fireball (Lv1~Lv5): Level-scaled Damage & Radius (Verified)
+- Chain Lightning (Lv1~Lv5): Level-scaled Radius & Jump Count (Verified)
+- Gigastorm Lightning: Damage=75.0, Radius=7.0, Cooldown=1.09s (Verified)
+- Exp & Monster Tuning: Custom values mapped (Verified)
+
+[3] SkillConfigRepository Path Logic Test
+- Primary Load Path: Path.Combine(Application.dataPath, "Config", "skill_configs.json") -> Matches Assets/Config/skill_configs.json
+- Fallback & Auto-Migration: Enabled (PersistentDataPath / PlayerPrefs -> Assets/Config/skill_configs.json)
+- Save Path: Writes directly to Assets/Config/skill_configs.json + PlayerPrefs backup
+
+[4] Compilation & Regression Tests
+- HappyShoot.Domain: Compiled successfully (0 errors)
+- HappyShoot.View: Compiled successfully (0 errors)
+- Test Suite: 123 / 123 Passed (100%)
+
+=================================================
+ RESULT: ALL VERIFICATIONS PASSED
+=================================================

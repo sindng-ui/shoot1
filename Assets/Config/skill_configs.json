@@ -1,0 +1,580 @@
+{
+    "Slash": {
+        "Damage": 35.0,
+        "Radius": 2.5,
+        "ArcAngle": 150.0,
+        "Cooldown": 1.2000000476837159,
+        "EnableCameraShake": false
+    },
+    "GroundStomp": {
+        "Damage": 32.0,
+        "Radius": 2.200000047683716,
+        "Cooldown": 1.399999976158142,
+        "EnableCameraShake": false
+    },
+    "Whirlwind": {
+        "Damage": 30.0,
+        "Radius": 2.200000047683716,
+        "Cooldown": 1.7999999523162842,
+        "EnableCameraShake": false
+    },
+    "Bow": {
+        "Damage": 25.0,
+        "Speed": 16.0,
+        "ArrowCount": 1,
+        "SpreadAngle": 28.0,
+        "Cooldown": 0.800000011920929,
+        "EnableCameraShake": false
+    },
+    "Glaive": {
+        "Damage": 28.0,
+        "Speed": 15.0,
+        "Distance": 8.5,
+        "GlaiveCount": 1,
+        "Cooldown": 2.0,
+        "EnableCameraShake": false
+    },
+    "ArrowRain": {
+        "Damage": 24.0,
+        "Radius": 2.0,
+        "Duration": 1.5,
+        "ArrowCount": 20,
+        "Cooldown": 2.200000047683716,
+        "EnableCameraShake": false
+    },
+    "Fireball": {
+        "Damage": 35.0,
+        "Radius": 1.600000023841858,
+        "Speed": 14.0,
+        "FireballCount": 1,
+        "Cooldown": 1.2000000476837159,
+        "EnableCameraShake": false
+    },
+    "FrostNova": {
+        "Damage": 28.0,
+        "Radius": 2.799999952316284,
+        "ChillDuration": 3.5,
+        "Cooldown": 1.7999999523162842,
+        "EnableCameraShake": false
+    },
+    "ChainLightning": {
+        "Damage": 30.0,
+        "ChainCount": 4,
+        "JumpRadius": 4.0,
+        "Cooldown": 2.0,
+        "EnableCameraShake": false
+    },
+    "Orbital": {
+        "Damage": 25.0,
+        "Radius": 2.0,
+        "RotationSpeed": 4.1887898445129398,
+        "BladeCount": 2,
+        "Cooldown": 0.20000000298023225,
+        "EnableCameraShake": false
+    },
+    "BloodEater": {
+        "Damage": 85.0,
+        "Radius": 4.800000190734863,
+        "HealAmount": 2.0,
+        "Cooldown": 0.8500000238418579,
+        "EnableCameraShake": false
+    },
+    "TempestWhirlwind": {
+        "Damage": 75.0,
+        "Radius": 4.199999809265137,
+        "SlashWaveCount": 4,
+        "Cooldown": 1.100000023841858,
+        "EnableCameraShake": false
+    },
+    "Earthshaker": {
+        "Damage": 80.0,
+        "Radius": 4.800000190734863,
+        "FissureCount": 4,
+        "Cooldown": 1.600000023841858,
+        "EnableCameraShake": false
+    },
+    "StormBow": {
+        "ArrowDamage": 65.0,
+        "ExplosionDamage": 45.0,
+        "ExplosionRadius": 1.600000023841858,
+        "Speed": 20.0,
+        "ArrowCount": 5,
+        "SpreadAngle": 36.0,
+        "Cooldown": 0.7999998331069946,
+        "EnableCameraShake": false
+    },
+    "PhantomGlaive": {
+        "Damage": 60.0,
+        "Distance": 11.0,
+        "Speed": 17.0,
+        "PhantomCount": 2,
+        "Cooldown": 1.2999999523162842,
+        "EnableCameraShake": false
+    },
+    "StellarRain": {
+        "Damage": 75.0,
+        "Radius": 5.0,
+        "ArrowCount": 60,
+        "Cooldown": 2.200000047683716,
+        "EnableCameraShake": false
+    },
+    "MeteorStrike": {
+        "Damage": 120.0,
+        "Radius": 3.0,
+        "Cooldown": 1.2000000476837159,
+        "EnableCameraShake": true
+    },
+    "GigastormLightning": {
+        "Damage": 75.0,
+        "ChainCount": 12,
+        "JumpRadius": 7.0,
+        "SparkRadius": 1.7999999523162842,
+        "Cooldown": 1.0925697088241578,
+        "EnableCameraShake": true
+    },
+    "BlizzardNova": {
+        "Damage": 70.0,
+        "Radius": 5.199999809265137,
+        "ShardCount": 8,
+        "Cooldown": 1.7999999523162842,
+        "EnableCameraShake": false
+    },
+    "Exp": {
+        "GemExpMultiplier": 1.0,
+        "BaseRequiredExp": 4,
+        "ExpGrowthFactor": 1.005180835723877
+    },
+    "Monsters": {
+        "Slime": {
+            "MaxHealth": 30.0,
+            "MoveSpeed": 2.5,
+            "ContactDamage": 8.0,
+            "ExpValue": 1,
+            "GoldValue": 1
+        },
+        "Bat": {
+            "MaxHealth": 15.0,
+            "MoveSpeed": 3.773259401321411,
+            "ContactDamage": 5.0,
+            "ExpValue": 1,
+            "GoldValue": 1
+        },
+        "Skeleton": {
+            "MaxHealth": 45.0,
+            "MoveSpeed": 1.7999999523162842,
+            "ContactDamage": 12.0,
+            "ExpValue": 2,
+            "GoldValue": 2,
+            "ProjectileSpeed": 2.75,
+            "ProjectileDamage": 10.0
+        },
+        "Golem": {
+            "MaxHealth": 160.0,
+            "MoveSpeed": 1.2000000476837159,
+            "ContactDamage": 22.0,
+            "ExpValue": 4,
+            "GoldValue": 5
+        },
+        "FireImp": {
+            "MaxHealth": 150.0,
+            "MoveSpeed": 3.36753511428833,
+            "ContactDamage": 18.0,
+            "ExpValue": 5,
+            "GoldValue": 6
+        },
+        "ToxicSpider": {
+            "MaxHealth": 280.0,
+            "MoveSpeed": 2.200000047683716,
+            "ContactDamage": 20.0,
+            "ExpValue": 8,
+            "GoldValue": 9
+        },
+        "DarkKnight": {
+            "MaxHealth": 600.0,
+            "MoveSpeed": 1.5,
+            "ContactDamage": 35.0,
+            "ExpValue": 14,
+            "GoldValue": 18
+        },
+        "Boss": {
+            "MaxHealth": 800.0,
+            "MoveSpeed": 2.200000047683716,
+            "ContactDamage": 25.0,
+            "ExpValue": 30,
+            "GoldValue": 100,
+            "LaserInterval": 8.0,
+            "LaserDamage": 25.0
+        }
+    },
+    "CritStat": {
+        "CritChance": 0.10000000149011612,
+        "CritDamageMultiplier": 1.5,
+        "AttackPowerMultiplier": 1.25,
+        "MoveSpeed": 5.0,
+        "Armor": 0.0,
+        "CooldownReduction": 0.15000000596046449,
+        "IsCustom": true
+    },
+    "LevelTunings": [
+        {
+            "SkillId": "slash",
+            "Level": 1,
+            "Damage": -1.0,
+            "Radius": 3.055755615234375,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "slash",
+            "Level": 2,
+            "Damage": -1.0,
+            "Radius": 3.600766181945801,
+            "Cooldown": 1.100000023841858,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "slash",
+            "Level": 3,
+            "Damage": -1.0,
+            "Radius": 4.202357292175293,
+            "Cooldown": 1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "slash",
+            "Level": 5,
+            "Damage": -1.0,
+            "Radius": 5.391120910644531,
+            "Cooldown": 0.7999999523162842,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "slash",
+            "Level": 4,
+            "Damage": -1.0,
+            "Radius": 4.813250541687012,
+            "Cooldown": 0.8999999761581421,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "storm_bow",
+            "Level": 1,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": 0.7999998331069946,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "bow",
+            "Level": 1,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "bow",
+            "Level": 5,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "blood_eater",
+            "Level": 1,
+            "Damage": 95.0,
+            "Radius": 5.399999618530273,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "blood_eater",
+            "Level": 2,
+            "Damage": 95.0,
+            "Radius": 5.399999618530273,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "blood_eater",
+            "Level": 3,
+            "Damage": 95.0,
+            "Radius": 5.399999618530273,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "blood_eater",
+            "Level": 4,
+            "Damage": 95.0,
+            "Radius": 5.399999618530273,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "blood_eater",
+            "Level": 5,
+            "Damage": 95.0,
+            "Radius": 5.399999618530273,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "meteor_strike",
+            "Level": 1,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "fireball",
+            "Level": 1,
+            "Damage": -1.0,
+            "Radius": 2.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "fireball",
+            "Level": 2,
+            "Damage": 48.0,
+            "Radius": 2.4000000953674318,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "fireball",
+            "Level": 3,
+            "Damage": 61.0,
+            "Radius": 3.200000286102295,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "fireball",
+            "Level": 4,
+            "Damage": 74.0,
+            "Radius": 3.6000001430511476,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "fireball",
+            "Level": 5,
+            "Damage": 87.0,
+            "Radius": 3.999999761581421,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "frost_nova",
+            "Level": 1,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "frost_nova",
+            "Level": 2,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "frost_nova",
+            "Level": 3,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "frost_nova",
+            "Level": 4,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "frost_nova",
+            "Level": 5,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "chain_lightning",
+            "Level": 1,
+            "Damage": -1.0,
+            "Radius": 4.5,
+            "Cooldown": 2.299999713897705,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "chain_lightning",
+            "Level": 2,
+            "Damage": -1.0,
+            "Radius": 5.099999904632568,
+            "Cooldown": 2.0,
+            "Speed": -1.0,
+            "Count": 6,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "chain_lightning",
+            "Level": 3,
+            "Damage": -1.0,
+            "Radius": 5.699999809265137,
+            "Cooldown": 1.6999999284744263,
+            "Speed": -1.0,
+            "Count": 8,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "chain_lightning",
+            "Level": 4,
+            "Damage": -1.0,
+            "Radius": 6.300000190734863,
+            "Cooldown": 1.3999998569488526,
+            "Speed": -1.0,
+            "Count": 10,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "chain_lightning",
+            "Level": 5,
+            "Damage": -1.0,
+            "Radius": 6.900000095367432,
+            "Cooldown": 1.0999997854232789,
+            "Speed": -1.0,
+            "Count": 12,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "gigastorm_lightning",
+            "Level": 1,
+            "Damage": 75.0,
+            "Radius": 7.0,
+            "Cooldown": 1.0925697088241578,
+            "Speed": -1.0,
+            "Count": 12,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "HasCustomValues": true
+        }
+    ]
+}

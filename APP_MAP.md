@@ -168,8 +168,10 @@ graph TD
 | **UI** | `SettingsDialogUiView.cs` | `SettingsDialogUiView` | 3개 탭 종합 환경 설정 모달 다이얼로그 (자동/수동조준, 볼륨, UI스케일) |
 | | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **첫 시작 영웅 선택 화면** (전사/궁수/마법사 3영웅 카드, 🛠️ 개발자모드, 🧪 샌드박스, ⚙️ 환경설정, **🚪 게임 종료 버튼**) |
 | | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | [개발자 모드] 인게임 실시간 스킬(10종)/진화/패시브 원클릭 장착 및 **우클릭 즉시 Lv.0 해제/제거**, 치트(무적, 레벨업, 전멸, 배속 등) UI |
-| | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 (Combat Sandbox)** - 실시간 10종 스킬 + 3종 궁극기 튜닝, **💎 경험치 & 레벨업 시스템 튜닝**, **👾 7종 몬스터 + 보스 스탯**, **🎯 치명타 확률/배율 및 플레이어 코어 스탯 실시간 조절 및 JSON 파일 영구 저장/자동 복원** 지원 |
+| | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 (Combat Sandbox)** - 실시간 10종 스킬 + 3종 궁극기 튜닝, **💎 경험치 & 레벨업 시스템 튜닝**, **👾 7종 몬스터 + 보스 스탯**, **🎯 치명타 확률/배율 및 플레이어 코어 스탯 실시간 조절 및 프로젝트 내부 JSON 파일(`Assets/Config/skill_configs.json`) 영구 저장/GitHub 동기화 지원** |
 | | `SkillTuningUiBuilder.cs [UPDATED]` | `SkillTuningUiBuilder` | 샌드박스 모드 UI 요소 생성 전담 헬퍼 (16개 메인 탭 + 몬스터 8종 서브탭, 500줄 규칙 준수 모듈화) |
+| | `SkillConfigRepository.cs [UPDATED]` | `SkillConfigRepository` | **📁 샌드박스 설정 파일 프로젝트 내부화** - `Assets/Config/skill_configs.json` 1순위 입출력 및 GitHub 동기화 보장 (AppData/PlayerPrefs 멀티 폴백 및 자동 마이그레이션) |
+| | `skill_configs.json [NEW]` | `Assets/Config/skill_configs.json` | **깃허브 형상관리 연동 샌드박스 튜닝 설정 파일** (전체 스킬/진화/몬스터/경험치/크리티컬 커스텀 수치 보존) |
 | | `SkillConfigModels.cs [UPDATED]` | `SkillConfigData`, `CritStatConfig [NEW]` | 전체 스킬/경험치/몬스터 스탯 및 **플레이어 치명타/공격력/이속/방어력/쿨감 커스텀 스탯(`CritStatConfig`) 직렬화 모델** |
 | | `MonsterTuningConfig.cs [NEW]` | `MonsterTuningConfigData`, `MonsterStatConfig` | 7종 일반 몬스터(슬라임/박쥐/해골/골렘/화염임프/독거미/흑기사) 및 보스 스탯 설정 데이터 모델 |
 | | `SkillTuningMemoryCache.cs [NEW]` | `SkillTuningMemoryCache` | 스킬 테스트 모드에서 L1~L5 레벨 간 이동 시 각 레벨별로 튜닝한 수치(공격력, 쿨다운, 반경 등)를 메모리에 완벽 보존/복원하는 세션 캐시 관리자 |

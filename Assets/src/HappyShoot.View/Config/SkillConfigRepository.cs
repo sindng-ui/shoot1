@@ -24,8 +24,13 @@ namespace HappyShoot.View.Config
         {
             try
             {
-                string filePath = GetConfigFilePath();
-                return File.Exists(filePath) || PlayerPrefs.HasKey(PrefsKey);
+                string projectPath = GetConfigFilePath();
+                if (File.Exists(projectPath)) return true;
+
+                string persistentPath = GetPersistentConfigFilePath();
+                if (File.Exists(persistentPath)) return true;
+
+                return PlayerPrefs.HasKey(PrefsKey);
             }
             catch
             {
@@ -46,18 +51,39 @@ namespace HappyShoot.View.Config
         {
             try
             {
-                string filePath = GetConfigFilePath();
-                if (File.Exists(filePath))
+                // 1. Primary: Project Assets/Config directory (version controlled in Git)
+                string projectPath = GetConfigFilePath();
+                if (File.Exists(projectPath))
                 {
-                    string json = File.ReadAllText(filePath);
+                    string json = File.ReadAllText(projectPath);
                     var loaded = JsonUtility.FromJson<SkillConfigData>(json);
                     if (loaded != null) return loaded;
                 }
-                else if (PlayerPrefs.HasKey(PrefsKey))
+
+                // 2. Secondary: Fallback to PersistentDataPath
+                string persistentPath = GetPersistentConfigFilePath();
+                if (File.Exists(persistentPath))
+                {
+                    string json = File.ReadAllText(persistentPath);
+                    var loaded = JsonUtility.FromJson<SkillConfigData>(json);
+                    if (loaded != null)
+                    {
+                        // Auto-migrate to project directory for future Git tracking
+                        SaveToPath(projectPath, json);
+                        return loaded;
+                    }
+                }
+
+                // 3. Tertiary: PlayerPrefs
+                if (PlayerPrefs.HasKey(PrefsKey))
                 {
                     string json = PlayerPrefs.GetString(PrefsKey);
                     var loaded = JsonUtility.FromJson<SkillConfigData>(json);
-                    if (loaded != null) return loaded;
+                    if (loaded != null)
+                    {
+                        SaveToPath(projectPath, json);
+                        return loaded;
+                    }
                 }
             }
             catch (Exception ex)
@@ -76,22 +102,49 @@ namespace HappyShoot.View.Config
             try
             {
                 string json = JsonUtility.ToJson(data, true);
-                string filePath = GetConfigFilePath();
-                string dir = Path.GetDirectoryName(filePath);
-                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+
+                // 1. Save directly to project Assets/Config folder for Git synchronization
+                string projectPath = GetConfigFilePath();
+                bool projectSaved = SaveToPath(projectPath, json);
+
+                // 2. Also save to persistentDataPath and PlayerPrefs as robust backup
+                string persistentPath = GetPersistentConfigFilePath();
+                if (!string.Equals(projectPath, persistentPath, StringComparison.OrdinalIgnoreCase))
                 {
-                    Directory.CreateDirectory(dir);
+                    SaveToPath(persistentPath, json);
                 }
 
-                File.WriteAllText(filePath, json);
                 PlayerPrefs.SetString(PrefsKey, json);
                 PlayerPrefs.Save();
-                Debug.Log($"[SkillConfigRepository] Saved skill configs successfully to: {filePath}");
+
+                if (projectSaved)
+                {
+                    Debug.Log($"[SkillConfigRepository] Saved skill configs successfully to project: {projectPath}");
+                }
                 return true;
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[SkillConfigRepository] Error saving configs: {ex.Message}");
+                return false;
+            }
+        }
+
+        private bool SaveToPath(string filePath, string json)
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(filePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+                File.WriteAllText(filePath, json);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[SkillConfigRepository] Unable to write to {filePath}: {ex.Message}");
                 return false;
             }
         }
@@ -264,10 +317,45 @@ namespace HappyShoot.View.Config
                     break;
             }
         }
-
         private string GetConfigFilePath()
         {
-            return Path.Combine(Application.persistentDataPath, "skill_configs.json");
+            try
+            {
+                // Unity Editor or Runtime: Assets/Config/skill_configs.json
+                if (!string.IsNullOrEmpty(Application.dataPath))
+                {
+                    return Path.Combine(Application.dataPath, "Config", "skill_configs.json");
+                }
+            }
+            catch
+            {
+                // Fallback for tests or headless runners
+            }
+
+            string currentDir = Directory.GetCurrentDirectory();
+            string candidate = Path.Combine(currentDir, "Assets", "Config", "skill_configs.json");
+            if (File.Exists(candidate) || Directory.Exists(Path.Combine(currentDir, "Assets")))
+            {
+                return candidate;
+            }
+
+            return Path.Combine(currentDir, "Config", "skill_configs.json");
+        }
+
+        private string GetPersistentConfigFilePath()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(Application.persistentDataPath))
+                {
+                    return Path.Combine(Application.persistentDataPath, "skill_configs.json");
+                }
+            }
+            catch
+            {
+                // Ignore in headless test runner
+            }
+            return Path.Combine(Directory.GetCurrentDirectory(), "skill_configs.json");
         }
     }
 }
