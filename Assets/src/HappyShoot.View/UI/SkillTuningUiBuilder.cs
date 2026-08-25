@@ -84,11 +84,22 @@ namespace HappyShoot.View.UI
             ("blizzard_nova", "❄️ 블리자드 노바", "wizard", true),
             ("gigastorm_lightning", "⚡ 기가스톰 체인", "wizard", true),
 
-            // 4. Common & Stats
+            // 4. Passives (9 Total)
+            ("passive_fang", "🧛 흡혈귀의 이빨", "passive", false),
+            ("passive_feather", "🪶 바람의 깃털", "passive", false),
+            ("passive_rune", "🔮 마나 룬", "passive", false),
+            ("passive_armor", "🛡️ 강철 갑옷", "passive", false),
+            ("passive_ring", "💍 황금 반지", "passive", false),
+            ("passive_heart", "💖 생명의 펜던트", "passive", false),
+            ("passive_ignition", "🔥 발화의 불꽃", "passive", true),
+            ("passive_overcharge", "⚡ 과전류의 핵", "passive", true),
+            ("passive_crit", "🎯 치명타의 눈", "passive", true),
+
+            // 5. Common & Stats
             ("orbital", "⚔️ 수호의 검 (오비탈)", "common", false),
             ("crit_tuning", "🎯 치명/코어스탯", "common", true),
 
-            // 5. System
+            // 6. System
             ("exp_tuning", "💎 경험치/레벨 튜닝", "system", false),
             ("monster_tuning", "👾 몬스터 스탯 튜닝", "system", true)
         };
@@ -98,7 +109,8 @@ namespace HappyShoot.View.UI
             ("warrior", "⚔️ 전사"),
             ("ranger", "🏹 궁수"),
             ("wizard", "🧙 마법사"),
-            ("common", "🛡️ 공통/스탯"),
+            ("passive", "🧬 패시브"),
+            ("common", "🛡️ 공통"),
             ("system", "⚙️ 시스템")
         };
 
@@ -107,8 +119,8 @@ namespace HappyShoot.View.UI
             Dictionary<string, Image> categoryTabImgs,
             Action<string> onSelectCategory)
         {
-            float startX = -184f;
-            float spacingX = 92f;
+            float startX = -195f;
+            float spacingX = 78f;
             float tabY = -72f;
 
             for (int i = 0; i < Categories.Length; i++)
@@ -121,7 +133,7 @@ namespace HappyShoot.View.UI
                 rt.anchorMax = new Vector2(0.5f, 1f);
                 rt.pivot = new Vector2(0.5f, 1f);
                 rt.anchoredPosition = new Vector2(startX + i * spacingX, tabY);
-                rt.sizeDelta = new Vector2(88f, 24f);
+                rt.sizeDelta = new Vector2(74f, 24f);
 
                 var img = catGo.AddComponent<Image>();
                 img.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -133,7 +145,7 @@ namespace HappyShoot.View.UI
                 string capturedCat = catId;
                 btn.onClick.AddListener(() => onSelectCategory?.Invoke(capturedCat));
 
-                SkillTuningSliderFactory.CreateText(catGo.transform, "Txt", catName, 12, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+                SkillTuningSliderFactory.CreateText(catGo.transform, "Txt", catName, 11, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
             }
         }
 
@@ -152,7 +164,26 @@ namespace HappyShoot.View.UI
                     if (def.cat == catId) skillsInCat.Add(def);
                 }
 
-                // 2 rows layout per category (Row 0: Base skills, Row 1: Ultimates/Special)
+                // Special 3x3 Grid for Passives (9 items)
+                if (catId == "passive")
+                {
+                    float pWidth = 145f;
+                    float pHeight = 22f;
+                    for (int i = 0; i < skillsInCat.Count; i++)
+                    {
+                        var def = skillsInCat[i];
+                        int col = i % 3;
+                        int row = i / 3;
+                        float xPos = -150f + col * 150f;
+                        float yPos = -98f - row * 24f;
+
+                        var btnGo = CreateSubSkillButton(contentBox, def.id, def.name, new Vector2(xPos, yPos), new Vector2(pWidth, pHeight), def.isUltimate, onSelectSkill, onUnequipSkill);
+                        skillTabButtons[def.id] = (btnGo, btnGo.GetComponent<Image>());
+                    }
+                    continue;
+                }
+
+                // 2 rows layout per standard category (Row 0: Base skills, Row 1: Ultimates/Special)
                 var baseSkills = skillsInCat.FindAll(s => !s.isUltimate);
                 var ultSkills = skillsInCat.FindAll(s => s.isUltimate);
 
@@ -245,7 +276,7 @@ namespace HappyShoot.View.UI
             scrollRt.anchorMax = new Vector2(1f, 1f);
             scrollRt.pivot = new Vector2(0.5f, 0.5f);
             scrollRt.offsetMin = new Vector2(12f, 105f); // 105px above bottom buttons
-            scrollRt.offsetMax = new Vector2(-12f, -218f); // 218px below top toolbar
+            scrollRt.offsetMax = new Vector2(-12f, -228f); // 228px below top toolbar & level selectors
 
             var scrollImg = scrollGo.AddComponent<Image>();
             scrollImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -280,7 +311,7 @@ namespace HappyShoot.View.UI
             Action onResetDummies,
             Action onAddBatDummies)
         {
-            float toolY = -154f;
+            float toolY = -174f;
 
             var spamGo = new GameObject("Btn_InfiniteSpam");
             spamGo.transform.SetParent(contentBox, false);
@@ -289,7 +320,7 @@ namespace HappyShoot.View.UI
             spRt.anchorMax = new Vector2(0.5f, 1f);
             spRt.pivot = new Vector2(0.5f, 1f);
             spRt.anchoredPosition = new Vector2(-155f, toolY);
-            spRt.sizeDelta = new Vector2(140f, 25f);
+            spRt.sizeDelta = new Vector2(140f, 23f);
 
             var spamImg = spamGo.AddComponent<Image>();
             spamImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -307,7 +338,7 @@ namespace HappyShoot.View.UI
             dRt.anchorMax = new Vector2(0.5f, 1f);
             dRt.pivot = new Vector2(0.5f, 1f);
             dRt.anchoredPosition = new Vector2(0f, toolY);
-            dRt.sizeDelta = new Vector2(145f, 25f);
+            dRt.sizeDelta = new Vector2(145f, 23f);
 
             var dImg = dummyGo.AddComponent<Image>();
             dImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -325,7 +356,7 @@ namespace HappyShoot.View.UI
             bRt.anchorMax = new Vector2(0.5f, 1f);
             bRt.pivot = new Vector2(0.5f, 1f);
             bRt.anchoredPosition = new Vector2(155f, toolY);
-            bRt.sizeDelta = new Vector2(140f, 25f);
+            bRt.sizeDelta = new Vector2(140f, 23f);
 
             var bImg = batGo.AddComponent<Image>();
             bImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -344,7 +375,7 @@ namespace HappyShoot.View.UI
             Action<int> onSelectLevel)
         {
             var levelButtonImgs = new List<Image>();
-            float lvY = -184f;
+            float lvY = -199f;
             float startX = -188f;
 
             for (int i = 0; i < 5; i++)

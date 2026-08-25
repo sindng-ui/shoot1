@@ -51,16 +51,19 @@ namespace HappyShoot.Domain.Skills
         public GigastormLightningConfig GigastormLightning = new GigastormLightningConfig();
         public BlizzardNovaConfig BlizzardNova = new BlizzardNovaConfig();
 
-        // 6. Experience & Leveling Tuning
+        // 6. Passive Skills Tuning (9 Total)
+        public PassiveConfigData Passives = new PassiveConfigData();
+
+        // 7. Experience & Leveling Tuning
         public ExpConfig Exp = new ExpConfig();
 
-        // 7. Monster Stats Tuning
+        // 8. Monster Stats Tuning
         public HappyShoot.Domain.Entities.MonsterTuningConfigData Monsters = new HappyShoot.Domain.Entities.MonsterTuningConfigData();
 
-        // 8. Player Critical & Core Stats Tuning
+        // 9. Player Critical & Core Stats Tuning
         public CritStatConfig CritStat = new CritStatConfig();
 
-        // 9. Explicit Level-by-Level Tunings (L1~L5)
+        // 10. Explicit Level-by-Level Tunings (L1~L5)
         public List<SkillLevelCustomData> LevelTunings = new List<SkillLevelCustomData>();
     }
 
@@ -312,5 +315,40 @@ namespace HappyShoot.Domain.Skills
         public float HitStopDuration = 0.035f;    // 역경직 지속 시간 (초, 0.00~0.15s)
         public float HitStopSlowScale = 0.20f;    // 역경직 슬로우 강도 (0.00~0.50, 부드러운 슬로우 모션)
         public float MasterCameraShakeScale = 100f; // 📳 마스터 카메라 셰이크 강도 배율 (0~100%)
+    }
+
+    [Serializable]
+    public class PassiveConfigData
+    {
+        // 1. Vampire Fang (흡혈귀의 이빨)
+        public float FangAttackPowerPercent = 15f; // Lv당 +15%
+
+        // 2. Wind Feather (바람의 깃털)
+        public float FeatherMoveSpeed = 0.6f; // Lv당 +0.6m/s
+        public float FeatherProjSpeedPercent = 15f; // Lv당 +15%
+
+        // 3. Mana Rune (마나 룬)
+        public float RuneCooldownReductionPercent = 10f; // Lv당 +10%
+        public float RuneAreaMultiplierPercent = 15f; // Lv당 +15%
+
+        // 4. Iron Armor (강철 갑옷)
+        public float ArmorAmount = 5f; // Lv당 +5
+
+        // 5. Golden Ring (황금 반지)
+        public float RingPickupRadius = 1.5f; // Lv당 +1.5m
+
+        // 6. Heart Pendant (생명의 펜던트)
+        public float HeartMaxHp = 30f; // Lv당 +30
+        public float HeartHpRegen = 1.5f; // Lv당 +1.5 HP/s
+
+        // 7. Ignition Flame (발화의 불꽃)
+        public float IgnitionAttackPowerPercent = 10f; // Lv당 +10%
+
+        // 8. Overcharge Core (과전류의 핵)
+        public float OverchargeCooldownReductionPercent = 6f; // Lv당 +6%
+
+        // 9. Hawk's Eye (치명타의 눈)
+        public float CritEyeChancePercent = 8f; // Lv당 +8%
+        public float CritEyeDamageMultiplierPercent = 5f; // Lv당 +5%
     }
 }

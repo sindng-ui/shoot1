@@ -41,6 +41,12 @@ namespace HappyShoot.View.UI
                 AddRow(title, curVal ? 1f : 0f, 0f, 1f, 1f, v => onToggle?.Invoke(v >= 0.5f), isInt: true);
             }
 
+            if (skillId.StartsWith("passive_"))
+            {
+                SkillTuningPassiveConfigurator.ConfigurePassiveRows(skillId, player, config, AddRow);
+                return;
+            }
+
             if (skillId == "crit_tuning")
             {
                 if (player == null) return;

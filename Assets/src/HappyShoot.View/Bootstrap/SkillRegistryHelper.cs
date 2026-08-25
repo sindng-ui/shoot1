@@ -94,58 +94,65 @@ namespace HappyShoot.View.Bootstrap
 
         public static void RegisterAllPassives(SkillRewardManager rewardManager)
         {
-            rewardManager.RegisterPassive("passive_fang", "흡혈귀의 이빨", "공격력 +15% 증가 (대검 진화 재료)", 5, (p, lv) =>
+            PassiveConfigData Cfg() => SkillConfigRepository.Instance?.GetConfig()?.Passives ?? new PassiveConfigData();
+
+            rewardManager.RegisterPassive("passive_fang", "흡혈귀의 이빨", "공격력 증가 (대검 진화 재료)", 5, (p, lv) =>
             {
                 var s = p.Stats;
-                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier + 0.15f, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+                float inc = Cfg().FangAttackPowerPercent / 100f;
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier + inc, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             });
 
-            rewardManager.RegisterPassive("passive_feather", "바람의 깃털", "이동속도 +12% & 투사체 속도 +15% 증가 (활/휠윈드 진화 재료)", 5, (p, lv) =>
+            rewardManager.RegisterPassive("passive_feather", "바람의 깃털", "이동속도 & 투사체 속도 증가 (활/휠윈드 진화 재료)", 5, (p, lv) =>
             {
                 var s = p.Stats;
-                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed + 0.6f, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier + 0.15f, s.ExtraProjectiles, s.PickupRadius);
+                var cfg = Cfg();
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed + cfg.FeatherMoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier + (cfg.FeatherProjSpeedPercent / 100f), s.ExtraProjectiles, s.PickupRadius);
             });
 
-            rewardManager.RegisterPassive("passive_rune", "마나 룬", "쿨타임 감소 -10% & 공격 범위 +15% 증가 (화염구 진화 재료)", 5, (p, lv) =>
+            rewardManager.RegisterPassive("passive_rune", "마나 룬", "쿨타임 감소 & 공격 범위 증가 (화염구 진화 재료)", 5, (p, lv) =>
             {
                 var s = p.Stats;
-                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction + 0.10f, s.AreaMultiplier + 0.15f, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+                var cfg = Cfg();
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction + (cfg.RuneCooldownReductionPercent / 100f), s.AreaMultiplier + (cfg.RuneAreaMultiplierPercent / 100f), s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             });
 
-            rewardManager.RegisterPassive("passive_armor", "강철 갑옷", "방어력 +5 증가 (지면강타 진화 재료)", 5, (p, lv) =>
+            rewardManager.RegisterPassive("passive_armor", "강철 갑옷", "방어력 증가 (지면강타 진화 재료)", 5, (p, lv) =>
             {
                 var s = p.Stats;
-                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor + 5f, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor + Cfg().ArmorAmount, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             });
 
-            rewardManager.RegisterPassive("passive_ring", "황금 반지", "자석 흡수 반경 +1.5m 증가 (화살비 진화 재료)", 5, (p, lv) =>
+            rewardManager.RegisterPassive("passive_ring", "황금 반지", "자석 흡수 반경 증가 (화살비 진화 재료)", 5, (p, lv) =>
             {
                 var s = p.Stats;
-                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius + 1.5f);
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius + Cfg().RingPickupRadius);
             });
 
-            rewardManager.RegisterPassive("passive_heart", "생명의 펜던트", "최대 체력 +30 & 초당 체력 재생 +1.5 HP/s 증가 (서리폭발 진화 재료)", 5, (p, lv) =>
+            rewardManager.RegisterPassive("passive_heart", "생명의 펜던트", "최대 체력 & 초당 체력 재생 증가 (서리폭발 진화 재료)", 5, (p, lv) =>
             {
                 var s = p.Stats;
-                p.Stats = new CharacterStats(s.MaxHealth + 30f, s.HealthRegen + 1.5f, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+                var cfg = Cfg();
+                p.Stats = new CharacterStats(s.MaxHealth + cfg.HeartMaxHp, s.HealthRegen + cfg.HeartHpRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             });
 
-            rewardManager.RegisterPassive("passive_ignition", "발화의 불꽃", "화염 마법 공격 시 적을 7초간 불태우며 공격력 +10% 증가", 5, (p, lv) =>
+            rewardManager.RegisterPassive("passive_ignition", "발화의 불꽃", "화염 마법 공격 시 적을 7초간 불태우며 공격력 증가", 5, (p, lv) =>
             {
                 var s = p.Stats;
-                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier + 0.10f, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier + (Cfg().IgnitionAttackPowerPercent / 100f), s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             });
 
-            rewardManager.RegisterPassive("passive_overcharge", "과전류의 핵", "전기 마법 공격 시 적을 7초간 감전시키며 쿨타임 -6% 추가 감소 (연쇄번개 진화 재료)", 5, (p, lv) =>
+            rewardManager.RegisterPassive("passive_overcharge", "과전류의 핵", "전기 마법 공격 시 적을 7초간 감전시키며 쿨타임 추가 감소 (연쇄번개 진화 재료)", 5, (p, lv) =>
             {
                 var s = p.Stats;
-                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction + 0.06f, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance, s.CritDamageMultiplier, s.CooldownReduction + (Cfg().OverchargeCooldownReductionPercent / 100f), s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             });
 
-            rewardManager.RegisterPassive("passive_crit", "치명타의 눈", "크리티컬 확률 +8% & 크리티컬 데미지 +5% 증가 (글레이브 진화 재료)", 5, (p, lv) =>
+            rewardManager.RegisterPassive("passive_crit", "치명타의 눈", "크리티컬 확률 & 크리티컬 데미지 증가 (글레이브 진화 재료)", 5, (p, lv) =>
             {
                 var s = p.Stats;
-                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance + 0.08f, s.CritDamageMultiplier + 0.05f, s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
+                var cfg = Cfg();
+                p.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, s.MoveSpeed, s.AttackPowerMultiplier, s.Armor, s.CritChance + (cfg.CritEyeChancePercent / 100f), s.CritDamageMultiplier + (cfg.CritEyeDamageMultiplierPercent / 100f), s.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             });
         }
 

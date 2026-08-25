@@ -396,5 +396,52 @@ namespace HappyShoot.View.UI
                     break;
             }
         }
+
+        /// <summary>
+        /// Recalculates and dynamically hot-reloads all passive stat modifiers directly on PlayerEntity.Stats.
+        /// </summary>
+        public static void ApplyPassivesLive(PlayerEntity player, SkillConfigData config)
+        {
+            if (player == null || config == null || config.Passives == null) return;
+            var cfg = config.Passives;
+
+            // Base class stats baseline
+            float baseHp = player.ClassType == CharacterClassType.Warrior ? 125f : (player.ClassType == CharacterClassType.Ranger ? 90f : 80f);
+            float baseRegen = player.ClassType == CharacterClassType.Warrior ? 0.5f : 0f;
+            float baseSpeed = player.ClassType == CharacterClassType.Ranger ? 6.0f : (player.ClassType == CharacterClassType.Warrior ? 4.8f : 5.0f);
+            float baseAtk = player.ClassType == CharacterClassType.Warrior ? 1.10f : 1.00f;
+            float baseArmor = player.ClassType == CharacterClassType.Warrior ? 15f : 0f;
+            float baseCritChance = player.ClassType == CharacterClassType.Ranger ? 0.20f : 0.10f;
+            float baseCritDmg = player.ClassType == CharacterClassType.Ranger ? 1.75f : 1.50f;
+            float baseCdr = player.ClassType == CharacterClassType.Wizard ? 0.15f : 0f;
+            float baseArea = player.ClassType == CharacterClassType.Warrior ? 1.15f : 1.00f;
+            float baseProjSpeed = player.ClassType == CharacterClassType.Ranger ? 1.20f : 1.00f;
+
+            // Add tuned passive modifiers
+            int fangLv = player.GetPassiveLevel("passive_fang");
+            int featherLv = player.GetPassiveLevel("passive_feather");
+            int runeLv = player.GetPassiveLevel("passive_rune");
+            int armorLv = player.GetPassiveLevel("passive_armor");
+            int ringLv = player.GetPassiveLevel("passive_ring");
+            int heartLv = player.GetPassiveLevel("passive_heart");
+            int ignitionLv = player.GetPassiveLevel("passive_ignition");
+            int overchargeLv = player.GetPassiveLevel("passive_overcharge");
+            int critLv = player.GetPassiveLevel("passive_crit");
+
+            float curHp = baseHp + (heartLv * cfg.HeartMaxHp);
+            float curRegen = baseRegen + (heartLv * cfg.HeartHpRegen);
+            float curSpeed = baseSpeed + (featherLv * cfg.FeatherMoveSpeed);
+            float curAtk = baseAtk + (fangLv * (cfg.FangAttackPowerPercent / 100f)) + (ignitionLv * (cfg.IgnitionAttackPowerPercent / 100f));
+            float curArmor = baseArmor + (armorLv * cfg.ArmorAmount);
+            float curCritChance = baseCritChance + (critLv * (cfg.CritEyeChancePercent / 100f));
+            float curCritDmg = baseCritDmg + (critLv * (cfg.CritEyeDamageMultiplierPercent / 100f));
+            float curCdr = baseCdr + (runeLv * (cfg.RuneCooldownReductionPercent / 100f)) + (overchargeLv * (cfg.OverchargeCooldownReductionPercent / 100f));
+            float curArea = baseArea + (runeLv * (cfg.RuneAreaMultiplierPercent / 100f));
+            float curProjSpeed = baseProjSpeed + (featherLv * (cfg.FeatherProjSpeedPercent / 100f));
+            float curPickup = 2.0f + (ringLv * cfg.RingPickupRadius);
+
+            // Apply to PlayerEntity.Stats
+            player.Stats = new CharacterStats(curHp, curRegen, curSpeed, curAtk, curArmor, curCritChance, curCritDmg, curCdr, curArea, curProjSpeed, player.Stats.ExtraProjectiles, curPickup);
+        }
     }
 }

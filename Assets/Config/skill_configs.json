@@ -4,19 +4,19 @@
         "Radius": 2.5,
         "ArcAngle": 150.0,
         "Cooldown": 1.2000000476837159,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "GroundStomp": {
         "Damage": 32.0,
         "Radius": 2.200000047683716,
         "Cooldown": 1.399999976158142,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "Whirlwind": {
         "Damage": 30.0,
         "Radius": 2.200000047683716,
         "Cooldown": 1.7999999523162842,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "Bow": {
         "Damage": 25.0,
@@ -24,7 +24,7 @@
         "ArrowCount": 1,
         "SpreadAngle": 28.0,
         "Cooldown": 0.800000011920929,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "Glaive": {
         "Damage": 28.0,
@@ -32,7 +32,7 @@
         "Distance": 8.5,
         "GlaiveCount": 1,
         "Cooldown": 2.0,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "ArrowRain": {
         "Damage": 24.0,
@@ -40,7 +40,7 @@
         "Duration": 1.5,
         "ArrowCount": 20,
         "Cooldown": 2.200000047683716,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "Fireball": {
         "Damage": 35.0,
@@ -48,21 +48,21 @@
         "Speed": 14.0,
         "FireballCount": 1,
         "Cooldown": 1.2000000476837159,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "FrostNova": {
         "Damage": 28.0,
         "Radius": 2.799999952316284,
         "ChillDuration": 3.5,
         "Cooldown": 1.7999999523162842,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "ChainLightning": {
         "Damage": 30.0,
         "ChainCount": 4,
         "JumpRadius": 4.0,
         "Cooldown": 2.0,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "Orbital": {
         "Damage": 25.0,
@@ -70,28 +70,29 @@
         "RotationSpeed": 4.1887898445129398,
         "BladeCount": 2,
         "Cooldown": 0.20000000298023225,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "BloodEater": {
         "Damage": 85.0,
         "Radius": 4.800000190734863,
+        "ArcAngle": 150.0,
         "HealAmount": 2.0,
         "Cooldown": 0.8500000238418579,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "TempestWhirlwind": {
         "Damage": 75.0,
         "Radius": 4.199999809265137,
         "SlashWaveCount": 4,
         "Cooldown": 1.100000023841858,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "Earthshaker": {
         "Damage": 80.0,
         "Radius": 4.800000190734863,
         "FissureCount": 4,
         "Cooldown": 1.600000023841858,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "StormBow": {
         "ArrowDamage": 65.0,
@@ -101,7 +102,7 @@
         "ArrowCount": 5,
         "SpreadAngle": 36.0,
         "Cooldown": 0.7999998331069946,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "PhantomGlaive": {
         "Damage": 60.0,
@@ -110,7 +111,7 @@
         "BladeScale": 1.0,
         "PhantomCount": 2,
         "Cooldown": 1.2999999523162842,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "StellarRain": {
         "Damage": 75.0,
@@ -118,13 +119,13 @@
         "Duration": 2.0,
         "ArrowCount": 60,
         "Cooldown": 2.200000047683716,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
     },
     "MeteorStrike": {
         "Damage": 120.0,
         "Radius": 3.0,
         "Cooldown": 1.2000000476837159,
-        "EnableCameraShake": true
+        "CameraShakeScale": 0.0
     },
     "GigastormLightning": {
         "Damage": 75.0,
@@ -132,24 +133,42 @@
         "JumpRadius": 7.0,
         "SparkRadius": 1.7999999523162842,
         "Cooldown": 1.0925697088241578,
-        "EnableCameraShake": true
+        "CameraShakeScale": 0.0
     },
     "BlizzardNova": {
         "Damage": 70.0,
         "Radius": 5.199999809265137,
         "ShardCount": 8,
         "Cooldown": 1.7999999523162842,
-        "EnableCameraShake": false
+        "CameraShakeScale": 0.0
+    },
+    "Passives": {
+        "FangAttackPowerPercent": 15.0,
+        "FeatherMoveSpeed": 0.6000000238418579,
+        "FeatherProjSpeedPercent": 15.0,
+        "RuneCooldownReductionPercent": 10.0,
+        "RuneAreaMultiplierPercent": 15.0,
+        "ArmorAmount": 5.0,
+        "RingPickupRadius": 1.5,
+        "HeartMaxHp": 30.0,
+        "HeartHpRegen": 1.5,
+        "IgnitionAttackPowerPercent": 10.0,
+        "OverchargeCooldownReductionPercent": 6.0,
+        "CritEyeChancePercent": 8.0,
+        "CritEyeDamageMultiplierPercent": 5.0
     },
     "Exp": {
         "GemExpMultiplier": 1.0,
         "BaseRequiredExp": 4,
         "ExpGrowthFactor": 1.005180835723877,
-        "MobHpScalingRatio": 0.10,
+        "EnableLevelExpScaling": true,
+        "MobScalingRatio": 0.30000001192092898,
+        "MobHpScalingRatio": 0.10000000149011612,
         "MobHpMaxCapMultiplier": 5.0,
+        "MaxMonsterCapLimit": 1200,
         "EnableHitStop": true,
-        "HitStopDuration": 0.035,
-        "HitStopSlowScale": 0.20,
+        "HitStopDuration": 0.03500000014901161,
+        "HitStopSlowScale": 0.20000000298023225,
         "MasterCameraShakeScale": 100.0
     },
     "Monsters": {
@@ -217,10 +236,10 @@
     "CritStat": {
         "CritChance": 0.10000000149011612,
         "CritDamageMultiplier": 1.5,
-        "AttackPowerMultiplier": 1.25,
-        "MoveSpeed": 5.0,
-        "Armor": 0.0,
-        "CooldownReduction": 0.15000000596046449,
+        "AttackPowerMultiplier": 1.100000023841858,
+        "MoveSpeed": 4.800000190734863,
+        "Armor": 15.0,
+        "CooldownReduction": 0.0,
         "IsCustom": true
     },
     "LevelTunings": [
@@ -229,11 +248,12 @@
             "Level": 1,
             "Damage": -1.0,
             "Radius": 3.055755615234375,
-            "Cooldown": -1.0,
+            "Cooldown": 1.2000000476837159,
             "Speed": -1.0,
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -246,6 +266,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -258,6 +279,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -270,6 +292,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -282,6 +305,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -294,6 +318,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -306,6 +331,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -318,6 +344,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -330,6 +357,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -342,6 +370,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -354,6 +383,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -366,6 +396,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -378,6 +409,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -390,6 +422,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -402,6 +435,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -414,6 +448,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -426,6 +461,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -438,6 +474,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -450,18 +487,20 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
             "SkillId": "frost_nova",
             "Level": 1,
-            "Damage": -1.0,
+            "Damage": 28.0,
             "Radius": -1.0,
             "Cooldown": -1.0,
             "Speed": -1.0,
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -474,6 +513,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -486,6 +526,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -498,6 +539,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -510,6 +552,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -522,6 +565,7 @@
             "Count": -1,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -534,6 +578,7 @@
             "Count": 6,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -546,6 +591,7 @@
             "Count": 8,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -558,6 +604,7 @@
             "Count": 10,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -570,6 +617,7 @@
             "Count": 12,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
             "HasCustomValues": true
         },
         {
@@ -582,6 +630,33 @@
             "Count": 12,
             "Duration": -1.0,
             "ExtraParam1": -1.0,
+            "ExtraParam2": 0.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "ground_stomp",
+            "Level": 1,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "ExtraParam2": -1.0,
+            "HasCustomValues": true
+        },
+        {
+            "SkillId": "whirlwind",
+            "Level": 1,
+            "Damage": -1.0,
+            "Radius": -1.0,
+            "Cooldown": -1.0,
+            "Speed": -1.0,
+            "Count": -1,
+            "Duration": -1.0,
+            "ExtraParam1": -1.0,
+            "ExtraParam2": -1.0,
             "HasCustomValues": true
         }
     ]

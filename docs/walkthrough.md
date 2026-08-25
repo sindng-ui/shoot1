@@ -1,61 +1,24 @@
-# 🛡️ Git Ignore 최적화 및 불필요한 빌드 파일 정리 완료 보고서
+# 🔢 샌드박스 숫자 직접 입력 필드(InputField) 구현 완료 보고서
 
-## 1. 개요 및 해결된 작업
-- Unity 프로젝트 및 .NET 테스트 호스트에서 생성되는 거대한 빌드 산출물(실행 파일, DLL, 심볼, 중간 캐시 등)이 GitHub 저장소에 불필요하게 올라가지 않도록 **[`.gitignore`](file:///k:/unityprojects/shoot1/shoot1/.gitignore)**를 종합 표준 규칙으로 확장/정리했습니다.
-- 기존에 이미 git에 추적되어 커밋 대상에 포함되던 Standalone 빌드 출력 폴더(`/Zxe/`) 및 .NET 빌드 폴더(`scratch/TestHost/bin/`, `scratch/TestHost/obj/`)를 저장소 인덱스에서 안전하게 언스테이징(`git rm -r --cached`) 처리했습니다 (로컬 파일은 안전하게 보존).
+## 1. 구현 개요
+- 샌드박스(전투 & 밸런스 샌드박스)의 모든 슬라이더 항목 우측에 **인터랙티브 숫자 직접 입력 박스(`InputField`)**를 추가하여, 슬라이더 드래그뿐만 아니라 **키보드로 원하는 숫자를 직접 클릭하여 타이핑 입력**할 수 있도록 전면 개선했습니다.
 
 ---
 
-## 2. 주요 `.gitignore` 추가 항목
+## 2. 세부 구현 내역 ([SkillTuningSliderFactory.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/SkillTuningSliderFactory.cs))
 
-```gitignore
-# Unity 표준 라이브러리 및 임시 파일
-/[Ll]ibrary/
-/[Tt]emp/
-/[Oo]bj/
-/[Bb]uild/
-/[Bb]uilds/
-/[Ll]ogs/
-/[Uu]ser[Ss]ettings/
-/[Mm]emoryCaptures/
-/[Rr]ecordings/
-/[Aa]ssets/[Aa]ssetStoreTools*
+1. **키보드 직접 입력 `InputField` 박스 연동**:
+   - 각 슬라이더 행의 우측에 네이비 블루 배경 + 시안 하이라이트 테두리의 입력 박스 배치 (`size: 56x22px`).
+   - 클릭 시 즉시 커서가 깜빡이며 정수/소수점 숫자를 직접 키보드로 타이핑 가능.
 
-# Standalone 빌드 출력물 (Windows 실행 파일 및 번들 데이터)
-/Zxe/
-/build/
-/builds/
-/dist/
-
-# .NET / C# 빌드 아티팩트
-scratch/**/bin/
-scratch/**/obj/
-**/bin/
-**/obj/
-
-# Visual Studio / VS Code / Rider IDE 캐시 및 설정 파일
-.vs/
-.idea/
-.vscode/
-*.csproj
-*.unityproj
-*.sln
-*.suo
-*.user
-*.userprefs
-*.pidb
-*.pdb
-*.opendb
-*.VC.db
-
-# OS 임시 파일
-.DS_Store
-Thumbs.db
-*.tmp
-```
+2. **완벽한 양방향 실시간 동기화 (Two-way Live Sync)**:
+   - **슬라이더 조작 시**: 우측 입력 박스의 숫자가 실시간으로 함께 갱신.
+   - **`[-]` / `[+]` 버튼 클릭 시**: 슬라이더와 입력 박스 숫자가 스텝 단위로 함께 갱신.
+   - **키보드 타이핑 후 엔터/포커스 아웃 시**: 입력한 숫자로 슬라이더와 인게임 스킬/스탯 로직에 즉시 반영.
 
 ---
 
 ## 3. 검증 결과
-- `git status` 확인 결과 수백 개에 달하던 `Zxe/` 빌드 실행물 및 `scratch/TestHost/bin/` 바이너리들이 모두 git 추적에서 제외되어 깔끔한 소스 코드 및 필수 에셋만 GitHub에 관리되도록 최적화되었습니다.
-- [`APP_MAP.md`](file:///k:/unityprojects/shoot1/shoot1/APP_MAP.md)에 `.gitignore` 최적화 내역을 동기화 완료했습니다.
+- **단위 테스트**: 124개 도메인 단위 테스트 전체 100% 통과 (**124/124 ALL PASS**).
+- **코드 품질**: `SkillTuningSliderFactory.cs` (271줄) 500줄 이하 엄수.
+- **문서화**: [`APP_MAP.md`](file:///k:/unityprojects/shoot1/shoot1/APP_MAP.md) 최신화 완료.

@@ -125,19 +125,72 @@ namespace HappyShoot.View.UI
                 new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
                 new Vector2(380f, 0f), new Vector2(btnW, btnH), new Color(0.20f, 0.28f, 0.42f, 1f));
 
-            // 5. Value Text (Right)
-            var valTxt = CreateText(rowGo.transform, "Value", isInt ? $"{Mathf.RoundToInt(curVal)}" : $"{curVal:F2}", 11, TextAnchor.MiddleRight,
-                new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
-                new Vector2(-8f, 0f), new Vector2(55f, 30f), new Color(0.35f, 1f, 0.65f));
+            // 5. Interactive Direct Number InputField (Right)
+            var inputGo = new GameObject("InputField");
+            inputGo.transform.SetParent(rowGo.transform, false);
+            var inputRt = inputGo.AddComponent<RectTransform>();
+            inputRt.anchorMin = new Vector2(1f, 0.5f);
+            inputRt.anchorMax = new Vector2(1f, 0.5f);
+            inputRt.pivot = new Vector2(1f, 0.5f);
+            inputRt.anchoredPosition = new Vector2(-6f, 0f);
+            inputRt.sizeDelta = new Vector2(56f, 22f);
 
+            var inputBg = inputGo.AddComponent<Image>();
+            inputBg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            inputBg.color = new Color(0.04f, 0.08f, 0.14f, 0.95f);
+
+            var inputOutline = inputGo.AddComponent<Outline>();
+            inputOutline.effectColor = new Color(0.25f, 0.60f, 0.90f, 0.85f);
+            inputOutline.effectDistance = new Vector2(1f, -1f);
+
+            var textComponent = CreateText(inputGo.transform, "Text", isInt ? $"{Mathf.RoundToInt(curVal)}" : $"{curVal:F2}", 11, TextAnchor.MiddleCenter,
+                Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(0.35f, 1f, 0.65f));
+
+            var inputField = inputGo.AddComponent<InputField>();
+            inputField.textComponent = textComponent;
+            inputField.contentType = isInt ? InputField.ContentType.IntegerNumber : InputField.ContentType.DecimalNumber;
+            inputField.lineType = InputField.LineType.SingleLine;
+            inputField.caretColor = Color.cyan;
+            inputField.selectionColor = new Color(0.18f, 0.55f, 0.85f, 0.5f);
+            inputField.text = isInt ? $"{Mathf.RoundToInt(curVal)}" : $"{curVal:F2}";
+
+            // Sync Slider -> InputField
             slider.onValueChanged.AddListener(v =>
             {
-                valTxt.text = isInt ? $"{Mathf.RoundToInt(v)}" : $"{v:F2}";
+                if (!inputField.isFocused)
+                {
+                    inputField.text = isInt ? $"{Mathf.RoundToInt(v)}" : $"{v:F2}";
+                }
                 onChanged?.Invoke(v);
             });
 
-            minusBtnGo.GetComponent<Button>().onClick.AddListener(() => slider.value = Mathf.Max(min, slider.value - step));
-            plusBtnGo.GetComponent<Button>().onClick.AddListener(() => slider.value = Mathf.Min(max, slider.value + step));
+            // Sync InputField -> Slider & Logic
+            inputField.onEndEdit.AddListener(str =>
+            {
+                if (float.TryParse(str, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float parsed))
+                {
+                    float clamped = Mathf.Clamp(parsed, min, max);
+                    slider.value = clamped;
+                    inputField.text = isInt ? $"{Mathf.RoundToInt(clamped)}" : $"{clamped:F2}";
+                    onChanged?.Invoke(clamped);
+                }
+                else
+                {
+                    inputField.text = isInt ? $"{Mathf.RoundToInt(slider.value)}" : $"{slider.value:F2}";
+                }
+            });
+
+            minusBtnGo.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                slider.value = Mathf.Max(min, slider.value - step);
+                inputField.text = isInt ? $"{Mathf.RoundToInt(slider.value)}" : $"{slider.value:F2}";
+            });
+
+            plusBtnGo.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                slider.value = Mathf.Min(max, slider.value + step);
+                inputField.text = isInt ? $"{Mathf.RoundToInt(slider.value)}" : $"{slider.value:F2}";
+            });
 
             yOffset -= 38f;
             if (parent is RectTransform pRt)
