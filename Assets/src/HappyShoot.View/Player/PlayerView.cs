@@ -90,14 +90,14 @@ namespace HappyShoot.View.Player
             var rootSr = GetComponent<SpriteRenderer>();
             if (rootSr != null) rootSr.sprite = null;
 
-            // 3. Dynamic Aim-tracking Weapon Pivot
+            // 3. Natural Hand-Held Weapon Pivot
             _weaponPivotGo = new GameObject("WeaponPivot");
             _weaponPivotGo.transform.SetParent(transform, false);
             _weaponPivotGo.transform.localPosition = new Vector3(0.25f, -0.05f, 0f);
 
             _weaponGo = new GameObject("WeaponVisual");
             _weaponGo.transform.SetParent(_weaponPivotGo.transform, false);
-            _weaponGo.transform.localPosition = new Vector3(0.28f, 0f, 0f);
+            _weaponGo.transform.localPosition = Vector3.zero;
             _weaponGo.transform.localScale = Vector3.one * 1.3f;
 
             _weaponSr = _weaponGo.AddComponent<SpriteRenderer>();
@@ -293,16 +293,20 @@ namespace HappyShoot.View.Player
 
             _bodySr.flipX = isFacingLeft;
 
-            // Weapon Pivot Positioning & Aim Rotation
+            // Weapon Pivot Positioning & Natural Hand-Held Posture
             if (_weaponPivotGo != null && _slashVisualTimer <= 0f)
             {
                 float sideOffset = isFacingLeft ? -0.25f : 0.25f;
                 _weaponPivotGo.transform.localPosition = new Vector3(sideOffset, -0.05f, 0f);
-                _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, angleDeg);
+
+                // Natural resting angle (does not spin 360 with mouse)
+                float restAngle = isFacingLeft ? 135f : -45f;
+                _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, restAngle);
 
                 if (_weaponSr != null)
                 {
-                    _weaponSr.flipY = isFacingLeft;
+                    _weaponSr.flipY = false;
+                    _weaponSr.flipX = false;
                     _weaponSr.sortingOrder = (newDir == HeroSpriteHelper.ViewDirection.Back || newDir == HeroSpriteHelper.ViewDirection.BackDiagonal) ? 14 : 16;
                 }
             }
@@ -330,6 +334,11 @@ namespace HappyShoot.View.Player
             {
                 if (_slashPivotGo != null) _slashPivotGo.SetActive(false);
                 if (_weaponSr != null) _weaponSr.sortingOrder = 16;
+                if (_weaponPivotGo != null)
+                {
+                    bool isFlipped = _bodySr != null && _bodySr.flipX;
+                    _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, isFlipped ? 135f : -45f);
+                }
             }
         }
 
