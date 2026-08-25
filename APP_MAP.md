@@ -188,10 +188,12 @@ graph TD
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
 | | `PauseMenuUiView.cs` | `PauseMenuUiView` | ESC 일시정지 다이얼로그 (계속하기, ⚙️ 환경 설정, 다시 시작, 게임 종료) |
 | | `DamageTextView.cs` | `DamageTextManagerView`, `DamageTextView` | 이벤트 기반 무할당 32개 풀링 (GameSettings.ShowDamageText 옵션 적용) |
-| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | **지능형 시선 제어: (1) 마우스 조작 시 Aim 9방향 실시간 조준, (2) 마우스 유휴(4s) 시 Aim 숨김 및 즉시 기본 정면(Front) 샷 복귀, (3) 키보드(WASD) 이동 시 누른 방향(9방향) 질주 및 멈추면 즉시 정면 복귀, (4) 마우스 움직임 시 즉시 Aim 복원**, 오늘 시작 시의 100% 원본 치비 픽셀아트, 2.5D Blob Shadow, Brotato 젤리 물리 모션 (450줄) |
+| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | **지능형 시선 제어: (1) 마우스 조작 시 Aim 9방향 실시간 조준, (2) 마우스 유휴(4s) 시 Aim 숨김 및 즉시 기본 정면(Front) 샷 복귀, (3) 키보드(WASD) 이동 시 누른 방향(9방향) 질주 및 멈추면 즉시 정면 복귀, (4) 마우스 움직임 시 즉시 Aim 복원**, 오늘 시작 시의 100% 원본 치비 픽셀아트, 2.5D Blob Shadow, Brotato 젤리 물리 모션 (495줄) |
 | | `HeroSpriteHelper.cs [NEW]` | `HeroSpriteHelper` | **오늘 시작 시의 100% 원본 32x32 귀여운 치비 3영웅(전사 둥근투구/빨간망토, 궁수 그린후드/화살통, 마법사 롭/고깔모자) 9방향 스프라이트 및 원본 브로드소드/리커브활/크리스탈스태프 연동 (368줄)** |
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
-| **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **2.5D Blob Shadow 타원 그림자**, **7종 몬스터 타입별 젤리 물리 모션** (FireImp 빠른 다트, ToxicSpider 크리피 스커틀, DarkKnight 중장갑 행진), **피격 Flash White** (오비탈 다단히트 HitStop 제거로 120fps 보장) |
+| **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **7종 몬스터(Slime, Bat, Skeleton, Golem, FireImp, ToxicSpider, DarkKnight) + 2종 보스(Golem King, Laser Archdemon) 고퀄리티 픽셀아트 때깔/명암/발광 코어 강화**, 2.5D Blob Shadow 타원 그림자, 타입별 젤리 물리 모션 (316줄) |
+| | `MonsterDeathFxManagerView.cs [NEW]` | `MonsterDeathFxManagerView` | **몬스터 속성별(암석 파편/형광 독즙/화염 불씨/영혼 가루/골드 룬) 처치 미니 파티클 무할당 풀링(64개) 뷰 매니저 (154줄)** |
+| | `MonsterSpriteHelper.cs [UPDATED]` | `MonsterSpriteHelper` | **7종 일반 몬스터 + 보스 2종 고해상도 셀 셰이딩/글레어/발광 코어/룬 픽셀아트 프로시저럴 생성기 (367줄)** |
 | | `MonsterSpawnerView.cs [UPDATED]` | `MonsterSpawnerView` | **Phase 1→보스1→Phase 2(FireImp→ToxicSpider→DarkKnight 순차 합류)→보스2 웨이브 진화 시스템**, `BossLaserBeamManagerView` 라이프사이클 연동, 512개 풀링 |
 | | `WavePhaseController.cs [NEW]` | `WavePhaseController` | **보스 격퇴 후 웨이브 페이즈 진화 컨트롤러** (Phase1/Phase2Wave1~3/Boss2Spawned 5단계, 페이즈별 몬스터 아키타입 롤 테이블 분리 관리) |
 | **Projectiles** | `ProjectileView.cs [UPDATED]` | `ProjectileManagerView`, `ProjectileView` | **관통 화살(Piercing Arrow) 비주얼 대폭 개편: 32x10 날렵하고 얄쌍한 다이아몬드 화살촉 + 슬림 화살대 + V자 화살깃 신규 픽셀아트 적용, 1발~5발 레벨업 시에도 변색 없이 처음의 찬란한 황금빛 앰버 골드 일관 유지** (128개 사전 생성 Prewarm 및 0-Allocation 풀링) |

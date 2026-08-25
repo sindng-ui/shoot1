@@ -203,6 +203,10 @@ namespace HappyShoot.View.Bootstrap
             var reticleView = reticleGo.AddComponent<Cameras.AimReticleView>();
             reticleView.Initialize();
 
+            var deathFxGo = new GameObject("MonsterDeathFxManager");
+            var deathFxView = deathFxGo.AddComponent<Monsters.MonsterDeathFxManagerView>();
+            deathFxView.Initialize(playerView.EventBus);
+
             playerView.SetExternalSystems(spawnerView, projManagerView);
 
             // 4. Setup Timeline

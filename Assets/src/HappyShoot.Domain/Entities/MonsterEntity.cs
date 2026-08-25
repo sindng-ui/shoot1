@@ -349,7 +349,7 @@ namespace HappyShoot.Domain.Entities
 
             if (CurrentHealth <= 0f)
             {
-                _eventBus?.Publish(new MonsterDiedEvent(Id, Position, ExpValue, GoldValue));
+                _eventBus?.Publish(new MonsterDiedEvent(Id, Position, ExpValue, GoldValue, Type, IsBoss));
 
                 if (wasChilled)
                 {

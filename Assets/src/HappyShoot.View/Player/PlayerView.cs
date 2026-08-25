@@ -43,18 +43,10 @@ namespace HappyShoot.View.Player
         public Vector2 CurrentMoveDirection { get; private set; } = Vector2.zero;
         public bool IsGameStarted { get; set; } = false;
 
-        private GameObject _shadowGo;
-        private GameObject _bodyVisualGo;
-        private SpriteRenderer _bodySr;
-        private GameObject _weaponPivotGo;
-        private GameObject _weaponGo;
-        private SpriteRenderer _weaponSr;
-        private GameObject _slashPivotGo;
-        private SpriteRenderer _slashVisualSr;
+        private GameObject _shadowGo, _bodyVisualGo, _weaponPivotGo, _weaponGo, _slashPivotGo, _slashVisualGo;
+        private SpriteRenderer _bodySr, _shadowSr, _weaponSr, _slashVisualSr;
 
-        private float _slashVisualTimer;
-        private float _slashBaseAngle;
-        private float _slashHalfArc = 75f;
+        private float _slashVisualTimer, _slashBaseAngle, _slashHalfArc = 75f;
         private const float SlashDuration = 0.18f;
 
         // Ranger bow recoil & snap
@@ -66,13 +58,6 @@ namespace HappyShoot.View.Player
         private float _wizardCastPulseTimer;
         private const float WizardCastPulseDuration = 0.18f;
 
-        // Intelligent Aim & Look State Machine
-        private float _keyboardIdleTimer;
-        private const float KeyboardIdleThreshold = 4.5f;
-        private HeroSpriteHelper.ViewDirection _lastMoveViewDir = HeroSpriteHelper.ViewDirection.Front;
-        private bool _lastMoveFacingLeft = false;
-        private Vector2 _lastActiveAimDir = Vector2.right;
-
         private Projectiles.OrbitingBladeView _orbitingBladeView;
         private int _cachedOrbitalLevel = -1;
         private float _cachedOrbitalArea = -1f;
@@ -80,6 +65,8 @@ namespace HappyShoot.View.Player
         private Vector3 _lastPos;
         private float _walkBobTimer;
         private HeroSpriteHelper.ViewDirection _currentViewDir = HeroSpriteHelper.ViewDirection.Front;
+
+        public CharacterClassType ClassType => _classType;
 
         public void SetExternalSystems(Monsters.MonsterSpawnerView spawnerView, Projectiles.ProjectileManagerView projectileManagerView)
         {
@@ -89,51 +76,44 @@ namespace HappyShoot.View.Player
 
         private void Awake()
         {
-            // 1. 2.5D Blob Shadow at feet
-            _shadowGo = new GameObject("BlobShadow");
-            _shadowGo.transform.SetParent(transform, false);
-            _shadowGo.transform.localPosition = new Vector3(0f, -0.42f, 0f);
-            _shadowGo.transform.localScale = new Vector3(1.6f, 0.8f, 1f);
-            var shadowSr = _shadowGo.AddComponent<SpriteRenderer>();
-            shadowSr.sprite = SpriteHelper.GetOrCreateBlobShadowSprite();
-            shadowSr.sortingOrder = -1;
-
-            // 2. Child BodyVisual (Cute Chibi Hero)
+            // 1. Root & Base visuals
             _bodyVisualGo = new GameObject("BodyVisual");
             _bodyVisualGo.transform.SetParent(transform, false);
-            _bodyVisualGo.transform.localPosition = Vector3.zero;
-            _bodyVisualGo.transform.localScale = Vector3.one * 1.5f;
-
             _bodySr = _bodyVisualGo.AddComponent<SpriteRenderer>();
             _bodySr.sortingOrder = 15;
-            _bodySr.color = Color.white;
+            _originalColor = _bodySr.color;
+            _bodyVisualGo.transform.localScale = Vector3.one * 1.5f;
 
-            var rootSr = GetComponent<SpriteRenderer>();
-            if (rootSr != null) rootSr.sprite = null;
+            // 2. 2.5D Blob Shadow
+            _shadowGo = new GameObject("BlobShadow");
+            _shadowGo.transform.SetParent(transform, false);
+            _shadowGo.transform.localPosition = new Vector3(0f, -0.36f, 0f);
+            _shadowGo.transform.localScale = new Vector3(1.6f, 0.8f, 1f);
+            _shadowSr = _shadowGo.AddComponent<SpriteRenderer>();
+            _shadowSr.sprite = SpriteHelper.GetOrCreateBlobShadowSprite();
+            _shadowSr.sortingOrder = 8;
 
-            // 3. Hand-Held Weapon Pivot
+            // 3. Weapon Pivot & Visual
             _weaponPivotGo = new GameObject("WeaponPivot");
             _weaponPivotGo.transform.SetParent(transform, false);
-            _weaponPivotGo.transform.localPosition = new Vector3(0.28f, -0.06f, 0f);
-
+            _weaponPivotGo.transform.localPosition = new Vector3(0.25f, -0.05f, 0f);
             _weaponGo = new GameObject("WeaponVisual");
             _weaponGo.transform.SetParent(_weaponPivotGo.transform, false);
             _weaponGo.transform.localPosition = Vector3.zero;
             _weaponGo.transform.localScale = Vector3.one * 1.3f;
-
             _weaponSr = _weaponGo.AddComponent<SpriteRenderer>();
             _weaponSr.sortingOrder = 16;
 
-            // 4. Slash Visual Arc
+            // 4. Slash Effect Pivot & Visual
             _slashPivotGo = new GameObject("SlashPivot");
             _slashPivotGo.transform.SetParent(transform, false);
             _slashPivotGo.transform.localPosition = Vector3.zero;
-
-            var slashGo = new GameObject("SlashArc");
-            slashGo.transform.SetParent(_slashPivotGo.transform, false);
-            _slashVisualSr = slashGo.AddComponent<SpriteRenderer>();
+            _slashVisualGo = new GameObject("SlashVisual");
+            _slashVisualGo.transform.SetParent(_slashPivotGo.transform, false);
+            _slashVisualGo.transform.localPosition = Vector3.zero;
+            _slashVisualSr = _slashVisualGo.AddComponent<SpriteRenderer>();
             _slashVisualSr.sprite = SpriteHelper.GetOrCreateSlashArcSprite();
-            _slashVisualSr.sortingOrder = 30;
+            _slashVisualSr.sortingOrder = 20;
             _slashPivotGo.SetActive(false);
 
             // 5. Orbiting Blades Visual
@@ -158,19 +138,19 @@ namespace HappyShoot.View.Player
 
             // Ranger recoil events
             _eventBus.Subscribe<PiercingArrowExecutedEvent>(OnRangerShoot);
-            _eventBus.Subscribe<StormBowExecutedEvent>(evt => TriggerRangerRecoil(new Vector2(evt.TargetDirection.X, evt.TargetDirection.Y)));
-            _eventBus.Subscribe<WindGlaiveExecutedEvent>(evt => TriggerRangerRecoil(new Vector2(evt.TargetDirection.X, evt.TargetDirection.Y)));
-            _eventBus.Subscribe<PhantomGlaiveExecutedEvent>(evt => TriggerRangerRecoil(new Vector2(evt.TargetDirection.X, evt.TargetDirection.Y)));
-            _eventBus.Subscribe<StellarRainExecutedEvent>(evt => TriggerRangerRecoil(Vector2.down));
-            _eventBus.Subscribe<ArrowRainExecutedEvent>(evt => TriggerRangerRecoil(Vector2.down));
+            _eventBus.Subscribe<StormBowExecutedEvent>(e => TriggerRangerRecoil(new Vector2(e.TargetDirection.X, e.TargetDirection.Y)));
+            _eventBus.Subscribe<WindGlaiveExecutedEvent>(e => TriggerRangerRecoil(new Vector2(e.TargetDirection.X, e.TargetDirection.Y)));
+            _eventBus.Subscribe<PhantomGlaiveExecutedEvent>(e => TriggerRangerRecoil(new Vector2(e.TargetDirection.X, e.TargetDirection.Y)));
+            _eventBus.Subscribe<StellarRainExecutedEvent>(_ => TriggerRangerRecoil(Vector2.down));
+            _eventBus.Subscribe<ArrowRainExecutedEvent>(_ => TriggerRangerRecoil(Vector2.down));
 
             // Wizard cast pulse events
-            _eventBus.Subscribe<FireballLaunchedEvent>(evt => TriggerWizardCastPulse());
-            _eventBus.Subscribe<MeteorStrikeLaunchedEvent>(evt => TriggerWizardCastPulse());
-            _eventBus.Subscribe<ChainLightningExecutedEvent>(evt => TriggerWizardCastPulse());
-            _eventBus.Subscribe<GigastormLightningExecutedEvent>(evt => TriggerWizardCastPulse());
-            _eventBus.Subscribe<FrostNovaExecutedEvent>(evt => TriggerWizardCastPulse());
-            _eventBus.Subscribe<BlizzardNovaExecutedEvent>(evt => TriggerWizardCastPulse());
+            _eventBus.Subscribe<FireballLaunchedEvent>(_ => TriggerWizardCastPulse());
+            _eventBus.Subscribe<MeteorStrikeLaunchedEvent>(_ => TriggerWizardCastPulse());
+            _eventBus.Subscribe<ChainLightningExecutedEvent>(_ => TriggerWizardCastPulse());
+            _eventBus.Subscribe<GigastormLightningExecutedEvent>(_ => TriggerWizardCastPulse());
+            _eventBus.Subscribe<FrostNovaExecutedEvent>(_ => TriggerWizardCastPulse());
+            _eventBus.Subscribe<BlizzardNovaExecutedEvent>(_ => TriggerWizardCastPulse());
 
             _lastPos = transform.position;
         }
@@ -184,7 +164,6 @@ namespace HappyShoot.View.Player
             _slashVisualTimer = 0f;
             _rangerRecoilTimer = 0f;
             _wizardCastPulseTimer = 0f;
-            _keyboardIdleTimer = 0f;
             if (_slashPivotGo != null) _slashPivotGo.SetActive(false);
             if (_weaponPivotGo != null) _weaponPivotGo.transform.rotation = Quaternion.identity;
 
@@ -194,21 +173,13 @@ namespace HappyShoot.View.Player
 
         private void ApplyClassVisuals()
         {
-            if (_bodySr != null)
-            {
-                _bodySr.sprite = HeroSpriteHelper.GetHeroSprite(_classType, _currentViewDir, 32);
-            }
-            if (_weaponSr != null)
-            {
-                _weaponSr.sprite = HeroSpriteHelper.GetWeaponSprite(_classType, 32);
-            }
+            if (_bodySr != null) _bodySr.sprite = HeroSpriteHelper.GetHeroSprite(_classType, _currentViewDir, 32);
+            if (_weaponSr != null) _weaponSr.sprite = HeroSpriteHelper.GetWeaponSprite(_classType, 32);
         }
 
         private void Update()
         {
-            if (_entity == null || _entity.IsDead || !IsGameStarted)
-                return;
-
+            if (_entity == null || _entity.IsDead || !IsGameStarted) return;
             float dt = Time.deltaTime;
 
             // 1. Damage flash timer
@@ -218,24 +189,21 @@ namespace HappyShoot.View.Player
                 if (_flashTimer <= 0f && _bodySr != null) _bodySr.color = _originalColor;
             }
 
-            // 2. Compute Movement Vector
+            // 2. Movement & Direction
             Vector3 deltaMove = transform.position - _lastPos;
             _lastPos = transform.position;
             float moveDist = deltaMove.magnitude;
             Vector2 moveDir = moveDist > 0.0001f ? new Vector2(deltaMove.x, deltaMove.y).normalized : Vector2.zero;
             CurrentMoveDirection = moveDir;
 
-            // 3. Mouse Coordinate Evaluation
+            // 3. Mouse Aim Target Position
             Vector2 mouseAimDir = Vector2.right;
             if (Camera.main != null)
             {
-                Vector3 mouseScreenPos = UnityEngine.InputSystem.Mouse.current != null
-                    ? (Vector3)UnityEngine.InputSystem.Mouse.current.position.ReadValue()
-                    : Input.mousePosition;
+                Vector3 mouseScreenPos = UnityEngine.InputSystem.Mouse.current != null ? (Vector3)UnityEngine.InputSystem.Mouse.current.position.ReadValue() : Input.mousePosition;
                 mouseScreenPos.z = -Camera.main.transform.position.z;
                 Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
                 _entity.AimTargetPosition = new Vector2D(mouseWorldPos.x, mouseWorldPos.y);
-
                 Vector2 offset = new Vector2(mouseWorldPos.x - transform.position.x, mouseWorldPos.y - transform.position.y);
                 if (offset.sqrMagnitude > 0.001f) mouseAimDir = offset.normalized;
             }
@@ -244,9 +212,7 @@ namespace HappyShoot.View.Player
             UpdateHeroAimVisuals(mouseAimDir, moveDir, dt);
 
             // 5. Domain skills update
-            ISpatialGrid2D monsterGrid = _spawnerView != null ? _spawnerView.MonsterGrid : null;
-            ProjectileManager projManager = _projectileManagerView != null ? _projectileManagerView.DomainManager : null;
-            _entity.Update(dt, monsterGrid, projManager);
+            _entity.Update(dt, _spawnerView?.MonsterGrid, _projectileManagerView?.DomainManager);
 
             // 6. Movement Jelly Bobbing & Shadow scaling
             if (moveDist > 0.0001f)
@@ -254,13 +220,11 @@ namespace HappyShoot.View.Player
                 _walkBobTimer += dt * 16f;
                 float hop = Mathf.Abs(Mathf.Sin(_walkBobTimer)) * 0.12f;
                 float squashY = Mathf.Sin(_walkBobTimer * 2f) * 0.08f;
-                float stretchX = -squashY * 0.5f;
                 float tiltZ = Mathf.Clamp(-deltaMove.x * 30f, -8f, 8f);
-
                 if (_bodyVisualGo != null)
                 {
                     _bodyVisualGo.transform.localPosition = new Vector3(0f, hop, 0f);
-                    _bodyVisualGo.transform.localScale = new Vector3(1.5f * (1f + stretchX), 1.5f * (1f + squashY), 1f);
+                    _bodyVisualGo.transform.localScale = new Vector3(1.5f * (1f - squashY * 0.5f), 1.5f * (1f + squashY), 1f);
                     _bodyVisualGo.transform.localRotation = Quaternion.Euler(0f, 0f, tiltZ);
                 }
                 if (_shadowGo != null)
@@ -311,12 +275,9 @@ namespace HappyShoot.View.Player
             if (isMouseAimActive)
             {
                 // (1) Mouse Active -> Look & Aim towards Mouse (9-way)
-                _keyboardIdleTimer = 0f;
                 float angleDeg = Mathf.Atan2(mouseAimDir.y, mouseAimDir.x) * Mathf.Rad2Deg;
                 isFacingLeft = mouseAimDir.x < -0.05f;
                 newDir = EvaluateViewDirection(angleDeg);
-                _lastMoveViewDir = newDir;
-                _lastMoveFacingLeft = isFacingLeft;
                 finalSkillAimDir = mouseAimDir;
             }
             else
@@ -325,12 +286,9 @@ namespace HappyShoot.View.Player
                 if (moveDir.sqrMagnitude > 0.001f)
                 {
                     // (2-a) Moving with Keyboard -> Look towards WASD Move Direction (9-way)
-                    _keyboardIdleTimer = 0f;
                     float moveAngleDeg = Mathf.Atan2(moveDir.y, moveDir.x) * Mathf.Rad2Deg;
                     isFacingLeft = moveDir.x < -0.05f;
                     newDir = EvaluateViewDirection(moveAngleDeg);
-                    _lastMoveViewDir = newDir;
-                    _lastMoveFacingLeft = isFacingLeft;
                     finalSkillAimDir = moveDir;
                 }
                 else
@@ -339,12 +297,9 @@ namespace HappyShoot.View.Player
                     newDir = HeroSpriteHelper.ViewDirection.Front;
                     isFacingLeft = false;
                     finalSkillAimDir = Vector2.down;
-                    _lastMoveViewDir = newDir;
-                    _lastMoveFacingLeft = false;
                 }
             }
 
-            _lastActiveAimDir = finalSkillAimDir;
             _entity.AimDirection = new Vector2D(finalSkillAimDir.x, finalSkillAimDir.y);
 
             if (_currentViewDir != newDir || _bodySr.sprite == null)
@@ -489,19 +444,11 @@ namespace HappyShoot.View.Player
                     _orbitingBladeView.SetBlades(bladeCount, radius);
                 }
             }
-            else
-            {
-                if (_orbitingBladeView.gameObject.activeSelf) _orbitingBladeView.gameObject.SetActive(false);
-            }
+            else if (_orbitingBladeView.gameObject.activeSelf) _orbitingBladeView.gameObject.SetActive(false);
         }
 
         private void OnRangerShoot(PiercingArrowExecutedEvent evt) => TriggerRangerRecoil(new Vector2(evt.TargetDirection.X, evt.TargetDirection.Y));
-        private void TriggerRangerRecoil(Vector2 dir)
-        {
-            _rangerRecoilTimer = RangerRecoilDuration;
-            _lastShootAimDir = dir.sqrMagnitude > 0.001f ? dir.normalized : Vector2.right;
-        }
-
+        private void TriggerRangerRecoil(Vector2 dir) { _rangerRecoilTimer = RangerRecoilDuration; _lastShootAimDir = dir.sqrMagnitude > 0.001f ? dir.normalized : Vector2.right; }
         private void TriggerWizardCastPulse() => _wizardCastPulseTimer = WizardCastPulseDuration;
 
         private void OnPlayerSlashExecuted(PlayerSlashExecutedEvent evt)
@@ -509,8 +456,7 @@ namespace HappyShoot.View.Player
             _slashBaseAngle = evt.DirectionAngleDegrees;
             _slashHalfArc = Mathf.Max(15f, evt.ArcAngleDegrees * 0.5f);
             _slashVisualTimer = SlashDuration;
-            CameraFollowView.Instance?.TriggerShake("slash", duration: 0.12f, intensity: 0.18f);
-
+            CameraFollowView.Instance?.TriggerShake("slash", 0.12f, 0.18f);
             if (_slashVisualSr != null) _slashVisualSr.sprite = SpriteHelper.GetOrCreateSlashArcSprite();
             if (_weaponSr != null) { _weaponSr.color = Color.white; _weaponSr.sortingOrder = 30; }
             TriggerSlashPivot(evt.Radius);
@@ -521,7 +467,6 @@ namespace HappyShoot.View.Player
             _slashBaseAngle = evt.DirectionAngleDegrees;
             _slashHalfArc = Mathf.Max(15f, evt.ArcAngleDegrees * 0.5f);
             _slashVisualTimer = SlashDuration;
-
             if (_slashVisualSr != null) _slashVisualSr.sprite = SpriteHelper.GetOrCreateBloodSlashArcSprite();
             if (_weaponSr != null) { _weaponSr.color = new Color(1.0f, 0.35f, 0.45f, 1f); _weaponSr.sortingOrder = 30; }
             TriggerSlashPivot(evt.Radius);
@@ -529,26 +474,18 @@ namespace HappyShoot.View.Player
 
         private void TriggerSlashPivot(float radius)
         {
-            if (_slashPivotGo != null)
+            if (_slashPivotGo == null) return;
+            _slashPivotGo.SetActive(true);
+            float initialAngle = _slashBaseAngle - _slashHalfArc;
+            _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
+            if (_weaponPivotGo != null) _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
+            if (_slashVisualSr != null)
             {
-                _slashPivotGo.SetActive(true);
-                float initialAngle = _slashBaseAngle - _slashHalfArc;
-                _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
-                if (_weaponPivotGo != null) _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
-
-                float baseRadius = 3.52f;
-                float arcScale = Mathf.Max(0.5f, radius / baseRadius);
-                if (_slashVisualSr != null)
-                {
-                    _slashVisualSr.transform.localScale = Vector3.one * arcScale;
-                    _slashVisualSr.transform.localPosition = Vector3.zero;
-                    Color c = Color.white;
-                    c.a = 1.0f;
-                    _slashVisualSr.color = c;
-                }
+                _slashVisualSr.transform.localScale = Vector3.one * Mathf.Max(0.5f, radius / 3.52f);
+                _slashVisualSr.transform.localPosition = Vector3.zero;
+                _slashVisualSr.color = Color.white;
             }
         }
-
         private void OnPlayerMoved(PlayerMovedEvent evt) => transform.position = new Vector3(evt.Position.X, evt.Position.Y, transform.position.z);
         private void OnPlayerDamaged(PlayerDamagedEvent evt) { if (_bodySr != null) _bodySr.color = _flashDamageColor; _flashTimer = _flashDuration; }
         private void OnPlayerDied(PlayerDiedEvent evt) { if (_bodySr != null) _bodySr.color = Color.gray; }

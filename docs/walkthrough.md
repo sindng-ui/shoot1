@@ -1,78 +1,53 @@
-# 🎨 [Phase 1] 하단 3단 집중형 메인 HUD 전면 개편 완료 보고서
+# 🎮 HappyShoot 프로젝트 작업 내역 보고서 (Walkthrough)
 
-## 1. 구현 개요
-형님께서 제시해주신 캡처 레퍼런스(Soulstone Survivors / 하이엔드 쿼터뷰 뱀서라이크 스타일)를 바탕으로,
-게임 화면의 핵심 정보들을 하단 중앙에 집중 배치하는 **3단 레이어 메인 HUD 시스템**을 전면 구축 완료했습니다.
+형님! 로드맵의 전체 4단계(**Phase 1 ~ Phase 4**)가 모두 성공적으로 완성되었습니다! 🐧✨👾👑
 
 ---
 
-## 2. 세부 구현 내역
-
-### 1) Layer 1 (최하단): 10칸 분할 골드 보더 EXP 프로그레스 바 ([HudSpriteHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/HudSpriteHelper.cs))
-- 화면 최하단 전체를 가로지르는 10칸(Segments Divider) 메탈 프레임 베이스.
-- 경험치 획득 시 화려한 골드 게이지가 10% 단위 눈금에 맞춰 부드럽게 차오름.
-- 좌측 끝: 다이아몬드/방패 모양의 황금빛 레벨 배지 (`17`).
-- 중앙: `EXP 1,250 / 2,000 (62.5%)` 정보 텍스트.
-
-### 2) Layer 2 (중앙 중단): 6칸 스킬 슬롯 + 360° 시계방향 쿨타임 마스크 ([InGameHudBuilder.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/InGameHudBuilder.cs))
-- 6개의 골드 프레임 스킬 슬롯 (`48x48px`) + 좌측 대시(`Space 👟`) 슬롯.
-- **시계 방향 360° 쿨타임 회전 오버레이 (Radial Fill Clockwise)**:
-  스킬 발동 시 스킬 아이콘 위에서 어두운 마스크가 시계 방향으로 자연스럽게 회전하며 잔여 쿨타임을 직관적으로 표시.
-- 각 슬롯 하단: `Lv. 1`, `Lv. 2` 등 스킬 레벨 뱃지.
-
-### 3) Layer 3 (중앙 상단): 투구 엠블럼 대형 체력바
-- 중앙에 멋진 전사 투구/혼드 문양 엠블럼 장식.
-- 엠블럼 좌우로 펼쳐지는 와이드 루비 레드 체력 게이지 (`480px` 너비).
-- 중앙 선명한 체력 수치 텍스트 (`100 / 100`).
-
-### 4) 상단 미니멀 정보창
-- 상단 중앙: `00:00` 타이머.
-- 상단 우측: `💀 킬 카운터` & `💰 골드 카운터`.
+## 1. 개요
+- **목표**: 쿼터뷰 액션 서바이벌 스타일의 고퀄리티 비주얼, 신규 3단 HUD & 패시브 리스트, 오늘 시작 시의 100% 원본 귀여운 치비 영웅 복원 & 9방향 조준, 그리고 **7종 몬스터 + 2종 보스 고퀄리티 비주얼 때깔 & 속성별 처치 VFX** 완벽 연동.
+- **아키텍처 원칙**: 도메인 순수 C# 모델, 이벤트 기반 느슨한 결합(EventBus), 0-Allocation 무할당 풀링, 파일당 500줄 이하 엄수.
 
 ---
 
-### 5) 스킬별 고유 아이콘 분리 ([RangerRewardIconHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/RangerRewardIconHelper.cs), [WarriorRewardIconHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/WarriorRewardIconHelper.cs))
-- **관통 화살 (`bow`)**: 날렵한 황금빛 관통 활 & 화살 픽셀아트.
-- **화살비 (`arrow_rain`)**: **폭풍 구름에서 대각선 사선으로 지면에 사정없이 쏟아지는 에메랄드/골드 화살 비 & 푸른 궤적** 전용 픽셀아트 적용.
-- **풍인 (`glaive`)**: 3날 회전 바람 투척검.
-- **휠윈드 (`whirlwind`)**: 360도 3중 강철 회오리 칼날.
+## 2. 주요 구현 내역
 
-### 8) 액티브 스킬 슬롯 투사체 개수 뱃지 표시 ([InGameHudBuilder.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/InGameHudBuilder.cs), [InGameHudView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/InGameHudView.cs))
-- 스킬창의 각 액티브 스킬 슬롯 **우상단(Top-Right)** 에 선명한 네온 시안/화이트 뱃지로 현재 투사체/발사체 개수(예: 화염구 2개 -> `2`, 3개 -> `3`, 관통화살 5개 -> `5` 등)를 실시간 동기화하여 표시.
-- 투사체가 1개이거나 투사체 개념이 없는 스킬(대검베기, 지면강타 등)은 뱃지를 숨겨 깔끔함을 유지하고, 레벨업/패시브로 투사체가 2개 이상이 되는 순간 직관적으로 숫자가 표시됩니다.
+### 1) Phase 1: 하단 3단 메인 HUD 전면 개편
+- **1단 (최하단)**: 10칸(Segments) 분할 메탈/골드 EXP 게이지 + 다이아몬드 레벨 뱃지 (`Lv.17`) + 경험치 수치 (`EXP 1,250 / 2,000 (62.5%)`).
+- **2단 (중앙 중단)**: 6칸 액티브 스킬 슬롯 + 360° 시계방향 쿨타임 회전 마스크(Radial Fill) + 레벨 뱃지 (`Lv.3`) + 투사체 개수 뱃지 + 대시(Space) 슬롯.
+- **3단 (중앙 상단)**: 황금 투구 엠블럼 뱃지 + 루비 레드 플레이어 대형 HP 게이지 (`1000 / 1000`) + 피격 시 서서히 줄어드는 고스트 화이트 잔상 게이지 (Juice).
 
-### 9) Phase 2: 화면 좌측 패시브 리스트 HUD & 네온 에임 타겟 링 ([InGameHudBuilder.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/InGameHudBuilder.cs), [InGameHudView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/InGameHudView.cs), [AimReticleView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Cameras/AimReticleView.cs))
-- **머리 위 오버헤드 패시브 제거 및 화면 좌측 HUD로 전면 이전**:
-  - 플레이어 머리 위 버프를 깔끔하게 제거하여 시야를 100% 확보.
-  - **화면 좌측(Left)** 에 9종 패시브 슬롯 리스트를 배치하여 보유한 패시브 아이콘 + 우하단 레벨 뱃지 + **실시간 누적 수치(예: `+15% ATK`, `+24% SPD`, `+30% RNG`, `+10 ARM`, `+20% EXP`, `+40 HP`, `+16% CRT` 등)** 를 한눈에 알아보기 쉽게 표시.
-- **네온 라임-그린 에임 타겟 링 (Soulstone Survivors 스타일)**:
-  - 4방향 다이아몬드 돌기 십자선 과녁 링이 마우스 2D 월드 좌표를 부드럽게 추종하며, 은은한 펄스 및 좌클릭 피드백 반응을 제공합니다.
+### 2) Phase 2: 화면 좌측 패시브 리스트 HUD & 네온 에임 타겟 링
+- **화면 좌측(Left) 9종 패시브 슬롯 리스트**:
+  - 보유한 패시브 아이콘 + 우하단 레벨 뱃지 + **실시간 누적 수치(예: `+15% ATK`, `+24% SPD`, `+30% RNG`, `+10 ARM`, `+20% EXP`, `+40 HP`, `+16% CRT` 등)** 동기화.
+- **네온 라임-그린 에임 타겟 링 (Aim Reticle)**:
+  - 4방향 다이아몬드 돌기 십자선 과녁 링이 마우스 2D 월드 좌표를 부드럽게 추종하며, 인게임 중 OS 커서를 숨겨 몰입감 극대화.
 
-### 10) Phase 3: 오늘 시작 시의 100% 원본 귀여운 치비 픽셀아트 복원 & 9방향 조준 연동 ([HeroSpriteHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/HeroSpriteHelper.cs), [PlayerView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Player/PlayerView.cs))
-- **오늘 시작할 때의 100% 원본 치비 픽셀아트 드로잉 알고리즘 복원**:
-  - ⚔️ **전사 (Warrior)**: 오늘 시작 시의 32x32 둥근 철제 투구 + 황금 크레스트 + 가로 바이저 슬릿의 시안 눈 + 빨간 망토 + 골드 어깨 견갑 100% 원본 유지.
-  - 🏹 **궁수 (Ranger)**: 오늘 시작 시의 32x32 초록 후드 + 황금 눈 + 붉은 깃털 + 가죽 튜닉 & 등 뒤 화살통 100% 원본 유지.
-  - 🔮 **마법사 (Wizard)**: 오늘 시작 시의 32x32 바이올렛 롭 + 황금 띠 고깔모자 + 시안 눈 + 골드 트림 100% 원본 유지.
-  - 🗡️ **무기**: 원본 32x32 브로드 대검, 리커브 나무 활, 크리스탈 오브 스태프 완벽 연동.
-- **궁수 사격 반동 튕김 (Recoil Snap & Shooting Jelly Kickback)**:
-  - 관통 화살/풍인/스텔라 레인 발사 시, 활이 조준 반대 방향으로 순간 `-0.12m` 밀려났다가 탄력 있게 튕겨 복귀하며, 활 스케일이 팽팽하게 튕기고 몸체(`BodyVisual`)가 살짝 젖혀져 시원한 손맛과 액션감을 연동!
-- **지능형 시선 제어 시스템 ([AimReticleView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Cameras/AimReticleView.cs), [PlayerView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Player/PlayerView.cs))**:
-  - **(1) 마우스 조작 시**: 조준 레티클(Aim Reticle)이 선명하게 나타나며, 캐릭터는 마우스 9방향을 실시간으로 정밀 조준합니다.
-  - **(2) 마우스 유휴(4초) 시**: 조준 레티클이 부드럽게 페이드아웃되어 사라지고, **정지 상태인 캐릭터는 즉시 가장 귀엽고 당당한 기본 정면(Front) 샷을 바라봅니다!**
-  - **(3) 이 상태에서 키보드(WASD)로 움직일 시**: 달리는 이동 방향(9방향)을 향해 캐릭터가 자연스럽게 앞을 보며 질주하고, **키보드를 떼고 멈추면 즉시 다시 기본 정면(Front) 샷으로 복귀**합니다!
-  - **(4) 마우스를 다시 움직이거나 클릭하면**: 즉시 조준 레티클이 100% 다시 나타나며 마우스 9방향 조준 모드로 즉각 전환됩니다.
-- **조준 레티클(Aim Reticle) 활성화 시 OS 마우스 커서 자동 숨김 ([AimReticleView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Cameras/AimReticleView.cs))**:
-  - 인게임 플레이 중에는 기본 OS 마우스 커서를 완전히 숨겨(`Cursor.visible = false`), **네온 라임-그린 조준 레티클(Aim Reticle)만 단독으로 선명하게 표시**되도록 하여 시각적 몰입감을 극대화했습니다.
-  - 레벨업 선택창, ESC 일시정지 메뉴, 캐릭터 선택창, 게임오버 창 등 게임이 일시정지(`Time.timeScale == 0f`)되거나 창이 비활성화될 때는 OS 마우스 커서가 자동으로 복원되어 편리하게 UI 버튼을 클릭할 수 있습니다.
-- **마법사 치켜든 지팡이 파지 자세 & 지팡이 꼭대기(Staff Tip) 투사체 발사**:
-  - **얼굴/모자 가림 100% 방지**: 지팡이가 얼굴 쪽으로 꺾이지 않고 몸 바깥쪽(오른쪽 바라볼 때 `x = +0.28m, angle = -28°`, 왼쪽 바라볼 때 `x = -0.28m, angle = +28°`)에서 바깥 대각선 위로 뻗어나가도록 수정하여 **눈과 모자를 1픽셀도 가리지 않고 깔끔하게 치켜든 자세**를 유지합니다.
-  - 화염구, 인페르노 화염구, 체인 라이트닝 발사 시 **플레이어 발밑이 아니라 지팡이 꼭대기 크리스탈 오브 위치에서 투사체가 생성/발사**되며, 발사 순간 지팡이가 앞쪽으로 마나를 뿜어내는 캐스팅 펄스(`+16°`) 연출 적용!
-- **자연스러운 9방향 쿼터뷰 조준**:
-  - 마우스 방향에 맞춰 정면(Front), 남동/남서 대각(FrontDiagonal), 측면(Side), 북동/북서 대각(BackDiagonal), 후면(Back) 9개 각도로 눈빛/망토/화살통 방향이 부드럽게 스위칭됩니다.
+### 3) Phase 3: 오늘 시작 시의 100% 원본 귀여운 치비 영웅 복원 & 9방향 조준
+- **치비 3영웅 원본 복원**:
+  - ⚔️ **전사**: 둥근 철제 투구 + 황금 크레스트 + 시안 눈 + 빨간 망토 + 골드 견갑.
+  - 🏹 **궁수**: 초록 후드 + 황금 눈 + 붉은 깃털 + 가죽 튜닉 & 등 뒤 화살통.
+  - 🔮 **마법사**: 바이올렛 롭 + 황금 띠 고깔모자 + 시안 눈 + 골드 트림.
+- **궁수 사격 반동 (Recoil Snap Kickback)**: 화살 발사 시 활이 탄력 있게 튕기고 몸체가 살짝 젖혀지는 찰진 손맛.
+- **마법사 치켜든 지팡이 & 꼭대기 발사**: 지팡이가 얼굴을 가리지 않는 바깥 대각선 파지 자세 + 지팡이 꼭대기 크리스탈 오브에서 투사체 발사 및 캐스팅 펄스.
+- **지능형 시선 제어**: 마우스 조작 시 9방향 조준 → 마우스 4초 멈춤 시 즉시 귀여운 기본 정면(Front) 샷 복귀 → WASD 이동 시 이동 방향 질주 → 멈추면 즉시 정면 복귀.
+
+### 4) Phase 4: 7종 몬스터 + 2종 보스 비주얼 때깔 강화 & 속성별 처치 VFX
+- **7종 일반 몬스터 & 보스 고퀄리티 픽셀아트 때깔 업그레이드**:
+  - 🟢 **Slime (슬라임 28x28)**: 에메랄드 반투명 젤리 셰이딩 + 상단 하이라이트 글레어 + 눈동자 반사광.
+  - 🦇 **Bat (박쥐 28x28)**: 흑자주빛 벨벳 날개막 + 날개 뼈마디 디테일 + 뾰족한 송곳니 + 루비 레드 안광.
+  - 💀 **Skeleton (해골 궁수 32x32)**: 음영이 뚜렷한 백골 두개골 + 갈비뼈 & 척추 + 핏빛 붉은 안광 + 뼈 활.
+  - 🗿 **Golem King (골렘 킹 36x36)**: 화강암 바위 큐브 + 어깨 바위 숄더패드 + 가슴 중앙과 이마의 황금빛 룬 코어 맥동 발광.
+  - 🔥 **FireImp (화염 임프 30x30)**: 진홍빛 악마 몸체 + 뾰족한 악마 뿔 + 불꽃 왕관 + 꼬리 끝 불씨 발광.
+  - 🕷️ **ToxicSpider (맹독 거미 34x34)**: 형광 라임/퍼플 독낭 발광 + 8개 관절 마디 다리 + 4개의 섬뜩한 붉은 눈.
+  - ⚔️ **DarkKnight (암흑 기사 40x40)**: 칠흑의 옵시디언 다크 플레이트 아머 + 바이저 슬릿 퍼플 안광 + 대형 다크 클레이모어 대검.
+  - 👿 **Laser Archdemon (악마 군주 보스 56x56)**: 웅장한 대형 악마 날개 + 거대한 흑요석 뿔 + 이마 중앙의 레이저 캐논 3안 코어 발광.
+- **몬스터 속성별 처치 미니 파티클 VFX (무할당 64개 풀링)**:
+  - 몬스터 사망 시 고유 속성에 맞는 찰진 미니 파티클(3~6개)이 톡 튀어나오며 부드럽게 페이드아웃 (골렘-황금 룬 스파크, 거미-형광 독즙, 임프/보스-화염 불씨, 해골-아이보리 뼈가루, 슬라임-에메랄드 젤리).
 
 ---
 
 ## 3. 검증 결과
 - **단위 테스트**: 124개 도메인 단위 테스트 전체 100% 통과 (**124/124 ALL PASS**).
-- **모듈화**: `PlayerView.cs` (457줄), `HeroSpriteHelper.cs` (368줄) 등 모든 파일 500줄 이하 엄수.
+- **모듈화**: `MonsterSpriteHelper.cs` (367줄), `MonsterDeathFxManagerView.cs` (154줄), `PlayerView.cs` (450줄) 등 모든 파일 500줄 이하 엄수.
 - **문서화**: [`APP_MAP.md`](file:///k:/unityprojects/shoot1/shoot1/APP_MAP.md) 최신화 완료.
