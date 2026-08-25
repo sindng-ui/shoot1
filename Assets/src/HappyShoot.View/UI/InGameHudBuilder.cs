@@ -11,6 +11,7 @@ namespace HappyShoot.View.UI
     public static class InGameHudBuilder
     {
         public const int MaxSkillSlots = 6;
+        public const int MaxPassiveSlots = 9;
 
         public struct HudComponents
         {
@@ -29,6 +30,10 @@ namespace HappyShoot.View.UI
             public Text[] SkillSlotLevelTexts;
             public Text[] SkillSlotCountTexts;
             public GameObject[] SkillSlotRoots;
+            public Image[] PassiveSlotIcons;
+            public Text[] PassiveSlotLevelTexts;
+            public Text[] PassiveSlotValueTexts;
+            public GameObject[] PassiveSlotRoots;
             public Image DashIcon;
             public Image DashCooldownMask;
         }
@@ -41,7 +46,11 @@ namespace HappyShoot.View.UI
                 SkillSlotCooldownMasks = new Image[MaxSkillSlots],
                 SkillSlotLevelTexts = new Text[MaxSkillSlots],
                 SkillSlotCountTexts = new Text[MaxSkillSlots],
-                SkillSlotRoots = new GameObject[MaxSkillSlots]
+                SkillSlotRoots = new GameObject[MaxSkillSlots],
+                PassiveSlotIcons = new Image[MaxPassiveSlots],
+                PassiveSlotLevelTexts = new Text[MaxPassiveSlots],
+                PassiveSlotValueTexts = new Text[MaxPassiveSlots],
+                PassiveSlotRoots = new GameObject[MaxPassiveSlots]
             };
 
             // 1. Master Overlay Canvas
@@ -259,7 +268,85 @@ namespace HappyShoot.View.UI
             var goldOutline = res.GoldText.gameObject.AddComponent<Outline>();
             goldOutline.effectColor = Color.black;
 
+            // =========================================================================
+            // LAYER 4 (Left Column): 9 Passive Buff Slots with Level & Value Display
+            // =========================================================================
+            var passiveColGo = new GameObject("PassiveSlotsColumn");
+            passiveColGo.transform.SetParent(canvasGo.transform, false);
+            var passiveColRt = passiveColGo.AddComponent<RectTransform>();
+            passiveColRt.anchorMin = new Vector2(0f, 0.5f);
+            passiveColRt.anchorMax = new Vector2(0f, 0.5f);
+            passiveColRt.pivot = new Vector2(0f, 0.5f);
+            passiveColRt.anchoredPosition = new Vector2(24f, 20f);
+            passiveColRt.sizeDelta = new Vector2(160f, 420f);
+
+            float pSlotSize = 34f;
+            float pSpacing = 42f;
+            float pStartY = ((MaxPassiveSlots * pSpacing) * 0.5f) - 21f;
+
+            for (int i = 0; i < MaxPassiveSlots; i++)
+            {
+                var slotGo = CreatePassiveSlotElement(passiveColGo.transform, $"PassiveSlot_{i}", new Vector2(0f, pStartY - i * pSpacing), pSlotSize, out var icon, out var lvTxt, out var valTxt);
+                res.PassiveSlotRoots[i] = slotGo;
+                res.PassiveSlotIcons[i] = icon;
+                res.PassiveSlotLevelTexts[i] = lvTxt;
+                res.PassiveSlotValueTexts[i] = valTxt;
+                slotGo.SetActive(false);
+            }
+
             return res;
+        }
+
+        private static GameObject CreatePassiveSlotElement(Transform parent, string name, Vector2 pos, float size, out Image icon, out Text lvlTxt, out Text valTxt)
+        {
+            var root = new GameObject(name);
+            root.transform.SetParent(parent, false);
+            var rt = root.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0f, 0.5f);
+            rt.anchorMax = new Vector2(0f, 0.5f);
+            rt.pivot = new Vector2(0f, 0.5f);
+            rt.anchoredPosition = pos;
+            rt.sizeDelta = new Vector2(size + 110f, size);
+
+            // Frame Image (Left-aligned)
+            var frameGo = new GameObject("Frame");
+            frameGo.transform.SetParent(root.transform, false);
+            var frameRt = frameGo.AddComponent<RectTransform>();
+            frameRt.anchorMin = new Vector2(0f, 0.5f);
+            frameRt.anchorMax = new Vector2(0f, 0.5f);
+            frameRt.pivot = new Vector2(0f, 0.5f);
+            frameRt.anchoredPosition = Vector2.zero;
+            frameRt.sizeDelta = new Vector2(size, size);
+
+            var frameImg = frameGo.AddComponent<Image>();
+            frameImg.sprite = HudSpriteHelper.GetOrCreateSkillSlotFrameSprite();
+            frameImg.type = Image.Type.Sliced;
+
+            // Icon Image
+            var iconGo = new GameObject("Icon");
+            iconGo.transform.SetParent(frameGo.transform, false);
+            var iconRt = iconGo.AddComponent<RectTransform>();
+            iconRt.anchorMin = Vector2.zero;
+            iconRt.anchorMax = Vector2.one;
+            iconRt.offsetMin = new Vector2(3f, 3f);
+            iconRt.offsetMax = new Vector2(-3f, -3f);
+
+            icon = iconGo.AddComponent<Image>();
+            icon.raycastTarget = false;
+
+            // Level Badge (Inside Icon bottom-right)
+            lvlTxt = CreateText(frameGo.transform, "LvBadge", "1", 10, TextAnchor.LowerRight, Vector2.zero, Vector2.one, new Vector2(1f, 0f), new Vector2(-2f, 2f), Vector2.zero, new Color(1f, 0.90f, 0.30f, 1f));
+            var lvOutline = lvlTxt.gameObject.AddComponent<Outline>();
+            lvOutline.effectColor = Color.black;
+            lvOutline.effectDistance = new Vector2(1f, -1f);
+
+            // Value / Stat Label (Right of icon)
+            valTxt = CreateText(root.transform, "ValueText", "+15% ATK", 11, TextAnchor.MiddleLeft, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(size + 6f, 0f), new Vector2(100f, 20f), new Color(0.9f, 0.95f, 1f, 1f));
+            var valOutline = valTxt.gameObject.AddComponent<Outline>();
+            valOutline.effectColor = Color.black;
+            valOutline.effectDistance = new Vector2(1f, -1f);
+
+            return root;
         }
 
         private static GameObject CreateSlotElement(Transform parent, string name, Vector2 pos, float size, bool isDash, out Image icon, out Image cooldownMask, out Text lvlTxt, out Text countTxt)

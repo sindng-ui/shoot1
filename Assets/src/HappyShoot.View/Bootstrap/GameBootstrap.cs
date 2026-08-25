@@ -199,6 +199,10 @@ namespace HappyShoot.View.Bootstrap
             var soundView = soundGo.AddComponent<Audio.SoundManagerView>();
             soundView.Initialize(playerView.EventBus);
 
+            var reticleGo = new GameObject("AimReticle");
+            var reticleView = reticleGo.AddComponent<Cameras.AimReticleView>();
+            reticleView.Initialize();
+
             playerView.SetExternalSystems(spawnerView, projManagerView);
 
             // 4. Setup Timeline

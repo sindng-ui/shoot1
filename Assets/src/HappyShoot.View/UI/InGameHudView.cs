@@ -50,6 +50,10 @@ namespace HappyShoot.View.UI
         private Text[] _skillSlotLevelTexts;
         private Text[] _skillSlotCountTexts;
         private GameObject[] _skillSlotRoots;
+        private Image[] _passiveSlotIcons;
+        private Text[] _passiveSlotLevelTexts;
+        private Text[] _passiveSlotValueTexts;
+        private GameObject[] _passiveSlotRoots;
         private Image _dashCooldownMask;
         private SettingsDialogUiView _settingsDialog;
         private CanvasScaler _scaler;
@@ -246,6 +250,68 @@ namespace HappyShoot.View.UI
             {
                 if (_skillSlotRoots[i] != null) _skillSlotRoots[i].SetActive(false);
             }
+
+            // Sync Left-side Passive List
+            UpdatePassivesDisplay();
+        }
+
+        public void UpdatePassivesDisplay()
+        {
+            if (_playerView == null || _playerView.Entity == null || _passiveSlotRoots == null) return;
+
+            var passives = _playerView.Entity.PassiveLevels;
+            int slotIdx = 0;
+
+            if (passives != null)
+            {
+                foreach (var kvp in passives)
+                {
+                    if (slotIdx >= InGameHudBuilder.MaxPassiveSlots) break;
+
+                    string id = kvp.Key;
+                    int level = kvp.Value;
+                    if (level <= 0) continue;
+
+                    if (_passiveSlotRoots[slotIdx] != null) _passiveSlotRoots[slotIdx].SetActive(true);
+                    if (_passiveSlotIcons[slotIdx] != null)
+                    {
+                        _passiveSlotIcons[slotIdx].sprite = Utils.RewardIconHelper.GetOrCreateRewardIcon(id, 80);
+                    }
+                    if (_passiveSlotLevelTexts[slotIdx] != null)
+                    {
+                        _passiveSlotLevelTexts[slotIdx].text = level.ToString();
+                    }
+                    if (_passiveSlotValueTexts[slotIdx] != null)
+                    {
+                        _passiveSlotValueTexts[slotIdx].text = GetPassiveValueText(id, level);
+                    }
+
+                    slotIdx++;
+                }
+            }
+
+            // Hide unused slots
+            for (int i = slotIdx; i < InGameHudBuilder.MaxPassiveSlots; i++)
+            {
+                if (_passiveSlotRoots[i] != null) _passiveSlotRoots[i].SetActive(false);
+            }
+        }
+
+        private string GetPassiveValueText(string passiveId, int level)
+        {
+            switch (passiveId)
+            {
+                case "passive_fang": return $"+{level * 15}% ATK";
+                case "passive_feather": return $"+{level * 12}% SPD";
+                case "passive_rune": return $"+{level * 15}% RNG";
+                case "passive_armor": return $"+{level * 5} ARM";
+                case "passive_ring": return $"+{level * 10}% EXP";
+                case "passive_heart": return $"+{level * 20} HP";
+                case "passive_crit": return $"+{level * 8}% CRT";
+                case "passive_ignition": return "🔥 화염";
+                case "passive_overcharge": return "⚡ 감전";
+                default: return $"Lv.{level}";
+            }
         }
 
         private int GetSkillProjectileCount(ISkill skill)
@@ -365,6 +431,10 @@ namespace HappyShoot.View.UI
             _skillSlotLevelTexts = hud.SkillSlotLevelTexts;
             _skillSlotCountTexts = hud.SkillSlotCountTexts;
             _skillSlotRoots = hud.SkillSlotRoots;
+            _passiveSlotIcons = hud.PassiveSlotIcons;
+            _passiveSlotLevelTexts = hud.PassiveSlotLevelTexts;
+            _passiveSlotValueTexts = hud.PassiveSlotValueTexts;
+            _passiveSlotRoots = hud.PassiveSlotRoots;
             _dashCooldownMask = hud.DashCooldownMask;
         }
     }

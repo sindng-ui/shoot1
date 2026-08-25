@@ -41,9 +41,16 @@
 - 스킬창의 각 액티브 스킬 슬롯 **우상단(Top-Right)** 에 선명한 네온 시안/화이트 뱃지로 현재 투사체/발사체 개수(예: 화염구 2개 -> `2`, 3개 -> `3`, 관통화살 5개 -> `5` 등)를 실시간 동기화하여 표시.
 - 투사체가 1개이거나 투사체 개념이 없는 스킬(대검베기, 지면강타 등)은 뱃지를 숨겨 깔끔함을 유지하고, 레벨업/패시브로 투사체가 2개 이상이 되는 순간 직관적으로 숫자가 표시됩니다.
 
+### 9) Phase 2: 화면 좌측 패시브 리스트 HUD & 네온 에임 타겟 링 ([InGameHudBuilder.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/InGameHudBuilder.cs), [InGameHudView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/InGameHudView.cs), [AimReticleView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Cameras/AimReticleView.cs))
+- **머리 위 오버헤드 패시브 제거 및 화면 좌측 HUD로 전면 이전**:
+  - 플레이어 머리 위 버프를 깔끔하게 제거하여 시야를 100% 확보.
+  - **화면 좌측(Left)** 에 9종 패시브 슬롯 리스트를 배치하여 보유한 패시브 아이콘 + 우하단 레벨 뱃지 + **실시간 누적 수치(예: `+15% ATK`, `+24% SPD`, `+30% RNG`, `+10 ARM`, `+20% EXP`, `+40 HP`, `+16% CRT` 등)** 를 한눈에 알아보기 쉽게 표시.
+- **네온 라임-그린 에임 타겟 링 (Soulstone Survivors 스타일)**:
+  - 4방향 다이아몬드 돌기 십자선 과녁 링이 마우스 2D 월드 좌표를 부드럽게 추종하며, 은은한 펄스 및 좌클릭 피드백 반응을 제공합니다.
+
 ---
 
 ## 3. 검증 결과
 - **단위 테스트**: 124개 도메인 단위 테스트 전체 100% 통과 (**124/124 ALL PASS**).
-- **모듈화**: 신규 및 수정 파일 모두 500줄 이하 엄수.
+- **모듈화**: 모든 파일 500줄 이하 엄수.
 - **문서화**: [`APP_MAP.md`](file:///k:/unityprojects/shoot1/shoot1/APP_MAP.md) 최신화 완료.
