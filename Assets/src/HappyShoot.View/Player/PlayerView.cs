@@ -156,7 +156,7 @@ namespace HappyShoot.View.Player
         {
             if (_bodySr != null)
             {
-                _bodySr.sprite = HeroSpriteHelper.GetHeroSprite(_classType, _currentViewDir, 36);
+                _bodySr.sprite = HeroSpriteHelper.GetHeroSprite(_classType, _currentViewDir, 32);
             }
             if (_weaponSr != null)
             {
@@ -288,7 +288,7 @@ namespace HappyShoot.View.Player
             if (_currentViewDir != newDir || _bodySr.sprite == null)
             {
                 _currentViewDir = newDir;
-                _bodySr.sprite = HeroSpriteHelper.GetHeroSprite(_classType, _currentViewDir, 36);
+                _bodySr.sprite = HeroSpriteHelper.GetHeroSprite(_classType, _currentViewDir, 32);
             }
 
             _bodySr.flipX = isFacingLeft;

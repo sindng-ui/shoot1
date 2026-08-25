@@ -189,8 +189,8 @@ graph TD
 | | `PauseMenuUiView.cs` | `PauseMenuUiView` | ESC 일시정지 다이얼로그 (계속하기, ⚙️ 환경 설정, 다시 시작, 게임 종료) |
 | | `GameOverResultUiView.cs` | `GameOverResultUiView` | 플레이어 사망 시 골드 정산, [다시 도전하기] 씬 리로드 |
 | | `DamageTextView.cs` | `DamageTextManagerView`, `DamageTextView` | 이벤트 기반 무할당 32개 풀링 (GameSettings.ShowDamageText 옵션 적용) |
-| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | **기존 귀여운 치비 실루엣/비율 100% 보존 + 고급 명암/하이라이트 때깔 업그레이드 & 9방향(정면/대각4방/측면2방/후면) 실시간 마우스 조준 무기 피벗 회전 연동**, 2.5D Blob Shadow 타원 그림자, Brotato 젤리 물리 모션, 대검 베기 150도 풀 부채꼴 밀착 스윙 궤적 연동 (388줄) |
-| | `HeroSpriteHelper.cs [NEW]` | `HeroSpriteHelper` | **기존 치비 3영웅(전사 둥근투구/빨간망토, 궁수 그린후드/화살통, 마법사 롭/고깔모자) 9방향 프로시저럴 스프라이트 및 브로드소드/리커브활/크리스탈스태프 생성기 (368줄)** |
+| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | **오늘 시작 시의 100% 원본 치비 픽셀아트 생김새/비율 완벽 복원 & 9방향(정면/대각4방/측면2방/후면) 실시간 마우스 조준 무기 피벗 회전 연동**, 2.5D Blob Shadow 타원 그림자, Brotato 젤리 물리 모션, 대검 베기 150도 풀 부채꼴 밀착 스윙 궤적 연동 (388줄) |
+| | `HeroSpriteHelper.cs [NEW]` | `HeroSpriteHelper` | **오늘 시작 시의 100% 원본 32x32 귀여운 치비 3영웅(전사 둥근투구/빨간망토, 궁수 그린후드/화살통, 마법사 롭/고깔모자) 9방향 스프라이트 및 원본 브로드소드/리커브활/크리스탈스태프 연동 (368줄)** |
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
 | **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **2.5D Blob Shadow 타원 그림자**, **7종 몬스터 타입별 젤리 물리 모션** (FireImp 빠른 다트, ToxicSpider 크리피 스커틀, DarkKnight 중장갑 행진), **피격 Flash White** (오비탈 다단히트 HitStop 제거로 120fps 보장) |
 | | `MonsterSpawnerView.cs [UPDATED]` | `MonsterSpawnerView` | **Phase 1→보스1→Phase 2(FireImp→ToxicSpider→DarkKnight 순차 합류)→보스2 웨이브 진화 시스템**, `BossLaserBeamManagerView` 라이프사이클 연동, 512개 풀링 |

@@ -48,15 +48,14 @@
 - **네온 라임-그린 에임 타겟 링 (Soulstone Survivors 스타일)**:
   - 4방향 다이아몬드 돌기 십자선 과녁 링이 마우스 2D 월드 좌표를 부드럽게 추종하며, 은은한 펄스 및 좌클릭 피드백 반응을 제공합니다.
 
-### 10) Phase 3: 기존 치비 디자인 완벽 보존 + 고급 명암 때깔 업그레이드 & 9방향 쿼터뷰 조준 ([HeroSpriteHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/HeroSpriteHelper.cs), [PlayerView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Player/PlayerView.cs))
-- **형님께서 좋아하시는 기존 치비 실루엣과 비율을 100% 그대로 유지**:
-  - ⚔️ **전사 (Warrior)**: 둥글둥글하고 귀여운 은빛 강철 투구, 가로 바이저 슬릿 + 빛나는 시안 눈, 황금 숄더패드, 진홍빛 펄럭이는 망토, 클래식 브로드 대검.
-  - 🏹 **궁수 (Ranger)**: 둥글고 귀여운 포레스트 그린 후드, 앙증맞은 붉은 깃털, 가죽 튜닉/벨트 & 등 뒤 화살통(Quiver), 리커브 활.
-  - 🔮 **마법사 (Wizard)**: 앙증맞은 아케인 고깔모자 & 황금 띠/버클, 바이올렛 로브 & 골드 트림, 신비로운 시안 빛 눈, 크리스탈 오브 스태프.
-- **고급 하이라이트 & 메탈릭/엠버 그라데이션 때깔 극대화**:
-  - 도트 단위의 정밀한 명암 그라데이션, 하이라이트 반사광, 골드 트림 광택을 대폭 보강하여 한층 더 고급스럽고 선명한 때깔을 완성.
-- **9방향(정면/대각 4방/측면 2방/후면) 조준/이동 반응**:
-  - 마우스 커서 각도에 따라 정면(South), 남동/남서 대각(FrontDiagonal), 측면(Side), 북동/북서 대각(BackDiagonal), 후면(Back) 9개 각도 스프라이트가 실시간 스위칭되며, 무기가 마우스 방향을 정확하게 조준합니다.
+### 10) Phase 3: 오늘 시작 시의 100% 원본 귀여운 치비 픽셀아트 복원 & 9방향 조준 연동 ([HeroSpriteHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/HeroSpriteHelper.cs), [PlayerView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Player/PlayerView.cs))
+- **오늘 시작할 때의 100% 원본 치비 픽셀아트 드로잉 알고리즘 복원**:
+  - ⚔️ **전사 (Warrior)**: 오늘 시작 시의 32x32 둥근 철제 투구 + 황금 크레스트 + 가로 바이저 슬릿의 시안 눈 + 빨간 망토 + 골드 어깨 견갑 100% 원본 유지.
+  - 🏹 **궁수 (Ranger)**: 오늘 시작 시의 32x32 초록 후드 + 황금 눈 + 붉은 깃털 + 가죽 튜닉 & 등 뒤 화살통 100% 원본 유지.
+  - 🔮 **마법사 (Wizard)**: 오늘 시작 시의 32x32 바이올렛 롭 + 황금 띠 고깔모자 + 시안 눈 + 골드 트림 100% 원본 유지.
+  - 🗡️ **무기**: 원본 32x32 브로드 대검, 리커브 나무 활, 크리스탈 오브 스태프 완벽 연동.
+- **자연스러운 9방향 쿼터뷰 조준**:
+  - 마우스 방향에 맞춰 정면(Front), 남동/남서 대각(FrontDiagonal), 측면(Side), 북동/북서 대각(BackDiagonal), 후면(Back) 9개 각도로 눈빛/망토/화살통 방향이 부드럽게 스위칭되며, 무기가 마우스 방향을 실시간으로 조준합니다.
 
 ---
 
