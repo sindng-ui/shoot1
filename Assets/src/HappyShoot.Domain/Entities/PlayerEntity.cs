@@ -46,7 +46,7 @@ namespace HappyShoot.Domain.Entities
                 CasterId = id,
                 CasterEntity = this,
                 CasterPosition = startPosition,
-                BaseDamage = 10f,
+                BaseDamage = 10f * stats.AttackPowerMultiplier,
                 AreaMultiplier = stats.AreaMultiplier,
                 SpeedMultiplier = stats.ProjectileSpeedMultiplier,
                 EventBus = eventBus
@@ -246,6 +246,7 @@ namespace HappyShoot.Domain.Entities
             _skillContext.CasterPosition = Position;
             _skillContext.AimDirection = AimDirection;
             _skillContext.AimTargetPosition = AimTargetPosition;
+            _skillContext.BaseDamage = 10f * Stats.AttackPowerMultiplier;
             _skillContext.AreaMultiplier = Stats.AreaMultiplier;
             _skillContext.SpeedMultiplier = Stats.ProjectileSpeedMultiplier;
             _skillContext.DeltaTime = deltaTime;

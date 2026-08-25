@@ -90,7 +90,7 @@ namespace HappyShoot.View.Projectiles
                     var rockSr = rockGo.AddComponent<SpriteRenderer>();
                     rockSr.sprite = rockSprite;
                     rockSr.color = new Color(0.42f, 0.25f, 0.12f, 1f);
-                    rockSr.sortingOrder = 5;
+                    rockSr.sortingOrder = 26; // Fly above monsters (10)
                     rockGo.SetActive(false);
 
                     instance.DebrisList.Add(new RockDebris

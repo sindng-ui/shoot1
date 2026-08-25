@@ -9,7 +9,7 @@ namespace HappyShoot.Domain.Common
         /// <summary>
         /// 현재 앱 버전 (형님이 필요하실 때 이 값을 직접 변경하시면 게임 전체에 자동 반영됩니다)
         /// </summary>
-        public const string Current = "v0.3.3";
+        public const string Current = "v0.3.4";
 
         /// <summary>
         /// 빌드/업데이트 날짜

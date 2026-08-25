@@ -44,7 +44,7 @@ namespace HappyShoot.View.Projectiles
                 bladeGo.transform.SetParent(transform, false);
                 var sr = bladeGo.AddComponent<SpriteRenderer>();
                 sr.sprite = SpriteHelper.GetOrCreateSwordSprite();
-                sr.sortingOrder = 7;
+                sr.sortingOrder = 22; // In front of monsters (10) and player (15)
                 bladeGo.transform.localScale = Vector3.one * 1.3f;
                 _blades[i] = bladeGo.transform;
             }

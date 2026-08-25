@@ -92,12 +92,6 @@ namespace HappyShoot.Domain.Skills.Effects
                     Vector2D dirToMonster = toMonster / dist;
                     float dot = Vector2D.Dot(forward, dirToMonster);
 
-                    // Strictly ignore opposite side (behind the back)
-                    if (dot <= 0f)
-                    {
-                        continue;
-                    }
-
                     // Hit if within arc angle
                     if (dot >= minDot)
                     {

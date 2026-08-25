@@ -187,6 +187,41 @@ namespace HappyShoot.Domain.Tests.Skills
         }
 
         [Test]
+        public void BloodEaterEffect_WithCustomArcAngle_DealsDamageToExtendedArc()
+        {
+            // 240-degree broad blood slash arc (+-120 degrees)
+            var bloodEater = new BloodEaterEffect(baseDamage: 100f, radius: 4.0f, lifeStealPerHit: 5.0f, arcAngleDegrees: 240f);
+            var mFront = CreateSlime(30, new Vector2D(2.0f, 0f)); // 0 deg -> HIT
+            var mSide = CreateSlime(31, new Vector2D(0f, 2.0f)); // 90 deg -> HIT
+            var mRearSide = CreateSlime(32, new Vector2D(-1.0f, 1.732f)); // 120 deg (cos 120 = -0.5) -> HIT
+            var mDirectBehind = CreateSlime(33, new Vector2D(-3.0f, 0f)); // 180 deg -> OUT OF 240 ARC
+
+            _grid.Register(mFront);
+            _grid.Register(mSide);
+            _grid.Register(mRearSide);
+            _grid.Register(mDirectBehind);
+
+            var context = new SkillContext
+            {
+                CasterId = _player.Id,
+                CasterPosition = _player.Position,
+                CasterEntity = _player,
+                TargetGrid = _grid,
+                EventBus = _eventBus,
+                BaseDamage = 10f,
+                AreaMultiplier = 1.0f,
+                SpeedMultiplier = 1.0f
+            };
+
+            bloodEater.ApplyEffect(context, new List<Vector2D> { new Vector2D(10f, 0f) }); // Aim Right (1, 0)
+
+            Assert.That(mFront.CurrentHealth, Is.EqualTo(0f));
+            Assert.That(mSide.CurrentHealth, Is.EqualTo(0f));
+            Assert.That(mRearSide.CurrentHealth, Is.EqualTo(0f));
+            Assert.That(mDirectBehind.CurrentHealth, Is.EqualTo(100f));
+        }
+
+        [Test]
         public void TempestWhirlwindEffect_Deals360DamageAndPublishesTempestWhirlwindExecutedEvent()
         {
             var tempest = new TempestWhirlwindEffect(baseDamage: 75f, radius: 4.2f, slashWaveCount: 4);

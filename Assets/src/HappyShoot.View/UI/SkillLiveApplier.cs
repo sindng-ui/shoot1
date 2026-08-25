@@ -119,6 +119,7 @@ namespace HappyShoot.View.UI
                     {
                         be.BaseDamage = config.BloodEater.Damage;
                         be.Radius = config.BloodEater.Radius;
+                        be.ArcAngleDegrees = config.BloodEater.ArcAngle;
                         be.HealAmount = config.BloodEater.HealAmount;
                     }
                     if (skill.Trigger is CooldownTrigger cdBe) cdBe.Cooldown = cooldown(config.BloodEater.Cooldown);
@@ -310,6 +311,7 @@ namespace HappyShoot.View.UI
                     {
                         config.BloodEater.Damage = be.BaseDamage;
                         config.BloodEater.Radius = be.Radius;
+                        config.BloodEater.ArcAngle = be.ArcAngleDegrees;
                         config.BloodEater.HealAmount = be.HealAmount;
                     }
                     if (skill.Trigger is CooldownTrigger cdBePull) config.BloodEater.Cooldown = cdBePull.Cooldown;

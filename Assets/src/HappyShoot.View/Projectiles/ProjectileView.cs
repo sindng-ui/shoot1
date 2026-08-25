@@ -104,7 +104,7 @@ namespace HappyShoot.View.Projectiles
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = arrowSprite;
                 sr.color = new Color(1.0f, 0.90f, 0.35f, 1.0f);
-                sr.sortingOrder = 4;
+                sr.sortingOrder = 24; // Above monsters (10)
 
                 var view = go.AddComponent<ProjectileView>();
                 go.SetActive(false);
@@ -149,7 +149,7 @@ namespace HappyShoot.View.Projectiles
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = Utils.SkillSpriteHelper.GetOrCreatePiercingArrowSprite();
                 sr.color = new Color(1.0f, 0.90f, 0.35f, 1.0f);
-                sr.sortingOrder = 4;
+                sr.sortingOrder = 24;
 
                 var view = go.AddComponent<ProjectileView>();
                 view.Bind(entity);

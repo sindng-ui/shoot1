@@ -171,15 +171,16 @@ namespace HappyShoot.View.Monsters
                 if (_isCritHit)
                 {
                     // Stronger Critical Jolt & Violent Shake
-                    squashX = 0.45f;
-                    squashY = -0.35f;
+                    squashX = 0.48f;
+                    squashY = -0.36f;
                     tiltZ = Mathf.Sin(_animTimer * 24f) * 16f;
                 }
                 else
                 {
-                    // Regular hit jolt
-                    squashX = 0.22f;
-                    squashY = -0.18f;
+                    // Crisp, elastic hit jolt & micro-shake for satisfying melee punch
+                    squashX = 0.28f;
+                    squashY = -0.22f;
+                    tiltZ = Mathf.Sin(_animTimer * 20f) * 7f;
                 }
             }
             else

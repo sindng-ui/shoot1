@@ -77,6 +77,7 @@ graph TD
 | 카테고리 | 파일명 | 주요 클래스/인터페이스 | 설명 |
 | :--- | :--- | :--- | :--- |
 | **Common** | `AppVersion.cs` | `AppVersion` | 버전 관리 단일 소스 (`Current = "v0.3.0"`, `ReleaseDate`) |
+| **Entities** | `PlayerEntity.cs [UPDATED]` | `PlayerEntity` | 플레이어 순수 C# 엔티티 (스탯, 패시브, **`AttackPowerMultiplier` 공격력 배율 `SkillContext.BaseDamage` 실시간 완벽 동기화**, 스킬 틱/실행 관리) |
 | **Events** | `AudioEvents.cs` | `SoundEffectType`, `PlaySoundEvent`, `PlayBgmEvent`, `StopBgmEvent` | 14종 SFX 및 BGM 재생 요청 도메인 이벤트 집합 |
 | | `MagicEvents.cs [UPDATED]` | `FrostNovaExecutedEvent`, `ChainLightningExecutedEvent`, `FireballExplodedEvent`, `MeteorStrikeExecutedEvent`, `MonsterShatteredEvent` | 마법사 서리 폭발, 연쇄 번개, 화염구 폭발, 메테오 낙하, 빙결 파괴 도메인 이벤트 집합 |
 | | `BossEvents.cs` | `BossSpawnedEvent`, `BossHealthUpdatedEvent`, `BossDiedEvent` | 보스 스폰/체력 변경/사망 이벤트 집합 |
@@ -99,10 +100,10 @@ graph TD
 | | `ArrowRainEffect.cs [UPDATED]` | `ArrowRainEffect` | [궁수 전용] 화살 착탄 즉시 1:1 대미지 동기화 및 크리티컬 롤링 연동 |
 | | `WindGlaiveEffect.cs [UPDATED]` | `WindGlaiveEffect` | [궁수 전용] 회전 풍인 관통 및 복귀 2중 타격 크리티컬 롤링 연동 |
 | | `PiercingArrowEffect.cs [UPDATED]` | `PiercingArrowEffect` | [궁수 전용] 화면 끝까지 무제한 관통 사격, 투사체별 개별 크리티컬 롤링 및 **발사 시마다 시원한 BowShoot 활시위/공기 가르기 사운드 이벤트 100% 발행 연동** |
-| | `GreatswordSlashEffect.cs [UPDATED]` | `GreatswordSlashEffect` | [전사 전용] 전방 150도 부채꼴 궤적 판정 및 크리티컬 대미지 롤링 연동 |
+| | `GreatswordSlashEffect.cs [UPDATED]` | `GreatswordSlashEffect` | [전사 전용] **전방 부채꼴 궤적 판정(30°~360° 전방위 각도 완벽 지원) 및 크리티컬 대미지 롤링 연동** |
 | | `WhirlwindEffect.cs [UPDATED]` | `WhirlwindEffect` | [전사 전용] 360도 전방위 회전 검기 연속 크리티컬 롤링 연동 |
 | | `GroundStompEffect.cs [UPDATED]` | `GroundStompEffect` | [전사 전용] 대지 균열 지진파 크리티컬 롤링 연동 |
-| | `BloodEaterEffect.cs` | `BloodEaterEffect` | [전사 진화 1] 대검 + 뱀파이어 이빨 -> 흡혈 대검 베기 |
+| | `BloodEaterEffect.cs [UPDATED]` | `BloodEaterEffect` | [전사 진화 1] **대검 + 뱀파이어 이빨 -> 흡혈 대검 베기 (부채꼴 각도 30°~360° 커스텀 튜닝 및 라이브 동기화 지원)** |
 | | `TempestWhirlwindEffect.cs [NEW]` | `TempestWhirlwindEffect` | [전사 진화 2] 휠윈드 + 바람의 깃털 -> 2연속 초고속 사이클론 + 4방향 칼바람 참격 파동 |
 | | `EarthshakerEffect.cs [NEW]` | `EarthshakerEffect` | [전사 진화 3] 지면강타 + 강철 갑옷 -> 중심 마그마 크레이터 + 십자 4방향 3단 지진 균열 충격파 |
 | | `StormArrowEffect.cs` | `StormArrowEffect` | [궁수 진화 1] 활 + 깃털 -> 폭풍 충격파 및 투사체 |
@@ -134,20 +135,17 @@ graph TD
 
 | 카테고리 | 파일명 | 주요 컴포넌트 | 설명 |
 | :--- | :--- | :--- | :--- |
-| **Effects** | `CriticalHitVfxManagerView.cs [UPDATED]` | `CriticalHitVfxManagerView` | **황금빛 십자 섬광 + 8방향 스타버스트 크리티컬 스파크 VFX 및 샌드박스 설정 연동 크리티컬 역경직(Hit-Stop) 트리거** |
+| **Effects** | `SlashHitVfxManagerView.cs [NEW]` | `SlashHitVfxManagerView` | **⚔️ 슬래시 타격 이펙트 매니저: 대검 베기 및 스킬로 적 피격 시 몬스터 위치에 날카로운 대각선 슬래시 컷 스파크(Diagonal Slash Spark & Glint, sortingOrder = 32)를 0.10초 동안 재생하여 극상의 베는 손맛/타격감(Juice) 제공 (32개 무할당 풀링)** |
+| | `CriticalHitVfxManagerView.cs [UPDATED]` | `CriticalHitVfxManagerView` | **황금빛 십자 섬광 + 8방향 스타버스트 크리티컬 스파크 VFX(sortingOrder = 35) 및 샌드박스 설정 연동 크리티컬 역경직(Hit-Stop) 트리거** |
 | | `HitStopManager.cs [UPDATED]` | `HitStopManager` | **GC Zero-Allocation Update 루프 타이머 기반 초경량 타격 역경직 매니저 (코루틴/가비지 압박 제거, 찰진 20% 슬로우모션 최적화)** |
-| **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **크리티컬 피격 시 2배 강력한 Squash & Stretch (0.45/-0.35), 격렬한 셰이크 틸트 진동(+-16도), 황금빛 플래시 피격 피드백** |
+| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | 클래스별 외형 3단 분기, **플레이어 몸체(sortingOrder = 15) 및 무기(평상시 16, 스윙 시 30 동적 승격)**, **대검 베기 & 블러드 이터 부채꼴 각도(`ArcAngleDegrees`)에 연동된 동적 스윙 궤적(-halfArc ~ +halfArc) 및 100% 선명 회전(sortingOrder = 30)** |
+| **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **2.5D Blob Shadow 타원 그림자(sortingOrder = 9)**, **몬스터 몸체(sortingOrder = 10)**, **피격 시 탄성 스쿼시(0.28/-0.22) & 타격 진동 반동(Jolt) 대폭 강화로 시원한 피격 손맛 선사** |
 | | `MonsterSpawnerView.cs [UPDATED]` | `MonsterSpawnerView` | `MonsterDamagedEvent.IsCritical`을 `MonsterView.OnHitFeedback(evt.IsCritical)`로 전달 |
-| **UI** | `DamageTextView.cs [UPDATED]` | `DamageTextView`, `DamageTextManagerView` | **크리티컬 발생 시 볼드 42pt 대형 폰트, 네온 골드 컬러, 느낌표("!") 표기, 1.45배 튀어오르는 바운스 팝(Pop Animation) 애니메이션** |
-| | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 - 5대 카테고리 대분류 탭 ([전사], [궁수], [마법사], [공통/스탯], [시스템]) 및 22종 전체 스킬/궁극기 실시간 튜닝 지원** |
-| | `SkillTuningRowConfigurator.cs [UPDATED]`| `SkillTuningRowConfigurator` | 샌드박스 스킬별 슬라이더/토글 행 생성기 (**메테오 스트라이크 폭발 반경 1.0~12.0m**, **스텔라 레인 지속시간 0.5~8.0s**, **팬텀 글레이브 칼날 크기 0.5~3.0배 및 환영 글레이브 수 1~7개**, **스킬별 카메라 셰이크 0~100%**, **마스터 카메라 셰이크 강도 0~100%**, **경험치 증가분 대비 몹 젠 비율 0~100%**, **경험치 비례 몹 체력 감쇠율 0~50% & 최대 체력 상한선 1.0x~10.0x**, **역경직 지속 시간 및 슬로우 강도 조절**) |
-| | `SkillTuningSliderFactory.cs [UPDATED]` | `SkillTuningSliderFactory` | **초컴팩트 34px 높이 1줄 인라인 슬라이더 카드 팩토리 (버튼/핸들/글자 겹침 방지 및 뷰포트 크기 자동 확장 지원)** |
-| | `SkillLiveApplier.cs [UPDATED]` | `SkillLiveApplier` | 9종 진화 궁극기 전체 실시간 라이브 파라미터 동기화 |
-| | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | [개발자 모드] **9종 전체 진화 궁극기 직업별 정렬 원클릭 장착/우클릭 해제 지원** |
-| | `LevelUpUiView.cs` | `LevelUpUiView` | 신규 패시브 `passive_crit` 3지선다 카드 자동 연동 |
-| **Utils** | `RewardIconHelper.cs [UPDATED]` | `RewardIconHelper` | **`passive_crit` 전용 황금 크로스헤어 + 네온 레드 동공 + 빛나는 글린트 80x80 픽셀아트 아이콘 생성기 (`DrawCritEyeIcon`)** |
-| | `WizardSpriteHelper.cs [UPDATED]` | `WizardSpriteHelper` | **메테오 착탄 순백-황금 노바 섬광, 마그마 크레이터 균열, 타겟 룬 픽셀아트 생성기** |
-| **Bootstrap** | `GameBootstrap.cs [UPDATED]` | `GameBootstrap` | 신규 패시브 `passive_crit` 등록 및 `CriticalHitVfxManagerView` 인스턴스화/초기화 연동 |
+| **Projectiles** | `ProjectileView.cs [UPDATED]` | `ProjectileManagerView`, `ProjectileView` | 관통 화살(Piercing Arrow, sortingOrder = 24), 황금빛 앰버 골드 일관 유지 (128개 사전 생성 Prewarm 및 0-Allocation 풀링) |
+| | `OrbitingBladeView.cs [UPDATED]` | `OrbitingBladeView` | 공통 수호의 검(sortingOrder = 22)으로 몬스터(10) 및 플레이어(15) 상단에서 선명하게 회전 |
+| | `WhirlwindManagerView.cs [UPDATED]` | `WhirlwindManagerView` | 전사 휠윈드 회전 검날(sortingOrder = 28) 및 바람 스파크(sortingOrder = 29)로 몬스터 상단에서 사이클론 폭풍 선명 연출 |
+| | `GroundStompManagerView.cs [UPDATED]` | `GroundStompManagerView` | 전사 지면 강타 바닥 크레이터(sortingOrder = 2) 및 튀어오르는 암석 파편(sortingOrder = 26) |
+| | `MagicSkillManagerView.cs [UPDATED]` | `MagicSkillManagerView` | 서리폭발(sortingOrder = 26), 빙하샤드(27), 기가스톰/체인라이트닝 플라즈마 빔(28, 29) |
 
 ---
 

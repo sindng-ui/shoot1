@@ -114,5 +114,42 @@ namespace HappyShoot.Domain.Tests.Leveling
             Assert.That(_player.Stats.CritChance, Is.EqualTo(0.18f).Within(0.001f)); // 0.10 + 0.08
             Assert.That(_player.Stats.CritDamageMultiplier, Is.EqualTo(1.55f).Within(0.001f)); // 1.50 + 0.05
         }
+
+        [Test]
+        public void ApplyPassiveFang_IncreasesSlashSkillDamage_OnPlayer()
+        {
+            var grid = new SpatialGrid2D<ISpatialEntity>(cellSize: 2.0f);
+            var eventBus = new EventBus();
+            var warrior = PlayerClassFactory.CreatePlayer(1, CharacterClassType.Warrior, Vector2D.Zero, eventBus);
+
+            // Base warrior has 1.1x AttackPowerMultiplier -> BaseDamage = 11f (Slash: 35 * 1.1 = 38.5)
+            var monster1 = new MonsterEntity();
+            monster1.Initialize(10, "Slime", 100f, 2f, 10f, 1, 1, new Vector2D(1.5f, 0f), eventBus);
+            grid.Register(monster1);
+
+            // Execute 1 tick with Slash skill
+            warrior.Update(deltaTime: 1.5f, grid);
+
+            // Monster takes 38.5 damage (100 - 38.5 = 61.5)
+            float hpAfterFirstHit = monster1.CurrentHealth;
+            Assert.That(hpAfterFirstHit, Is.EqualTo(61.5f).Within(0.01f));
+
+            // Grant Vampire Fang (+15% AttackPowerMultiplier -> 1.1 + 0.15 = 1.25x)
+            _rewardManager.GrantOrUpgradePassiveDirectly(warrior, "passive_fang");
+            Assert.That(warrior.Stats.AttackPowerMultiplier, Is.EqualTo(1.25f).Within(0.01f));
+
+            // Reset slash cooldown to test second strike
+            var slashSkill = warrior.GetSkill("slash") as CompositeSkill;
+            (slashSkill.Trigger as HappyShoot.Domain.Skills.Triggers.CooldownTrigger).Reset();
+
+            var monster2 = new MonsterEntity();
+            monster2.Initialize(20, "Slime", 100f, 2f, 10f, 1, 1, new Vector2D(1.5f, 0f), eventBus);
+            grid.Register(monster2);
+
+            // Execute next tick -> Slash deals 35 * 1.25 = 43.75 damage!
+            warrior.Update(deltaTime: 1.5f, grid);
+
+            Assert.That(monster2.CurrentHealth, Is.EqualTo(56.25f).Within(0.01f));
+        }
     }
 }

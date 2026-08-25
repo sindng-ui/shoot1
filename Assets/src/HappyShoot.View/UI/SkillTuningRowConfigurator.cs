@@ -268,6 +268,7 @@ namespace HappyShoot.View.UI
                     {
                         AddRow("🩸 공격력 (Damage)", be.BaseDamage, 20f, 400f, 5f, v => { be.BaseDamage = v; mem.Damage = v; });
                         AddRow("📏 흡혈 반경 (Radius)", be.Radius, 2.0f, 10.0f, 0.2f, v => { be.Radius = v; mem.Radius = v; });
+                        AddRow("📐 부채꼴 각도 (ArcAngle)", be.ArcAngleDegrees, 30f, 360f, 15f, v => { be.ArcAngleDegrees = v; mem.ExtraParam2 = v; if (config?.BloodEater != null) config.BloodEater.ArcAngle = v; });
                         AddRow("💖 회복량 (HealAmount)", be.HealAmount, 0.5f, 10.0f, 0.5f, v => { be.HealAmount = v; mem.ExtraParam1 = v; });
                     }
                     if (cdTrigger != null)

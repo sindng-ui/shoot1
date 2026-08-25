@@ -187,6 +187,10 @@ namespace HappyShoot.View.Bootstrap
             var damageTextView = damageTextGo.AddComponent<DamageTextManagerView>();
             damageTextView.Initialize(playerView.EventBus);
 
+            var slashVfxGo = new GameObject("SlashHitVfxManager");
+            var slashVfxView = slashVfxGo.AddComponent<Effects.SlashHitVfxManagerView>();
+            slashVfxView.Initialize(playerView.EventBus);
+
             var critVfxGo = new GameObject("CriticalHitVfxManager");
             var critVfxView = critVfxGo.AddComponent<Effects.CriticalHitVfxManagerView>();
             critVfxView.Initialize(playerView.EventBus);

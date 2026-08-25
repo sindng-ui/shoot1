@@ -50,6 +50,7 @@ namespace HappyShoot.View.Player
         private SpriteRenderer _swordSr;
         private float _slashVisualTimer;
         private float _slashBaseAngle;
+        private float _slashHalfArc = 75f;
         private const float SlashDuration = 0.18f;
 
         private Projectiles.OrbitingBladeView _orbitingBladeView;
@@ -79,7 +80,7 @@ namespace HappyShoot.View.Player
             _bodySr = _bodyVisualGo.AddComponent<SpriteRenderer>();
             _bodySr.sprite = Utils.SpriteHelper.GetOrCreateWarriorSprite();
             _bodySr.color = Color.white;
-            _bodySr.sortingOrder = 0;
+            _bodySr.sortingOrder = 15; // In front of monsters (sortingOrder 10)
             _originalColor = Color.white;
 
             // Also check if root has SpriteRenderer and clean it up
@@ -101,7 +102,7 @@ namespace HappyShoot.View.Player
 
             _swordSr = _swordGo.AddComponent<SpriteRenderer>();
             _swordSr.sprite = Utils.SpriteHelper.GetOrCreateSwordSprite();
-            _swordSr.sortingOrder = 2; // In front of body
+            _swordSr.sortingOrder = 16; // In front of body
 
             // Create slash pivot & arc visual child
             _slashPivotGo = new GameObject("SlashPivot");
@@ -116,7 +117,7 @@ namespace HappyShoot.View.Player
             _slashVisualSr = slashGo.AddComponent<SpriteRenderer>();
             _slashVisualSr.sprite = Utils.SpriteHelper.GetOrCreateSlashArcSprite();
             _slashVisualSr.color = Color.white;
-            _slashVisualSr.sortingOrder = 3;
+            _slashVisualSr.sortingOrder = 30; // On top of all monsters during attack
             _slashPivotGo.SetActive(false);
 
             // Create Orbiting Blades visual container
@@ -278,8 +279,8 @@ namespace HappyShoot.View.Player
                 _slashVisualTimer -= Time.deltaTime;
                 float progress = Mathf.Clamp01(1.0f - (_slashVisualTimer / SlashDuration)); // 0.0 -> 1.0
 
-                // Swing smoothly through the full 150-degree arc (-75 to +75 degrees)
-                float currentAngle = _slashBaseAngle + Mathf.Lerp(-75f, 75f, Mathf.SmoothStep(0f, 1f, progress));
+                // Swing smoothly through the full dynamic arc (-halfArc to +halfArc degrees)
+                float currentAngle = _slashBaseAngle + Mathf.Lerp(-_slashHalfArc, _slashHalfArc, Mathf.SmoothStep(0f, 1f, progress));
                 if (_slashPivotGo != null)
                 {
                     _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, currentAngle);
@@ -302,6 +303,7 @@ namespace HappyShoot.View.Player
                 if (_slashVisualTimer <= 0f)
                 {
                     if (_slashPivotGo != null) _slashPivotGo.SetActive(false);
+                    if (_swordSr != null) _swordSr.sortingOrder = 16;
                     // Reset sword idle resting angle
                     if (_swordGo != null && _swordGo.transform.parent != null)
                     {
@@ -375,6 +377,7 @@ namespace HappyShoot.View.Player
         private void OnPlayerSlashExecuted(PlayerSlashExecutedEvent evt)
         {
             _slashBaseAngle = evt.DirectionAngleDegrees;
+            _slashHalfArc = Mathf.Max(15f, evt.ArcAngleDegrees * 0.5f);
             _slashVisualTimer = SlashDuration;
             CameraFollowView.Instance?.TriggerShake("slash", duration: 0.12f, intensity: 0.18f);
             if (_slashVisualSr != null)
@@ -384,11 +387,12 @@ namespace HappyShoot.View.Player
             if (_swordSr != null)
             {
                 _swordSr.color = Color.white;
+                _swordSr.sortingOrder = 30; // Bring sword on top of monsters during swing
             }
             if (_slashPivotGo != null)
             {
                 _slashPivotGo.SetActive(true);
-                float initialAngle = _slashBaseAngle - 75f;
+                float initialAngle = _slashBaseAngle - _slashHalfArc;
                 _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
                 if (_swordGo != null && _swordGo.transform.parent != null)
                 {
@@ -413,6 +417,7 @@ namespace HappyShoot.View.Player
         private void OnBloodEaterExecuted(BloodEaterExecutedEvent evt)
         {
             _slashBaseAngle = evt.DirectionAngleDegrees;
+            _slashHalfArc = Mathf.Max(15f, evt.ArcAngleDegrees * 0.5f);
             _slashVisualTimer = SlashDuration;
             if (_slashVisualSr != null)
             {
@@ -421,11 +426,12 @@ namespace HappyShoot.View.Player
             if (_swordSr != null)
             {
                 _swordSr.color = new Color(1.0f, 0.35f, 0.45f, 1f); // Glowing ruby blade
+                _swordSr.sortingOrder = 30;
             }
             if (_slashPivotGo != null)
             {
                 _slashPivotGo.SetActive(true);
-                float initialAngle = _slashBaseAngle - 75f;
+                float initialAngle = _slashBaseAngle - _slashHalfArc;
                 _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
                 if (_swordGo != null && _swordGo.transform.parent != null)
                 {

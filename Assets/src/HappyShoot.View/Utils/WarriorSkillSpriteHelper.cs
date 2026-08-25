@@ -31,10 +31,10 @@ namespace HappyShoot.View.Utils
             float maxRadius = size * 0.88f;
             float innerRadius = size * 0.04f;
 
-            Color bladeTipWhite = new Color(1.0f, 1.0f, 0.95f, 1f);
-            Color bladeEdgeGold = new Color(1.0f, 0.86f, 0.22f, 0.98f);
-            Color swordBodyOrange = new Color(1.0f, 0.65f, 0.12f, 0.85f);
-            Color centerCoreGlow = new Color(1.0f, 0.95f, 0.60f, 0.90f);
+            Color bladeTipWhite = new Color(1.0f, 1.0f, 1.0f, 1f);
+            Color bladeEdgeGold = new Color(1.0f, 0.90f, 0.30f, 1.0f);
+            Color swordBodyOrange = new Color(1.0f, 0.60f, 0.08f, 0.92f);
+            Color centerCoreGlow = new Color(1.0f, 0.98f, 0.70f, 0.98f);
 
             Color[] pixels = new Color[size * size];
             for (int y = 0; y < size; y++)
@@ -49,12 +49,12 @@ namespace HappyShoot.View.Utils
                     {
                         float normDist = Mathf.Clamp01((dist - innerRadius) / (maxRadius - innerRadius));
                         float angleNorm = (angle + 75f) / 150f;
-                        float sweepAlpha = Mathf.Sin(angleNorm * Mathf.PI * 0.85f + 0.15f);
+                        float sweepAlpha = Mathf.Sin(angleNorm * Mathf.PI * 0.90f + 0.10f);
 
                         Color col;
-                        if (normDist >= 0.85f)
+                        if (normDist >= 0.78f)
                         {
-                            float edgeT = (normDist - 0.85f) / 0.15f;
+                            float edgeT = (normDist - 0.78f) / 0.22f;
                             col = Color.Lerp(bladeEdgeGold, bladeTipWhite, edgeT);
                         }
                         else if (normDist <= 0.18f)
@@ -64,13 +64,13 @@ namespace HappyShoot.View.Utils
                         }
                         else
                         {
-                            float bodyT = (normDist - 0.18f) / 0.67f;
+                            float bodyT = (normDist - 0.18f) / 0.60f;
                             col = Color.Lerp(swordBodyOrange, bladeEdgeGold, bodyT);
                             float streamNoise = Mathf.Sin(dist * 0.45f + angle * 0.15f);
-                            if (streamNoise > 0.6f) col = Color.Lerp(col, bladeTipWhite, 0.35f);
+                            if (streamNoise > 0.5f) col = Color.Lerp(col, bladeTipWhite, 0.45f);
                         }
 
-                        float edgeFade = normDist > 0.95f ? (1.0f - normDist) / 0.05f : 1.0f;
+                        float edgeFade = normDist > 0.96f ? (1.0f - normDist) / 0.04f : 1.0f;
                         pixels[y * size + x] = new Color(col.r, col.g, col.b, col.a * sweepAlpha * edgeFade);
                     }
                     else
@@ -102,10 +102,10 @@ namespace HappyShoot.View.Utils
             float maxRadius = size * 0.88f;
             float innerRadius = size * 0.04f;
 
-            Color bladeTipWhite = new Color(1.0f, 0.90f, 0.92f, 1f);
-            Color bladeEdgeCrimson = new Color(1.0f, 0.15f, 0.25f, 0.98f);
-            Color swordBodyRuby = new Color(0.75f, 0.05f, 0.12f, 0.88f);
-            Color centerCorePink = new Color(1.0f, 0.45f, 0.55f, 0.95f);
+            Color bladeTipWhite = new Color(1.0f, 0.95f, 0.96f, 1f);
+            Color bladeEdgeCrimson = new Color(1.0f, 0.18f, 0.30f, 1.0f);
+            Color swordBodyRuby = new Color(0.80f, 0.04f, 0.15f, 0.95f);
+            Color centerCorePink = new Color(1.0f, 0.55f, 0.65f, 0.98f);
 
             Color[] pixels = new Color[size * size];
             for (int y = 0; y < size; y++)
@@ -120,12 +120,12 @@ namespace HappyShoot.View.Utils
                     {
                         float normDist = Mathf.Clamp01((dist - innerRadius) / (maxRadius - innerRadius));
                         float angleNorm = (angle + 75f) / 150f;
-                        float sweepAlpha = Mathf.Sin(angleNorm * Mathf.PI * 0.85f + 0.15f);
+                        float sweepAlpha = Mathf.Sin(angleNorm * Mathf.PI * 0.90f + 0.10f);
 
                         Color col;
-                        if (normDist >= 0.84f)
+                        if (normDist >= 0.78f)
                         {
-                            float edgeT = (normDist - 0.84f) / 0.16f;
+                            float edgeT = (normDist - 0.78f) / 0.22f;
                             col = Color.Lerp(bladeEdgeCrimson, bladeTipWhite, edgeT);
                         }
                         else if (normDist <= 0.18f)
@@ -135,13 +135,13 @@ namespace HappyShoot.View.Utils
                         }
                         else
                         {
-                            float bodyT = (normDist - 0.18f) / 0.66f;
+                            float bodyT = (normDist - 0.18f) / 0.60f;
                             col = Color.Lerp(swordBodyRuby, bladeEdgeCrimson, bodyT);
                             float streamNoise = Mathf.Sin(dist * 0.5f + angle * 0.2f);
-                            if (streamNoise > 0.6f) col = Color.Lerp(col, bladeTipWhite, 0.4f);
+                            if (streamNoise > 0.5f) col = Color.Lerp(col, bladeTipWhite, 0.5f);
                         }
 
-                        float edgeFade = normDist > 0.95f ? (1.0f - normDist) / 0.05f : 1.0f;
+                        float edgeFade = normDist > 0.96f ? (1.0f - normDist) / 0.04f : 1.0f;
                         pixels[y * size + x] = new Color(col.r, col.g, col.b, col.a * sweepAlpha * edgeFade);
                     }
                     else

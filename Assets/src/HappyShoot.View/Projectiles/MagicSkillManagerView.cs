@@ -55,7 +55,7 @@ namespace HappyShoot.View.Projectiles
                 go.transform.SetParent(transform, false);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = frostSprite;
-                sr.sortingOrder = 4;
+                sr.sortingOrder = 26; // Above monsters (10)
                 go.SetActive(false);
                 _novaPool.Add(new FrostNovaInstance { GameObject = go, Transform = go.transform, Renderer = sr, IsActive = false });
             }
@@ -67,7 +67,7 @@ namespace HappyShoot.View.Projectiles
                 go.transform.SetParent(transform, false);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = lightningBeamSprite;
-                sr.sortingOrder = 7;
+                sr.sortingOrder = 28;
                 go.SetActive(false);
                 _lightningPool.Add(new LightningSegment { GameObject = go, Transform = go.transform, Renderer = sr, IsActive = false });
             }
@@ -79,7 +79,7 @@ namespace HappyShoot.View.Projectiles
                 go.transform.SetParent(transform, false);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = _iceShardSprite;
-                sr.sortingOrder = 6;
+                sr.sortingOrder = 27;
                 go.SetActive(false);
                 _shardPool.Add(new IceShardInstance { GameObject = go, Transform = go.transform, Renderer = sr, IsActive = false });
             }
@@ -91,7 +91,7 @@ namespace HappyShoot.View.Projectiles
                 go.transform.SetParent(transform, false);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = _electricSparkSprite;
-                sr.sortingOrder = 9;
+                sr.sortingOrder = 29;
                 go.SetActive(false);
                 _sparkPool.Add(new ElectricSparkInstance { GameObject = go, Transform = go.transform, Renderer = sr, IsActive = false });
             }
@@ -210,11 +210,11 @@ namespace HappyShoot.View.Projectiles
                 // Heavy, thick high-voltage lightning pillar (0.75m -> 0.45m)
                 float baseWidth = Mathf.Lerp(0.72f, 0.42f, t);
 
-                // Layer 1: Outer Heavy Plasma Aura (Order = 7)
-                SpawnSingleSegment(cur, next, baseWidth * 1.5f, new Color(0.12f, 0.80f, 1.0f, 0.95f), 7, duration: 0.13f);
+                // Layer 1: Outer Heavy Plasma Aura (Order = 28)
+                SpawnSingleSegment(cur, next, baseWidth * 1.5f, new Color(0.12f, 0.80f, 1.0f, 0.95f), 28, duration: 0.13f);
 
-                // Layer 2: Inner Blinding High-Voltage Core (Order = 8)
-                SpawnSingleSegment(cur, next, baseWidth * 0.70f, new Color(1.0f, 1.0f, 0.95f, 1.0f), 8, duration: 0.13f);
+                // Layer 2: Inner Blinding High-Voltage Core (Order = 29)
+                SpawnSingleSegment(cur, next, baseWidth * 0.70f, new Color(1.0f, 1.0f, 0.95f, 1.0f), 29, duration: 0.13f);
 
                 cur = next;
             }
@@ -311,8 +311,8 @@ namespace HappyShoot.View.Projectiles
                 // Standard chain lightning width (0.34m -> 0.16m)
                 float baseWidth = Mathf.Lerp(0.34f, 0.16f, t);
 
-                SpawnSingleSegment(cur, next, baseWidth * 1.4f, new Color(0.15f, 0.85f, 1.0f, 0.85f), 7, duration: 0.12f);
-                SpawnSingleSegment(cur, next, baseWidth * 0.65f, Color.white, 8, duration: 0.12f);
+                SpawnSingleSegment(cur, next, baseWidth * 1.4f, new Color(0.15f, 0.85f, 1.0f, 0.85f), 28, duration: 0.12f);
+                SpawnSingleSegment(cur, next, baseWidth * 0.65f, Color.white, 29, duration: 0.12f);
 
                 cur = next;
             }

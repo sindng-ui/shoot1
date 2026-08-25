@@ -129,5 +129,32 @@ namespace HappyShoot.Domain.Tests.Skills
             Assert.That(receivedSoundEvent.HasValue, Is.True);
             Assert.That(receivedSoundEvent.Value.SoundType, Is.EqualTo(SoundEffectType.SlashAttack));
         }
+
+        [Test]
+        public void Slash_WithWideArc_Over180Degrees_DamagesEnemiesInExtendedRange()
+        {
+            // Set 270 degree arc angle (+-135 degrees from forward (1, 0))
+            var wideSlash = new GreatswordSlashEffect(baseDamage: 50f, radius: 3.0f, arcAngleDegrees: 270f);
+
+            var frontMonster = CreateMonster(201, new Vector2D(2f, 0f), maxHealth: 100f); // 0 deg -> HIT
+            var sideMonster = CreateMonster(202, new Vector2D(0f, 2f), maxHealth: 100f); // 90 deg -> HIT
+            var rearDiagMonster = CreateMonster(203, new Vector2D(-1.5f, 1.5f), maxHealth: 100f); // 135 deg -> HIT
+            var directBehindMonster = CreateMonster(204, new Vector2D(-2.5f, 0f), maxHealth: 100f); // 180 deg -> NOT hit (outside 270 deg)
+
+            _grid.Register(frontMonster);
+            _grid.Register(sideMonster);
+            _grid.Register(rearDiagMonster);
+            _grid.Register(directBehindMonster);
+
+            var targets = new List<Vector2D> { new Vector2D(2f, 0f) };
+            wideSlash.ApplyEffect(_context, targets);
+
+            // 0, 90, 135 degree monsters must be damaged
+            Assert.That(frontMonster.CurrentHealth, Is.EqualTo(50f));
+            Assert.That(sideMonster.CurrentHealth, Is.EqualTo(50f));
+            Assert.That(rearDiagMonster.CurrentHealth, Is.EqualTo(50f));
+            // 180 degree monster remains untouched
+            Assert.That(directBehindMonster.CurrentHealth, Is.EqualTo(100f));
+        }
     }
 }

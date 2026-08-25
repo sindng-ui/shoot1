@@ -15,6 +15,7 @@ namespace HappyShoot.Domain.Skills
         public int Count;
         public float Duration;
         public float ExtraParam1;
+        public float ExtraParam2;
         public bool HasCustomValues;
     }
 
@@ -193,6 +194,7 @@ namespace HappyShoot.Domain.Skills
     {
         public float Damage = 85f;
         public float Radius = 4.8f;
+        public float ArcAngle = 150f;
         public float HealAmount = 2.0f;
         public float Cooldown = 0.85f;
         public float CameraShakeScale = 0f;

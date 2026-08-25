@@ -22,6 +22,7 @@ namespace HappyShoot.View.UI
             public int? Count;
             public float? Duration;
             public float? ExtraParam1; // ArcAngle / ChillDuration / JumpRadius / SpreadAngle
+            public float? ExtraParam2; // BloodEater ArcAngle / Secondary Custom Params
         }
 
         private static readonly Dictionary<string, Dictionary<int, LevelMemory>> _cache = new Dictionary<string, Dictionary<int, LevelMemory>>();
@@ -186,6 +187,7 @@ namespace HappyShoot.View.UI
                         Count = mem.Count ?? -1,
                         Duration = mem.Duration ?? -1f,
                         ExtraParam1 = mem.ExtraParam1 ?? -1f,
+                        ExtraParam2 = mem.ExtraParam2 ?? -1f,
                         HasCustomValues = true
                     });
                 }
@@ -213,6 +215,7 @@ namespace HappyShoot.View.UI
                 if (data.Count >= 0) mem.Count = data.Count;
                 if (data.Duration >= 0f) mem.Duration = data.Duration;
                 if (data.ExtraParam1 >= 0f) mem.ExtraParam1 = data.ExtraParam1;
+                if (data.ExtraParam2 >= 0f) mem.ExtraParam2 = data.ExtraParam2;
             }
         }
 

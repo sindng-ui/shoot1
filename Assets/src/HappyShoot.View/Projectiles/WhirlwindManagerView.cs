@@ -69,7 +69,7 @@ namespace HappyShoot.View.Projectiles
 
                 var sr = rootGo.AddComponent<SpriteRenderer>();
                 sr.sprite = bladeSprite;
-                sr.sortingOrder = 4; // Above ground, around character
+                sr.sortingOrder = 28; // On top of monsters (10)
                 rootGo.SetActive(false);
 
                 var instance = new WhirlwindInstance
@@ -91,7 +91,7 @@ namespace HappyShoot.View.Projectiles
                     var sparkSr = sparkGo.AddComponent<SpriteRenderer>();
                     sparkSr.sprite = sparkSprite;
                     sparkSr.color = new Color(0.70f, 0.95f, 1.0f, 1f);
-                    sparkSr.sortingOrder = 6;
+                    sparkSr.sortingOrder = 29; // In front of whirlwind body
                     sparkGo.SetActive(false);
 
                     instance.SparkList.Add(new WindSpark
