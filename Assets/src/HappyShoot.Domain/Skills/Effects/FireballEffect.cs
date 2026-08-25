@@ -90,13 +90,16 @@ namespace HappyShoot.Domain.Skills.Effects
                 targetsToBlast.Add(fanTarget);
             }
 
-            // Launch flying fireball comets
+            bool isFacingLeft = primaryDir.X < -0.05f;
+            Vector2D staffTipPos = context.CasterPosition + new Vector2D(isFacingLeft ? -0.38f : 0.38f, 0.22f);
+
+            // Launch flying fireball comets from staff tip
             for (int b = 0; b < targetsToBlast.Count; b++)
             {
                 Vector2D targetPos = targetsToBlast[b];
 
                 // Publish Domain Event for Wizard Fireball flight (explosion & damage trigger upon arrival)
-                context.EventBus?.Publish(new FireballLaunchedEvent(context.CasterPosition, targetPos, effectiveRadius, effectiveDamage, Speed));
+                context.EventBus?.Publish(new FireballLaunchedEvent(staffTipPos, targetPos, effectiveRadius, effectiveDamage, Speed));
                 context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.Fireball, volume: 0.85f));
             }
         }

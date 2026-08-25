@@ -283,4 +283,18 @@ namespace HappyShoot.Domain.Events
             Duration = duration;
         }
     }
+
+    public readonly struct PiercingArrowExecutedEvent : IDomainEvent
+    {
+        public readonly Vector2D Origin;
+        public readonly Vector2D TargetDirection;
+        public readonly int ArrowCount;
+
+        public PiercingArrowExecutedEvent(Vector2D origin, Vector2D targetDirection, int arrowCount)
+        {
+            Origin = origin;
+            TargetDirection = targetDirection;
+            ArrowCount = arrowCount;
+        }
+    }
 }

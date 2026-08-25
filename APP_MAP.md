@@ -183,13 +183,12 @@ graph TD
 | | `InGameHudBuilder.cs [NEW]` | `InGameHudBuilder` | 절차적 메인 HUD UI 팩토리 빌더 (하단 3단 및 좌측 패시브 슬롯 리스트 포함, 440줄) |
 | | `HudSpriteHelper.cs [NEW]` | `HudSpriteHelper` | 10칸 분할 EXP 프레임, 다이아몬드 레벨 뱃지, 골드 스킬 슬롯 보더, 투구 엠블럼, 체력바 프레임 프로시저럴 비주얼 생성기 (236줄) |
 | | `PlayerHealthBarView.cs` | `PlayerHealthBarView` | 플레이어 머리 위를 따라다니는 초경량 오버헤드 미니 체력바 (SpriteRenderer 기반 무할당) |
-| | `AimReticleView.cs [NEW]` | `AimReticleView` | **네온 라임-그린 십자선 과녁 에임 레티클: 마우스 2D 월드 좌표 실시간 댐핑 추종 및 부드러운 펄스 애니메이션 (84줄)** |
+| **Visual Feedback** | `AimReticleView.cs [UPDATED]` | `AimReticleView` | **마우스 4초 무조작(유휴) 시 레티클 부드러운 페이드아웃 숨김 및 마우스 이동/클릭 시 즉시 100% 복원, 인게임 플레이 중 OS 커서 숨김, UI 일시정지 시 OS 커서 자동 복원**, 소울스톤 스타일 48x48 네온 라임그린 레티클 (128줄) |
 | | `ReticleSpriteHelper.cs [NEW]` | `ReticleSpriteHelper` | 48x48 네온 라임-그린 십자선 과녁 링 프로시저럴 픽셀아트 생성기 (104줄) |
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
 | | `PauseMenuUiView.cs` | `PauseMenuUiView` | ESC 일시정지 다이얼로그 (계속하기, ⚙️ 환경 설정, 다시 시작, 게임 종료) |
-| | `GameOverResultUiView.cs` | `GameOverResultUiView` | 플레이어 사망 시 골드 정산, [다시 도전하기] 씬 리로드 |
 | | `DamageTextView.cs` | `DamageTextManagerView`, `DamageTextView` | 이벤트 기반 무할당 32개 풀링 (GameSettings.ShowDamageText 옵션 적용) |
-| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | **오늘 시작 시의 100% 원본 치비 픽셀아트 생김새/비율 완벽 복원 & 9방향(정면/대각4방/측면2방/후면) 조준 반응, 무기 자연스러운 대기 파지 자세(360도 마우스 회전 제거) 및 공격 스윙 시에만 150도 궤적 회전 연동**, 2.5D Blob Shadow 타원 그림자, Brotato 젤리 물리 모션 (423줄) |
+| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | **지능형 시선 제어: (1) 마우스 조작 시 Aim 9방향 실시간 조준, (2) 마우스 유휴(4s) 시 Aim 숨김 및 즉시 기본 정면(Front) 샷 복귀, (3) 키보드(WASD) 이동 시 누른 방향(9방향) 질주 및 멈추면 즉시 정면 복귀, (4) 마우스 움직임 시 즉시 Aim 복원**, 오늘 시작 시의 100% 원본 치비 픽셀아트, 2.5D Blob Shadow, Brotato 젤리 물리 모션 (450줄) |
 | | `HeroSpriteHelper.cs [NEW]` | `HeroSpriteHelper` | **오늘 시작 시의 100% 원본 32x32 귀여운 치비 3영웅(전사 둥근투구/빨간망토, 궁수 그린후드/화살통, 마법사 롭/고깔모자) 9방향 스프라이트 및 원본 브로드소드/리커브활/크리스탈스태프 연동 (368줄)** |
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
 | **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **2.5D Blob Shadow 타원 그림자**, **7종 몬스터 타입별 젤리 물리 모션** (FireImp 빠른 다트, ToxicSpider 크리피 스커틀, DarkKnight 중장갑 행진), **피격 Flash White** (오비탈 다단히트 HitStop 제거로 120fps 보장) |

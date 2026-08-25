@@ -83,8 +83,9 @@ namespace HappyShoot.Domain.Skills.Effects
                     );
                 }
 
-                // Audio feedback: Crisply audible bowstring release and aerodynamic whoosh
+                // Audio & visual feedback: Crisply audible bowstring release and bow recoil kickback
                 context.EventBus?.Publish(new PlaySoundEvent(SoundEffectType.BowShoot, volume: 1.0f));
+                context.EventBus?.Publish(new PiercingArrowExecutedEvent(context.CasterPosition, baseDir, totalArrows));
             }
         }
     }
