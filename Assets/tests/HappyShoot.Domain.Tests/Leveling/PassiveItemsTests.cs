@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using HappyShoot.Domain.Entities;
+using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Leveling;
+using HappyShoot.Domain.Skills;
 using HappyShoot.Domain.Spatial;
 
 namespace HappyShoot.Domain.Tests.Leveling

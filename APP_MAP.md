@@ -76,7 +76,7 @@ graph TD
 
 | 카테고리 | 파일명 | 주요 클래스/인터페이스 | 설명 |
 | :--- | :--- | :--- | :--- |
-| **Common** | `AppVersion.cs` | `AppVersion` | 버전 관리 단일 소스 (`Current = "v0.3.0"`, `ReleaseDate`) |
+| **Config** | `.gitignore [UPDATED]` | - | Unity 표준 제외 규칙, Standalone 빌드 출력 폴더(`/Zxe/`, `/build/`), .NET 빌드 아티팩트(`**/bin/`, `**/obj/`), IDE/OS 캐시 파일 포괄적 무시 설정 |
 | **Entities** | `PlayerEntity.cs [UPDATED]` | `PlayerEntity` | 플레이어 순수 C# 엔티티 (스탯, 패시브, **`AttackPowerMultiplier` 공격력 배율 `SkillContext.BaseDamage` 실시간 완벽 동기화**, 스킬 틱/실행 관리) |
 | **Events** | `AudioEvents.cs` | `SoundEffectType`, `PlaySoundEvent`, `PlayBgmEvent`, `StopBgmEvent` | 14종 SFX 및 BGM 재생 요청 도메인 이벤트 집합 |
 | | `MagicEvents.cs [UPDATED]` | `FrostNovaExecutedEvent`, `ChainLightningExecutedEvent`, `FireballExplodedEvent`, `MeteorStrikeExecutedEvent`, `MonsterShatteredEvent` | 마법사 서리 폭발, 연쇄 번개, 화염구 폭발, 메테오 낙하, 빙결 파괴 도메인 이벤트 집합 |

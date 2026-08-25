@@ -1,4 +1,6 @@
-# Unity standard ignore
+# =========================================================================
+# Unity Standard Ignore Rules
+# =========================================================================
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -8,12 +10,62 @@
 /[Uu]ser[Ss]ettings/
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
+/[Aa]ssets/[Aa]ssetStoreTools*
 
+# =========================================================================
+# Custom Standalone Executable & Build Outputs
+# =========================================================================
+/Zxe/
+/build/
+/builds/
+/dist/
+
+# =========================================================================
+# .NET / C# Test Host Build Artifacts
+# =========================================================================
+scratch/**/bin/
+scratch/**/obj/
+**/bin/
+**/obj/
+
+# =========================================================================
+# Visual Studio / VS Code / Rider / MonoDevelop IDE & Cache Files
+# =========================================================================
 .vs/
 .idea/
+.vscode/
 *.csproj
+*.unityproj
 *.sln
+*.suo
+*.user
 *.userprefs
-*.tmp
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.opendb
+*.VC.db
+
+# Unity generated metadata for temp files
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Unity crash reports & memory dumps
+sysinfo.txt
+*.stackdump
+
+# =========================================================================
+# OS & System Generated Temporary Files
+# =========================================================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+[Dd]esktop.ini
+*.tmp
+*~

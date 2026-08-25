@@ -1,33 +1,61 @@
-# 🩸 흡혈귀의 이빨 패시브 공격력 미반영 버그 수정 완료 보고서
+# 🛡️ Git Ignore 최적화 및 불필요한 빌드 파일 정리 완료 보고서
 
-## 1. 개요 및 해결된 문제
-- **문제 현상**: 전사 캐릭터로 게임 진행 중 '흡혈귀의 이빨'(`passive_fang`) 패시브를 획득하여 공격력(+15%)이 증가했음에도, 대검 베기 등의 스킬 피해량이 38로 동일하게 유지되어 공격력 증가 효과가 스킬에 전혀 반영되지 않던 문제를 해결했습니다.
-- **원인 분석**:
-  1. `PlayerEntity.cs`의 `SkillContext` 생성자에서 `BaseDamage = 10f`로 고정되어 있었고, `PlayerEntity.Update()` 매 틱마다 `_skillContext.BaseDamage`를 `Stats.AttackPowerMultiplier`와 연동하여 업데이트하지 않았습니다.
-  2. 따라서 플레이어 스탯(`Stats.AttackPowerMultiplier`)이 패시브나 메타 업그레이드로 올라가도 모든 스킬의 유효 피해량 계산식(`BaseDamage * (context.BaseDamage / 10f)`)에 1도 전달되지 않는 상태였습니다.
+## 1. 개요 및 해결된 작업
+- Unity 프로젝트 및 .NET 테스트 호스트에서 생성되는 거대한 빌드 산출물(실행 파일, DLL, 심볼, 중간 캐시 등)이 GitHub 저장소에 불필요하게 올라가지 않도록 **[`.gitignore`](file:///k:/unityprojects/shoot1/shoot1/.gitignore)**를 종합 표준 규칙으로 확장/정리했습니다.
+- 기존에 이미 git에 추적되어 커밋 대상에 포함되던 Standalone 빌드 출력 폴더(`/Zxe/`) 및 .NET 빌드 폴더(`scratch/TestHost/bin/`, `scratch/TestHost/obj/`)를 저장소 인덱스에서 안전하게 언스테이징(`git rm -r --cached`) 처리했습니다 (로컬 파일은 안전하게 보존).
 
 ---
 
-## 2. 주요 수정 내역
+## 2. 주요 `.gitignore` 추가 항목
 
-### 1) PlayerEntity 공격력 배율 실시간 동기화 ([PlayerEntity.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.Domain/Entities/PlayerEntity.cs))
-- 생성자 및 `Update()` 루프에서:
-  ```csharp
-  _skillContext.BaseDamage = 10f * Stats.AttackPowerMultiplier;
-  ```
-  를 적용하여, 기본 직업 공격력 배율(전사 1.1x = 38.5 dmg), 흡혈귀의 이빨 패시브(+15% = 43.75 dmg), 메타 상점 공격력 영구 강화, 샌드박스 공격력 배율 조절이 **모든 액티브 스킬 및 진화 궁극기에 즉시 실시간으로 100% 반영**되도록 수정했습니다.
+```gitignore
+# Unity 표준 라이브러리 및 임시 파일
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/[Aa]ssets/[Aa]ssetStoreTools*
 
-### 2) 패시브 레벨업 증가량 수식 정리 ([SkillRegistryHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Bootstrap/SkillRegistryHelper.cs))
-- 레벨업 1회당 정해진 증가량(예: `s.AttackPowerMultiplier + 0.15f`)이 깔끔하게 누적되도록 패시브 콜백을 정리했습니다.
+# Standalone 빌드 출력물 (Windows 실행 파일 및 번들 데이터)
+/Zxe/
+/build/
+/builds/
+/dist/
+
+# .NET / C# 빌드 아티팩트
+scratch/**/bin/
+scratch/**/obj/
+**/bin/
+**/obj/
+
+# Visual Studio / VS Code / Rider IDE 캐시 및 설정 파일
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.pdb
+*.opendb
+*.VC.db
+
+# OS 임시 파일
+.DS_Store
+Thumbs.db
+*.tmp
+```
 
 ---
 
 ## 3. 검증 결과
-
-### 🧪 단위 테스트 검증
-- `PassiveItemsTests.cs`에 `ApplyPassiveFang_IncreasesSlashSkillDamage_OnPlayer` 테스트를 추가하여,
-  전사 기본 대미지(38.5) -> 흡혈귀의 이빨 획득 후 대미지(43.75)로 정상 증가함을 완벽히 검증했습니다.
-- **총 124개 도메인 단위 테스트 전체 100% 통과 (124/124 ALL PASS)** 완료!
-
-### 🗺️ 문서 동기화
-- [`APP_MAP.md`](file:///k:/unityprojects/shoot1/shoot1/APP_MAP.md)에 도메인 `PlayerEntity` 변경 사항 최신화 완료.
+- `git status` 확인 결과 수백 개에 달하던 `Zxe/` 빌드 실행물 및 `scratch/TestHost/bin/` 바이너리들이 모두 git 추적에서 제외되어 깔끔한 소스 코드 및 필수 에셋만 GitHub에 관리되도록 최적화되었습니다.
+- [`APP_MAP.md`](file:///k:/unityprojects/shoot1/shoot1/APP_MAP.md)에 `.gitignore` 최적화 내역을 동기화 완료했습니다.
