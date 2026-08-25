@@ -144,12 +144,27 @@ namespace HappyShoot.View.Player
             _lastPos = transform.position;
         }
 
+        public bool IsGameStarted { get; set; } = false;
+
         public void SetClassType(CharacterClassType classType)
         {
             _classType = classType;
             Vector2D currentPos = _entity != null ? _entity.Position : new Vector2D(transform.position.x, transform.position.y);
             _entity = PlayerClassFactory.CreatePlayer(1, _classType, currentPos, _eventBus);
+            
+            // Reset any pending slash animations and visuals
+            _slashVisualTimer = 0f;
+            if (_slashPivotGo != null)
+            {
+                _slashPivotGo.SetActive(false);
+            }
+            if (_swordGo != null && _swordGo.transform.parent != null)
+            {
+                _swordGo.transform.parent.rotation = Quaternion.identity;
+            }
+
             ApplyClassVisuals();
+            IsGameStarted = true;
         }
 
         private void ApplyClassVisuals()
@@ -177,7 +192,7 @@ namespace HappyShoot.View.Player
 
         private void Update()
         {
-            if (_entity == null || _entity.IsDead)
+            if (_entity == null || _entity.IsDead || !IsGameStarted)
                 return;
 
             // Handle damage flash timer

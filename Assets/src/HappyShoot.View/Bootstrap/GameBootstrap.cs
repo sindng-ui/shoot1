@@ -165,7 +165,7 @@ namespace HappyShoot.View.Bootstrap
 
             var meteorStrikeGo = new GameObject("MeteorStrikeManager");
             var meteorStrikeView = meteorStrikeGo.AddComponent<Projectiles.MeteorStrikeManagerView>();
-            meteorStrikeView.Initialize(playerView.EventBus);
+            meteorStrikeView.Initialize(playerView.EventBus, spawnerView, playerView);
 
             var bloodEaterGo = new GameObject("BloodEaterManager");
             var bloodEaterView = bloodEaterGo.AddComponent<Projectiles.BloodEaterManagerView>();

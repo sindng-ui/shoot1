@@ -146,4 +146,27 @@ namespace HappyShoot.Domain.Events
             ShardCount = shardCount;
         }
     }
+
+    /// <summary>
+    /// Event triggered when Wizard casts Evolved Meteor Strike (Inferno Fireball comets that pierce and double explode).
+    /// </summary>
+    public readonly struct MeteorStrikeLaunchedEvent : IDomainEvent
+    {
+        public readonly Vector2D StartPosition;
+        public readonly Vector2D TargetPosition;
+        public readonly float Radius;
+        public readonly float Damage;
+        public readonly float Speed;
+        public readonly int MaxPierces;
+
+        public MeteorStrikeLaunchedEvent(Vector2D startPosition, Vector2D targetPosition, float radius, float damage, float speed = 15f, int maxPierces = 1)
+        {
+            StartPosition = startPosition;
+            TargetPosition = targetPosition;
+            Radius = radius;
+            Damage = damage;
+            Speed = speed;
+            MaxPierces = maxPierces;
+        }
+    }
 }

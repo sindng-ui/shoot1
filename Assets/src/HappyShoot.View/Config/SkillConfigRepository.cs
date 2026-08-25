@@ -313,6 +313,9 @@ namespace HappyShoot.View.Config
                     {
                         if (match.Damage >= 0f) ms.BaseDamage = match.Damage;
                         if (match.Radius >= 0f) ms.ExplosionRadius = match.Radius;
+                        if (match.Count >= 0) ms.FireballCount = match.Count;
+                        if (match.ExtraParam1 >= 0f) ms.PierceCount = (int)match.ExtraParam1;
+                        if (match.Speed >= 0f) ms.Speed = match.Speed;
                     }
                     break;
             }

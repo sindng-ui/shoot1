@@ -221,10 +221,13 @@ namespace HappyShoot.Domain.Skills
     [Serializable]
     public class MeteorStrikeConfig
     {
-        public float Damage = 220f;
-        public float Radius = 7.5f;
-        public float Cooldown = 1.0f;
-        public float CameraShakeScale = 0f;
+        public float Damage = 85f;
+        public float Radius = 2.8f;
+        public float Speed = 15f;
+        public int FireballCount = 3;
+        public int PierceCount = 1;
+        public float Cooldown = 1.4f;
+        public float CameraShakeScale = 50f;
         public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }
 

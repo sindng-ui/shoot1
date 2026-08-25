@@ -179,7 +179,9 @@ graph TD
 | | `MonsterTuningConfig.cs [NEW]` | `MonsterTuningConfigData`, `MonsterStatConfig` | 7종 일반 몬스터(슬라임/박쥐/해골/골렘/화염임프/독거미/흑기사) 및 보스 스탯 설정 데이터 모델 |
 | | `SkillTuningSliderFactory.cs [UPDATED]` | `SkillTuningSliderFactory` | **🎨 샌드박스 슬라이더 UI 팩토리: 슬라이더 + [-]/[+] 스텝 버튼 + 키보드 숫자 직접 입력창(`InputField`) 완벽 결합 및 100% 양방향 실시간 동기화** (271줄, 500줄 규칙 준수) |
 | | `SkillTuningMemoryCache.cs [NEW]` | `SkillTuningMemoryCache` | 스킬 테스트 모드에서 L1~L5 레벨 간 이동 시 각 레벨별로 튜닝한 수치(공격력, 쿨다운, 반경 등)를 메모리에 완벽 보존/복원하는 세션 캐시 관리자 |
-| | `InGameHudView.cs` | `InGameHudView` | 1920x1080 반응형 CanvasScaler, 상단 EXP 바, HP/타이머/킬/골드 HUD, 6칸 스킬 인벤토리 |
+| **UI** | `InGameHudView.cs [UPDATED]` | `InGameHudView` | **하단 3단 메인 HUD 매니저: 10칸 골드 EXP바 + 6스킬 슬롯 시계방향 쿨타임 마스크 & 우상단 투사체 개수 뱃지(`2`, `3`...) + 투구 엠블럼 체력바 (373줄)** |
+| | `InGameHudBuilder.cs [NEW]` | `InGameHudBuilder` | 절차적 3단 메인 HUD UI 팩토리 빌더 (슬롯별 투사체 카운트 뱃지 포함, 345줄) |
+| | `HudSpriteHelper.cs [NEW]` | `HudSpriteHelper` | 10칸 분할 EXP 프레임, 다이아몬드 레벨 뱃지, 골드 스킬 슬롯 보더, 투구 엠블럼, 체력바 프레임 프로시저럴 비주얼 생성기 (236줄) |
 | | `PlayerHealthBarView.cs` | `PlayerHealthBarView` | 플레이어 머리 위를 따라다니는 초경량 오버헤드 미니 체력바 (SpriteRenderer 기반 무할당) |
 | | `PauseMenuUiView.cs` | `PauseMenuUiView` | ESC 일시정지 다이얼로그 (계속하기, ⚙️ 환경 설정, 다시 시작, 게임 종료) |
 | | `GameOverResultUiView.cs` | `GameOverResultUiView` | 플레이어 사망 시 골드 정산, [다시 도전하기] 씬 리로드 |
@@ -195,7 +197,12 @@ graph TD
 | | `GroundStompManagerView.cs [UPDATED]` | `GroundStompManagerView` | 전사 지면 강타 발동 시 **128x128 대지 파쇄 크레이터 & 실제 도메인 반경 100% 일치 림 경계선**, 12개 포물선 암석 파편 & 엠버 비산, 화면 진동 연동 뷰 매니저 |
 | | `WhirlwindManagerView.cs [NEW]` | `WhirlwindManagerView` | 전사 휠윈드 발동 시 **128x128 360도 강철 소용돌이 3중 칼날 & 1080 deg/s 초고속 사이클론 스핀**, 바람 잔상 및 8개 윈드 스파크 비산 뷰 매니저 (16개 무할당 풀링) |
 | | `ArrowRainManagerView.cs [UPDATED]` | `ArrowRainManagerView` | 궁수 화살비 & 스텔라 레인 발동 시 20~60발의 화살이 지면에 꽂히는 첫 프레임에 몬스터에게 1:1 즉시 대미지를 가하는 착탄 동기화 뷰 매니저 (**바닥 원형 인디케이터/무늬 0.6초 후 페이드아웃 및 깔끔한 조기 제거 적용**) |
+| | `RewardIconHelper.cs [UPDATED]` | `RewardIconHelper` | 인게임 보상 및 스킬 슬롯용 프로시저럴 픽셀아트 아이콘 마스터 캐시 및 디스패처 (198줄) |
+| | `RangerRewardIconHelper.cs [NEW]` | `RangerRewardIconHelper` | **궁수 스킬 전용 아이콘 생성기 (관통화살, 화살비 타겟팅 마법진+집중일제사격, 풍인 3날 부메랑, 스텔라레인 등 고유 픽셀아트)** |
+| | `WarriorRewardIconHelper.cs [NEW]` | `WarriorRewardIconHelper` | **전사 스킬 전용 아이콘 생성기 (대검베기, 휠윈드 3중 회오리날, 지면강타 크레이터, 블러드이터 등)** |
+| | `PassiveRewardIconHelper.cs [NEW]` | `PassiveRewardIconHelper` | **패시브 9종 전용 아이콘 생성기 (흡혈귀의 이빨, 바람의 깃털, 마나 룬, 강철 갑옷, 황금 반지, 생명의 펜던트, 치명타의 눈 등)** |
 | | `MagicSkillManagerView.cs [UPDATED]` | `MagicSkillManagerView` | 서리폭발/빙하샤드 및 **기가스톰 초고전압 중뇌격 플라즈마 기둥(0.72m) & 일반 체인라이트닝 썬더볼트(0.34m)** 뷰 매니저 |
+| | `MeteorStrikeManagerView.cs [UPDATED]`| `MeteorStrikeManagerView`| **인페르노 화염구 뷰 매니저: 거대 헬파이어 화염구 3발 발사 + 1회 관통(1차 충돌 폭발 + 관통 비행 + 2차 폭발) + 7초 화상 DoT & 마그마 네뷸라 이펙트** |
 | | `WizardSkillSpriteHelper.cs [UPDATED]`| `WizardSkillSpriteHelper`| 마법사 스킬 전용 프로시저럴 스프라이트 생성기 (화염구 혜성/폭발구/불씨, **32x16 고전압 플라즈마 번개 빔**, 16x16 십자 전기 스파크) |
 | | `MagicSkillVisualModels.cs [NEW]` | `MagicSkillVisualModels` | 서리 파동/번개 볼트/빙하 파편/전기 스파크 풀링 인스턴스 데이터 모델 (500줄 규칙 준수 모듈화) |
 | | `FireballSkillManagerView.cs [NEW]` | `FireballSkillManagerView` | [마법사 기본 스킬] **초고속 혜성 화염구 투사체(Comet Fireball, 18m/s) 비행 & 불씨 잔상**, **128x128 다단 플라즈마 화염 폭발 성운**, **8방향 방사형 불티(Embers) 비산 및 카메라 셰이크** 뷰 매니저 (266줄, 0-Allocation 풀링) |

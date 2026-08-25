@@ -141,6 +141,9 @@ namespace HappyShoot.View.UI
                     {
                         ms.BaseDamage = config.MeteorStrike.Damage;
                         ms.ExplosionRadius = config.MeteorStrike.Radius;
+                        ms.FireballCount = config.MeteorStrike.FireballCount;
+                        ms.PierceCount = config.MeteorStrike.PierceCount;
+                        ms.Speed = config.MeteorStrike.Speed;
                     }
                     if (skill.Trigger is CooldownTrigger cdMs) cdMs.Cooldown = cooldown(config.MeteorStrike.Cooldown);
                     break;
@@ -333,6 +336,9 @@ namespace HappyShoot.View.UI
                     {
                         config.MeteorStrike.Damage = ms.BaseDamage;
                         config.MeteorStrike.Radius = ms.ExplosionRadius;
+                        config.MeteorStrike.FireballCount = ms.FireballCount;
+                        config.MeteorStrike.PierceCount = ms.PierceCount;
+                        config.MeteorStrike.Speed = ms.Speed;
                     }
                     if (skill.Trigger is CooldownTrigger cdMsPull) config.MeteorStrike.Cooldown = cdMsPull.Cooldown;
                     break;

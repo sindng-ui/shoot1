@@ -204,10 +204,10 @@ namespace HappyShoot.View.Bootstrap
 
             // Wizard Evolutions (3)
             evolutionManager.RegisterRecipe(new SkillEvolutionRecipe(
-                "fireball", "passive_rune", "meteor_strike", "메테오 스트라이크",
+                "fireball", "passive_rune", "meteor_strike", "인페르노 화염구",
                 () => {
                     var cfg = SkillConfigRepository.Instance.GetConfig();
-                    return new CompositeSkill("meteor_strike", "메테오 스트라이크", new CooldownTrigger(cfg.MeteorStrike.Cooldown), new ClosestEnemyTargeter(), new MeteorStrikeEffect(cfg.MeteorStrike.Damage, cfg.MeteorStrike.Radius));
+                    return new CompositeSkill("meteor_strike", "인페르노 화염구", new CooldownTrigger(cfg.MeteorStrike.Cooldown), new ClosestEnemyTargeter(), new MeteorStrikeEffect(cfg.MeteorStrike.Damage, cfg.MeteorStrike.Radius, cfg.MeteorStrike.Speed, cfg.MeteorStrike.FireballCount, cfg.MeteorStrike.PierceCount), range: 9.0f);
                 }));
 
             evolutionManager.RegisterRecipe(new SkillEvolutionRecipe(

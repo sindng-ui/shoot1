@@ -160,7 +160,7 @@ namespace HappyShoot.View.UI
             AddSkillButton("storm_bow", "⚡ 폭풍의 활 [궁수]", ref currentY);
             AddSkillButton("phantom_glaive", "🪃 팬텀 글레이브 [궁수]", ref currentY);
             AddSkillButton("stellar_rain", "🌟 스텔라 레인 [궁수]", ref currentY);
-            AddSkillButton("meteor_strike", "☄️ 메테오 스트라이크 [마법사]", ref currentY);
+            AddSkillButton("meteor_strike", "☄️ 인페르노 화염구 [마법사]", ref currentY);
             AddSkillButton("blizzard_nova", "❄️ 블리자드 노바 [마법사]", ref currentY);
             AddSkillButton("gigastorm_lightning", "⚡ 기가스톰 체인 [마법사]", ref currentY);
             currentY -= 6f;
@@ -347,7 +347,7 @@ namespace HappyShoot.View.UI
                 case "orbital": return "오비탈 블레이드 [공용]";
                 case "blood_eater": return "✨ 블러드 이터";
                 case "storm_bow": return "✨ 폭풍의 활";
-                case "meteor_strike": return "☄️ 메테오 스트라이크";
+                case "meteor_strike": return "☄️ 인페르노 화염구";
                 default: return id;
             }
         }

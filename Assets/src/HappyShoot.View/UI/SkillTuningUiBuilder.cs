@@ -80,7 +80,7 @@ namespace HappyShoot.View.UI
             ("fireball", "화염구", "wizard", false),
             ("frost_nova", "서리 폭발", "wizard", false),
             ("chain_lightning", "연쇄 번개", "wizard", false),
-            ("meteor_strike", "☄️ 메테오 스트라이크", "wizard", true),
+            ("meteor_strike", "☄️ 인페르노 화염구", "wizard", true),
             ("blizzard_nova", "❄️ 블리자드 노바", "wizard", true),
             ("gigastorm_lightning", "⚡ 기가스톰 체인", "wizard", true),
 

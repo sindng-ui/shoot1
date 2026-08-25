@@ -157,6 +157,17 @@ namespace HappyShoot.View.UI
                         if (mem.Count.HasValue) orb.BladeCount = mem.Count.Value;
                     }
                     break;
+
+                case "meteor_strike":
+                    if (skill.Effect is MeteorStrikeEffect ms)
+                    {
+                        if (mem.Damage.HasValue) ms.BaseDamage = mem.Damage.Value;
+                        if (mem.Radius.HasValue) ms.ExplosionRadius = mem.Radius.Value;
+                        if (mem.Count.HasValue) ms.FireballCount = mem.Count.Value;
+                        if (mem.ExtraParam1.HasValue) ms.PierceCount = (int)mem.ExtraParam1.Value;
+                        if (mem.Speed.HasValue) ms.Speed = mem.Speed.Value;
+                    }
+                    break;
             }
         }
 

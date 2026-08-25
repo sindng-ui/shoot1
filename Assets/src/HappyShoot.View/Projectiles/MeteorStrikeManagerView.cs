@@ -1,61 +1,53 @@
 using System.Collections.Generic;
 using UnityEngine;
+using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Events;
+using HappyShoot.Domain.Spatial;
 using HappyShoot.View.Cameras;
+using HappyShoot.View.Monsters;
 using HappyShoot.View.Utils;
 
 namespace HappyShoot.View.Projectiles
 {
     /// <summary>
-    /// Presentation manager for Meteor Strike (Evolved Fireball):
-    /// 1. Sleek, comfortable golden-amber rune target indicator.
-    /// 2. Blazing high-gravity dropping meteor with fiery comet trail.
-    /// 3. Compact golden shockwave ring (reduced to less than half screen spread).
-    /// 4. Brilliant instant white-gold nova glint, magma crater decal, and ascending flame burst.
+    /// Presentation manager for Evolved Meteor Strike (Inferno Fireball):
+    /// 1. Fires 3 massive blazing inferno comets.
+    /// 2. Pierces 1 time (explodes on 1st monster collision AND on 2nd collision/destination).
+    /// 3. Creates high-res incandescent magma explosions with 7-second burn DoT and camera shake.
     /// Strictly modular and under 500 lines.
     /// </summary>
     public class MeteorStrikeManagerView : MonoBehaviour
     {
-        private struct ActiveIndicator
-        {
-            public GameObject Root;
-            public SpriteRenderer DecalRenderer;
-            public SpriteRenderer PulseRenderer;
-            public Vector2 Position;
-            public float Radius;
-            public float Elapsed;
-            public float Duration;
-            public bool IsActive;
-        }
-
-        private struct ActiveMeteor
+        private struct ActiveInfernoComet
         {
             public GameObject Root;
             public SpriteRenderer Renderer;
             public Vector2 StartPos;
-            public Vector2 TargetPos;
-            public float Elapsed;
-            public float Duration;
+            public Vector2 Direction;
+            public float Speed;
+            public float DistanceTravelled;
+            public float MaxDistance;
             public float Radius;
-            public float TrailTimer;
+            public float Damage;
+            public int PiercesRemaining;
+            public float SparkTimer;
             public bool IsActive;
+            public HashSet<int> HitMonsterIds;
         }
 
-        private struct ActiveBlast
+        private struct ActiveInfernoExplosion
         {
             public GameObject Root;
-            public SpriteRenderer RingRenderer;
-            public SpriteRenderer CoreRenderer;
-            public SpriteRenderer FlashRenderer;
-            public SpriteRenderer CraterRenderer;
-            public Vector2 Center;
+            public SpriteRenderer Renderer;
+            public Vector2 Position;
+            public float TargetScale;
+            public float RotSpeed;
             public float Elapsed;
             public float Duration;
-            public float TargetScale;
             public bool IsActive;
         }
 
-        private struct MeteorDebris
+        private struct ActiveInfernoEmber
         {
             public GameObject Root;
             public SpriteRenderer Renderer;
@@ -66,256 +58,125 @@ namespace HappyShoot.View.Projectiles
             public bool IsActive;
         }
 
-        private readonly List<ActiveIndicator> _indicatorPool = new List<ActiveIndicator>(6);
-        private readonly List<ActiveMeteor> _meteorPool = new List<ActiveMeteor>(6);
-        private readonly List<ActiveBlast> _blastPool = new List<ActiveBlast>(6);
-        private readonly List<MeteorDebris> _debrisPool = new List<MeteorDebris>(36);
+        private const int CometPoolSize = 18;
+        private const int ExplosionPoolSize = 24;
+        private const int EmberPoolSize = 64;
+
+        private readonly List<ActiveInfernoComet> _cometPool = new List<ActiveInfernoComet>(CometPoolSize);
+        private readonly List<ActiveInfernoExplosion> _explosionPool = new List<ActiveInfernoExplosion>(ExplosionPoolSize);
+        private readonly List<ActiveInfernoEmber> _emberPool = new List<ActiveInfernoEmber>(EmberPoolSize);
+        private readonly List<ISpatialEntity> _collisionQueryBuffer = new List<ISpatialEntity>(32);
+        private readonly List<ISpatialEntity> _damageHitBuffer = new List<ISpatialEntity>(64);
 
         private EventBus _eventBus;
-        private Sprite _indicatorSprite;
-        private Sprite _meteorSprite;
-        private Sprite _flameSprite;
-        private Sprite _ringSprite;
-        private Sprite _flashSprite;
-        private Sprite _craterSprite;
+        private MonsterSpawnerView _spawnerView;
+        private Player.PlayerView _playerView;
+        private Sprite _cometSprite;
+        private Sprite _explosionSprite;
+        private Sprite _emberSprite;
 
-        public void Initialize(EventBus eventBus)
+        public void Initialize(EventBus eventBus, MonsterSpawnerView spawnerView = null, Player.PlayerView playerView = null)
         {
             _eventBus = eventBus;
-            _indicatorSprite = WizardSpriteHelper.GetOrCreateTargetIndicatorSprite(128);
-            _meteorSprite = WizardSpriteHelper.GetOrCreateMeteorSprite(48);
-            _flameSprite = WizardSpriteHelper.GetOrCreateFireballSprite(32);
-            _ringSprite = SkillSpriteHelper.GetOrCreateGroundStompSprite();
-            _flashSprite = WizardSpriteHelper.GetOrCreateNovaFlashSprite(32);
-            _craterSprite = WizardSpriteHelper.GetOrCreateMagmaCraterSprite(64);
+            _spawnerView = spawnerView;
+            _playerView = playerView;
+
+            _cometSprite = WizardSkillSpriteHelper.GetOrCreateFireballCometSprite();
+            _explosionSprite = WizardSkillSpriteHelper.GetOrCreateFireballExplosionSprite();
+            _emberSprite = WizardSkillSpriteHelper.GetOrCreateEmberSparkSprite();
 
             PrewarmPools();
-            _eventBus?.Subscribe<MeteorStrikeExecutedEvent>(OnMeteorStrikeExecuted);
+            _eventBus?.Subscribe<MeteorStrikeLaunchedEvent>(OnMeteorStrikeLaunched);
         }
 
         private void OnDestroy()
         {
-            _eventBus?.Unsubscribe<MeteorStrikeExecutedEvent>(OnMeteorStrikeExecuted);
+            _eventBus?.Unsubscribe<MeteorStrikeLaunchedEvent>(OnMeteorStrikeLaunched);
         }
 
         private void PrewarmPools()
         {
-            // 1. Target Indicator Decal Pool (Soft, comfortable rune circles)
-            for (int i = 0; i < 6; i++)
+            // 1. Comet Projectiles Pool
+            for (int i = 0; i < CometPoolSize; i++)
             {
-                var go = new GameObject($"MeteorIndicator_{i}");
-                go.transform.SetParent(transform, false);
-
-                var decal = new GameObject("Decal");
-                decal.transform.SetParent(go.transform, false);
-                var decalSr = decal.AddComponent<SpriteRenderer>();
-                decalSr.sprite = _indicatorSprite;
-                decalSr.sortingOrder = 5;
-
-                var pulse = new GameObject("PulseRing");
-                pulse.transform.SetParent(go.transform, false);
-                var pulseSr = pulse.AddComponent<SpriteRenderer>();
-                pulseSr.sprite = _indicatorSprite;
-                pulseSr.sortingOrder = 6;
-
-                go.SetActive(false);
-                _indicatorPool.Add(new ActiveIndicator { Root = go, DecalRenderer = decalSr, PulseRenderer = pulseSr, IsActive = false });
-            }
-
-            // 2. Meteor Drop Pool
-            for (int i = 0; i < 6; i++)
-            {
-                var go = new GameObject($"MeteorDrop_{i}");
+                var go = new GameObject($"InfernoComet_{i}");
                 go.transform.SetParent(transform, false);
                 var sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = _meteorSprite;
-                sr.sortingOrder = 35;
+                sr.sprite = _cometSprite;
+                sr.sortingOrder = 28;
                 go.SetActive(false);
 
-                _meteorPool.Add(new ActiveMeteor { Root = go, Renderer = sr, IsActive = false });
-            }
-
-            // 3. Blast Shockwave & Impact Glint Pool
-            for (int i = 0; i < 6; i++)
-            {
-                var go = new GameObject($"MeteorBlast_{i}");
-                go.transform.SetParent(transform, false);
-
-                var crater = new GameObject("MagmaCrater");
-                crater.transform.SetParent(go.transform, false);
-                var craterSr = crater.AddComponent<SpriteRenderer>();
-                craterSr.sprite = _craterSprite;
-                craterSr.sortingOrder = 4;
-
-                var ring = new GameObject("ShockRing");
-                ring.transform.SetParent(go.transform, false);
-                var ringSr = ring.AddComponent<SpriteRenderer>();
-                ringSr.sprite = _ringSprite;
-                ringSr.sortingOrder = 34;
-
-                var core = new GameObject("FlameCore");
-                core.transform.SetParent(go.transform, false);
-                var coreSr = core.AddComponent<SpriteRenderer>();
-                coreSr.sprite = _flameSprite;
-                coreSr.sortingOrder = 36;
-
-                var flash = new GameObject("NovaFlash");
-                flash.transform.SetParent(go.transform, false);
-                var flashSr = flash.AddComponent<SpriteRenderer>();
-                flashSr.sprite = _flashSprite;
-                flashSr.sortingOrder = 38;
-
-                go.SetActive(false);
-                _blastPool.Add(new ActiveBlast
+                _cometPool.Add(new ActiveInfernoComet
                 {
                     Root = go,
-                    RingRenderer = ringSr,
-                    CoreRenderer = coreSr,
-                    FlashRenderer = flashSr,
-                    CraterRenderer = craterSr,
-                    IsActive = false
+                    Renderer = sr,
+                    IsActive = false,
+                    HitMonsterIds = new HashSet<int>()
                 });
             }
 
-            // 4. Debris & Trail Particle Pool
-            for (int i = 0; i < 36; i++)
+            // 2. Explosion Pool
+            for (int i = 0; i < ExplosionPoolSize; i++)
             {
-                var go = new GameObject($"MeteorDebris_{i}");
+                var go = new GameObject($"InfernoExplosion_{i}");
                 go.transform.SetParent(transform, false);
                 var sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = _flameSprite;
-                sr.sortingOrder = 37;
+                sr.sprite = _explosionSprite;
+                sr.sortingOrder = 29;
                 go.SetActive(false);
 
-                _debrisPool.Add(new MeteorDebris { Root = go, Renderer = sr, IsActive = false });
+                _explosionPool.Add(new ActiveInfernoExplosion { Root = go, Renderer = sr, IsActive = false });
+            }
+
+            // 3. Ember Sparks Pool
+            for (int i = 0; i < EmberPoolSize; i++)
+            {
+                var go = new GameObject($"InfernoEmber_{i}");
+                go.transform.SetParent(transform, false);
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = _emberSprite;
+                sr.sortingOrder = 30;
+                go.SetActive(false);
+
+                _emberPool.Add(new ActiveInfernoEmber { Root = go, Renderer = sr, IsActive = false });
             }
         }
 
-        private void OnMeteorStrikeExecuted(MeteorStrikeExecutedEvent e)
+        private void OnMeteorStrikeLaunched(MeteorStrikeLaunchedEvent evt)
         {
-            Vector2 target = new Vector2((float)e.TargetPosition.X, (float)e.TargetPosition.Y);
-            Vector2 skyOrigin = target + new Vector2(-3.0f, 8.5f);
-            float radius = e.Radius > 0f ? e.Radius : 3.0f;
-            float dropDuration = 0.32f;
+            Vector2 start = new Vector2((float)evt.StartPosition.X, (float)evt.StartPosition.Y);
+            Vector2 target = new Vector2((float)evt.TargetPosition.X, (float)evt.TargetPosition.Y);
+            Vector2 dir = (target - start).normalized;
+            if (dir.sqrMagnitude < 0.001f) dir = Vector2.right;
 
-            // 1. Spawn Ground Target Indicator
-            for (int i = 0; i < _indicatorPool.Count; i++)
+            float maxDist = Mathf.Max(Vector2.Distance(start, target) + 4.0f, 10.0f);
+            float speed = evt.Speed > 0f ? evt.Speed : 15f;
+
+            for (int i = 0; i < _cometPool.Count; i++)
             {
-                var ind = _indicatorPool[i];
-                if (!ind.IsActive)
+                var comet = _cometPool[i];
+                if (!comet.IsActive)
                 {
-                    ind.IsActive = true;
-                    ind.Position = target;
-                    ind.Radius = radius;
-                    ind.Elapsed = 0f;
-                    ind.Duration = dropDuration;
+                    comet.IsActive = true;
+                    comet.StartPos = start;
+                    comet.Direction = dir;
+                    comet.Speed = speed;
+                    comet.DistanceTravelled = 0f;
+                    comet.MaxDistance = maxDist;
+                    comet.Radius = evt.Radius;
+                    comet.Damage = evt.Damage;
+                    comet.PiercesRemaining = evt.MaxPierces;
+                    comet.SparkTimer = 0f;
+                    comet.HitMonsterIds.Clear();
 
-                    ind.Root.transform.position = target;
-                    ind.DecalRenderer.transform.localScale = Vector3.one * (radius * 2.0f);
-                    ind.DecalRenderer.color = new Color(1.0f, 0.65f, 0.15f, 0.30f);
+                    float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                    comet.Root.transform.position = start;
+                    comet.Root.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+                    comet.Root.transform.localScale = Vector3.one * 1.6f; // Giant 1.6x size for Evolved spell
+                    comet.Renderer.color = new Color(1.0f, 0.45f, 0.15f, 1.0f); // Fiery orange-red tint
+                    comet.Root.SetActive(true);
 
-                    ind.PulseRenderer.transform.localScale = Vector3.one * (radius * 2.2f);
-                    ind.PulseRenderer.color = new Color(1.0f, 0.80f, 0.25f, 0.25f);
-
-                    ind.Root.SetActive(true);
-                    _indicatorPool[i] = ind;
-                    break;
-                }
-            }
-
-            // 2. Spawn Dropping Meteor (High velocity with flaming corona)
-            for (int i = 0; i < _meteorPool.Count; i++)
-            {
-                var m = _meteorPool[i];
-                if (!m.IsActive)
-                {
-                    m.IsActive = true;
-                    m.StartPos = skyOrigin;
-                    m.TargetPos = target;
-                    m.Elapsed = 0f;
-                    m.Duration = dropDuration;
-                    m.Radius = radius;
-                    m.TrailTimer = 0f;
-                    m.Root.transform.position = skyOrigin;
-                    m.Root.transform.localScale = Vector3.one * 1.35f;
-                    m.Root.SetActive(true);
-                    _meteorPool[i] = m;
-                    break;
-                }
-            }
-        }
-
-        private void TriggerGroundExplosion(Vector2 center, float radius)
-        {
-            // 1. Punchy Camera Shake
-            CameraFollowView.Instance?.TriggerShake("meteor_strike", duration: 0.18f, intensity: 0.28f);
-
-            // 2. Spawn Shockwave Blast, Glint Flash & Magma Crater (Compact spread: radius * 0.85f)
-            for (int i = 0; i < _blastPool.Count; i++)
-            {
-                var b = _blastPool[i];
-                if (!b.IsActive)
-                {
-                    b.IsActive = true;
-                    b.Center = center;
-                    b.Elapsed = 0f;
-                    b.Duration = 0.35f;
-                    b.TargetScale = radius * 0.85f; // Reduced to less than half of previous 2.0f scale
-                    b.Root.transform.position = center;
-
-                    b.CraterRenderer.transform.localScale = Vector3.one * (radius * 1.1f);
-                    b.CraterRenderer.color = new Color(1.0f, 0.55f, 0.15f, 0.70f);
-
-                    b.FlashRenderer.transform.localScale = Vector3.one * (radius * 1.5f);
-                    b.FlashRenderer.color = new Color(1.0f, 0.95f, 0.70f, 1.0f);
-
-                    b.Root.SetActive(true);
-                    _blastPool[i] = b;
-                    break;
-                }
-            }
-
-            // 3. Spawn 8 Compact Magma Spark Debris Particles (Tightly contained within impact zone)
-            int spawnedDebris = 0;
-            for (int i = 0; i < _debrisPool.Count && spawnedDebris < 8; i++)
-            {
-                var d = _debrisPool[i];
-                if (!d.IsActive)
-                {
-                    d.IsActive = true;
-                    d.Position = center;
-                    float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-                    float speed = Random.Range(2.2f, 4.8f); // Soft, controlled splash
-                    d.Velocity = new Vector2(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed);
-                    d.Elapsed = 0f;
-                    d.Lifetime = Random.Range(0.22f, 0.38f);
-                    d.Root.transform.position = center;
-                    d.Root.transform.localScale = Vector3.one * Random.Range(0.35f, 0.60f);
-                    d.Renderer.color = (spawnedDebris % 2 == 0) ? new Color(1.0f, 0.90f, 0.30f, 1.0f) : new Color(1.0f, 0.55f, 0.12f, 1.0f);
-                    d.Root.SetActive(true);
-                    _debrisPool[i] = d;
-                    spawnedDebris++;
-                }
-            }
-        }
-
-        private void SpawnFallingTrailParticle(Vector2 pos)
-        {
-            for (int i = 0; i < _debrisPool.Count; i++)
-            {
-                var d = _debrisPool[i];
-                if (!d.IsActive)
-                {
-                    d.IsActive = true;
-                    d.Position = pos + new Vector2(Random.Range(-0.15f, 0.15f), Random.Range(-0.15f, 0.15f));
-                    d.Velocity = new Vector2(Random.Range(-0.8f, 0.8f), Random.Range(0.3f, 1.5f));
-                    d.Elapsed = 0f;
-                    d.Lifetime = Random.Range(0.12f, 0.20f);
-                    d.Root.transform.position = d.Position;
-                    d.Root.transform.localScale = Vector3.one * Random.Range(0.25f, 0.45f);
-                    d.Renderer.color = new Color(1.0f, 0.75f, 0.20f, 0.85f);
-                    d.Root.SetActive(true);
-                    _debrisPool[i] = d;
+                    _cometPool[i] = comet;
                     break;
                 }
             }
@@ -324,126 +185,219 @@ namespace HappyShoot.View.Projectiles
         private void Update()
         {
             float dt = Time.deltaTime;
+            ISpatialGrid2D grid = _spawnerView != null ? _spawnerView.MonsterGrid : null;
 
-            // 1. Update Target Indicators
-            for (int i = 0; i < _indicatorPool.Count; i++)
+            // 1. Update Flying Inferno Comets
+            for (int i = 0; i < _cometPool.Count; i++)
             {
-                var ind = _indicatorPool[i];
-                if (ind.IsActive)
+                var c = _cometPool[i];
+                if (!c.IsActive) continue;
+
+                float step = c.Speed * dt;
+                c.DistanceTravelled += step;
+                Vector2 curPos = c.StartPos + c.Direction * c.DistanceTravelled;
+                c.Root.transform.position = curPos;
+
+                // Flight ember trail
+                c.SparkTimer += dt;
+                if (c.SparkTimer >= 0.025f)
                 {
-                    ind.Elapsed += dt;
-                    float progress = Mathf.Clamp01(ind.Elapsed / ind.Duration);
+                    c.SparkTimer = 0f;
+                    SpawnFlightEmber(curPos);
+                }
 
-                    float currentPulseScale = Mathf.Lerp(ind.Radius * 2.2f, ind.Radius * 2.0f, progress);
-                    ind.PulseRenderer.transform.localScale = Vector3.one * currentPulseScale;
-
-                    float alpha = Mathf.Lerp(0.18f, 0.45f, progress);
-                    ind.DecalRenderer.color = new Color(1.0f, 0.65f, 0.15f, alpha);
-                    ind.PulseRenderer.color = new Color(1.0f, 0.80f, 0.25f, alpha * 0.65f);
-
-                    if (progress >= 1.0f)
+                // Check collision against monsters
+                bool triggerExplosion = false;
+                if (grid != null)
+                {
+                    int found = grid.QueryRadiusNonAlloc(new Vector2D(curPos.x, curPos.y), 0.7f, _collisionQueryBuffer);
+                    for (int m = 0; m < found; m++)
                     {
-                        ind.IsActive = false;
-                        ind.Root.SetActive(false);
+                        if (_collisionQueryBuffer[m] is MonsterEntity monster && monster.IsActive && !monster.IsDead)
+                        {
+                            if (!c.HitMonsterIds.Contains(monster.Id))
+                            {
+                                c.HitMonsterIds.Add(monster.Id);
+                                triggerExplosion = true;
+                                break;
+                            }
+                        }
                     }
-                    _indicatorPool[i] = ind;
+                }
+
+                if (triggerExplosion)
+                {
+                    // Explode on hit!
+                    SpawnExplosion(curPos, c.Radius);
+                    ApplyExplosionDamage(curPos, c.Radius, c.Damage);
+
+                    if (c.PiercesRemaining > 0)
+                    {
+                        // 1st explosion done, continue piercing!
+                        c.PiercesRemaining--;
+                    }
+                    else
+                    {
+                        // 2nd explosion done, destroy comet!
+                        c.IsActive = false;
+                        c.Root.SetActive(false);
+                    }
+                }
+                else if (c.DistanceTravelled >= c.MaxDistance)
+                {
+                    // Reached max range -> Final explosion
+                    c.IsActive = false;
+                    c.Root.SetActive(false);
+                    SpawnExplosion(curPos, c.Radius);
+                    ApplyExplosionDamage(curPos, c.Radius, c.Damage);
+                }
+
+                _cometPool[i] = c;
+            }
+
+            // 2. Update Explosion Nebulae
+            for (int i = 0; i < _explosionPool.Count; i++)
+            {
+                var exp = _explosionPool[i];
+                if (!exp.IsActive) continue;
+
+                exp.Elapsed += dt;
+                float progress = Mathf.Clamp01(exp.Elapsed / exp.Duration);
+
+                float scale = Mathf.Lerp(exp.TargetScale * 0.2f, exp.TargetScale, Mathf.Sin(progress * Mathf.PI * 0.5f));
+                exp.Root.transform.localScale = Vector3.one * scale;
+                exp.Root.transform.Rotate(0f, 0f, exp.RotSpeed * dt);
+
+                float alpha = Mathf.Clamp01(1.0f - progress * progress);
+                Color col = Color.Lerp(Color.white, new Color(1f, 0.25f, 0.05f, 1f), progress);
+                col.a = alpha * 0.95f;
+                exp.Renderer.color = col;
+
+                if (exp.Elapsed >= exp.Duration)
+                {
+                    exp.IsActive = false;
+                    exp.Root.SetActive(false);
+                }
+
+                _explosionPool[i] = exp;
+            }
+
+            // 3. Update Ember Sparks
+            for (int i = 0; i < _emberPool.Count; i++)
+            {
+                var ember = _emberPool[i];
+                if (!ember.IsActive) continue;
+
+                ember.Elapsed += dt;
+                if (ember.Elapsed >= ember.Lifetime)
+                {
+                    ember.IsActive = false;
+                    ember.Root.SetActive(false);
+                    _emberPool[i] = ember;
+                    continue;
+                }
+
+                ember.Position += ember.Velocity * dt;
+                ember.Velocity *= Mathf.Pow(0.20f, dt);
+                ember.Root.transform.position = ember.Position;
+
+                float t = ember.Elapsed / ember.Lifetime;
+                Color col = ember.Renderer.color;
+                col.a = 1.0f - t;
+                ember.Renderer.color = col;
+                _emberPool[i] = ember;
+            }
+        }
+
+        private void SpawnExplosion(Vector2 pos, float radius)
+        {
+            CameraFollowView.Instance?.TriggerShake("meteor_strike", duration: 0.16f, intensity: 0.26f);
+
+            for (int i = 0; i < _explosionPool.Count; i++)
+            {
+                var exp = _explosionPool[i];
+                if (!exp.IsActive)
+                {
+                    exp.IsActive = true;
+                    exp.Position = pos;
+                    exp.TargetScale = Mathf.Max(1.0f, radius * 1.15f);
+                    exp.RotSpeed = Random.Range(-200f, 200f);
+                    exp.Elapsed = 0f;
+                    exp.Duration = 0.28f;
+
+                    exp.Root.transform.position = pos;
+                    exp.Root.transform.rotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+                    exp.Root.transform.localScale = Vector3.one * (exp.TargetScale * 0.2f);
+                    exp.Renderer.color = Color.white;
+                    exp.Root.SetActive(true);
+                    _explosionPool[i] = exp;
+                    break;
                 }
             }
 
-            // 2. Update Dropping Meteors (Cubic in acceleration + dense comet trail)
-            for (int i = 0; i < _meteorPool.Count; i++)
+            // 10 radial embers per explosion
+            int spawned = 0;
+            for (int i = 0; i < _emberPool.Count && spawned < 10; i++)
             {
-                var m = _meteorPool[i];
-                if (m.IsActive)
+                var ember = _emberPool[i];
+                if (!ember.IsActive)
                 {
-                    m.Elapsed += dt;
-                    m.TrailTimer += dt;
-                    float t = Mathf.Clamp01(m.Elapsed / m.Duration);
-                    float easeT = t * t * t; // Fast gravity drop
+                    ember.IsActive = true;
+                    ember.Position = pos;
+                    float angle = (spawned * 36f + Random.Range(-10f, 10f)) * Mathf.Deg2Rad;
+                    float speed = Random.Range(5.0f, 10.0f);
+                    ember.Velocity = new Vector2(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed);
+                    ember.Elapsed = 0f;
+                    ember.Lifetime = Random.Range(0.28f, 0.48f);
 
-                    Vector2 currentPos = Vector2.Lerp(m.StartPos, m.TargetPos, easeT);
-                    m.Root.transform.position = currentPos;
-
-                    if (m.TrailTimer >= 0.03f)
-                    {
-                        m.TrailTimer = 0f;
-                        SpawnFallingTrailParticle(currentPos);
-                    }
-
-                    Vector2 dir = m.TargetPos - m.StartPos;
-                    float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-                    m.Root.transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
-
-                    if (t >= 1.0f)
-                    {
-                        m.IsActive = false;
-                        m.Root.SetActive(false);
-                        TriggerGroundExplosion(m.TargetPos, m.Radius);
-                    }
-                    _meteorPool[i] = m;
+                    ember.Root.transform.position = pos;
+                    ember.Root.transform.localScale = Vector3.one * Random.Range(0.9f, 1.4f);
+                    ember.Renderer.color = new Color(1.0f, Random.Range(0.4f, 0.85f), 0.1f, 1f);
+                    ember.Root.SetActive(true);
+                    _emberPool[i] = ember;
+                    spawned++;
                 }
             }
+        }
 
-            // 3. Update Blasts (Clean shockwave ring, instant nova flash fade, and glowing crater)
-            for (int i = 0; i < _blastPool.Count; i++)
+        private void SpawnFlightEmber(Vector2 pos)
+        {
+            for (int i = 0; i < _emberPool.Count; i++)
             {
-                var b = _blastPool[i];
-                if (b.IsActive)
+                var ember = _emberPool[i];
+                if (!ember.IsActive)
                 {
-                    b.Elapsed += dt;
-                    float progress = Mathf.Clamp01(b.Elapsed / b.Duration);
+                    ember.IsActive = true;
+                    ember.Position = pos + Random.insideUnitCircle * 0.2f;
+                    float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+                    float speed = Random.Range(1.2f, 3.0f);
+                    ember.Velocity = new Vector2(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed);
+                    ember.Elapsed = 0f;
+                    ember.Lifetime = Random.Range(0.14f, 0.24f);
 
-                    // A. Instant Nova Glint (Fades out quickly in first 0.09s)
-                    float flashAlpha = Mathf.Clamp01(1.0f - (b.Elapsed / 0.09f));
-                    b.FlashRenderer.color = new Color(1.0f, 0.95f, 0.70f, flashAlpha);
-                    b.FlashRenderer.transform.localScale = Vector3.one * (b.TargetScale * 1.5f * (1f + flashAlpha * 0.3f));
-
-                    // B. Compact Golden Shockwave Ring (Clean, sharp boundary)
-                    float ringScale = Mathf.Lerp(b.TargetScale * 0.3f, b.TargetScale * 1.2f, Mathf.Sqrt(progress));
-                    b.RingRenderer.transform.localScale = Vector3.one * ringScale;
-                    float ringAlpha = Mathf.Clamp01(1.0f - progress * 1.8f);
-                    b.RingRenderer.color = new Color(1.0f, 0.80f, 0.25f, ringAlpha * 0.60f);
-
-                    // C. Center Flame Core & Magma Crater (Smooth ember fade)
-                    float coreScale = Mathf.Lerp(b.TargetScale * 0.2f, b.TargetScale * 0.7f, Mathf.Sin(progress * Mathf.PI * 0.5f));
-                    b.CoreRenderer.transform.localScale = Vector3.one * coreScale;
-                    b.CoreRenderer.color = new Color(1.0f, 0.50f, 0.10f, Mathf.Clamp01((1f - progress) * 0.65f));
-
-                    float craterAlpha = Mathf.Clamp01(1.0f - progress);
-                    b.CraterRenderer.color = new Color(1.0f, 0.55f, 0.15f, craterAlpha * 0.55f);
-
-                    if (progress >= 1.0f)
-                    {
-                        b.IsActive = false;
-                        b.Root.SetActive(false);
-                    }
-                    _blastPool[i] = b;
+                    ember.Root.transform.position = ember.Position;
+                    ember.Root.transform.localScale = Vector3.one * 0.85f;
+                    ember.Renderer.color = new Color(1.0f, 0.40f, 0.05f, 0.9f);
+                    ember.Root.SetActive(true);
+                    _emberPool[i] = ember;
+                    break;
                 }
             }
+        }
 
-            // 4. Update Debris & Trail Particles
-            for (int i = 0; i < _debrisPool.Count; i++)
+        private void ApplyExplosionDamage(Vector2 pos, float radius, float damage)
+        {
+            ISpatialGrid2D grid = _spawnerView != null ? _spawnerView.MonsterGrid : null;
+            if (grid == null) return;
+
+            int hitCount = grid.QueryRadiusNonAlloc(new Vector2D(pos.x, pos.y), radius, _damageHitBuffer);
+            for (int i = 0; i < hitCount; i++)
             {
-                var d = _debrisPool[i];
-                if (d.IsActive)
+                if (_damageHitBuffer[i] is MonsterEntity monster && monster.IsActive && !monster.IsDead)
                 {
-                    d.Elapsed += dt;
-                    float progress = Mathf.Clamp01(d.Elapsed / d.Lifetime);
-
-                    d.Position += d.Velocity * dt;
-                    d.Velocity = Vector2.Lerp(d.Velocity, Vector2.zero, dt * 5.0f);
-                    d.Root.transform.position = d.Position;
-
-                    float alpha = 1.0f - progress;
-                    Color curCol = d.Renderer.color;
-                    d.Renderer.color = new Color(curCol.r, curCol.g, curCol.b, alpha);
-
-                    if (progress >= 1.0f)
-                    {
-                        d.IsActive = false;
-                        d.Root.SetActive(false);
-                    }
-                    _debrisPool[i] = d;
+                    monster.ApplyBurn(duration: 7.0f, damagePerTick: damage * 0.15f);
+                    var (hitDmg, isCrit) = _playerView != null ? _playerView.Entity.RollDamage(damage) : (damage, false);
+                    monster.TakeDamage(hitDmg, isCrit);
                 }
             }
         }

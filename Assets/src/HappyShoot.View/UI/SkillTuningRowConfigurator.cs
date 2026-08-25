@@ -301,8 +301,11 @@ namespace HappyShoot.View.UI
                 case "meteor_strike":
                     if (skill.Effect is MeteorStrikeEffect ms)
                     {
-                        AddRow("☄️ 공격력 (Damage)", ms.BaseDamage, 30f, 500f, 10f, v => { ms.BaseDamage = v; mem.Damage = v; if (config?.MeteorStrike != null) config.MeteorStrike.Damage = v; });
-                        AddRow("📏 폭발 반경 (Radius)", ms.ExplosionRadius, 1.0f, 12.0f, 0.2f, v => { ms.ExplosionRadius = v; mem.Radius = v; if (config?.MeteorStrike != null) config.MeteorStrike.Radius = v; });
+                        AddRow("☄️ 공격력 (Damage)", ms.BaseDamage, 20f, 400f, 5f, v => { ms.BaseDamage = v; mem.Damage = v; if (config?.MeteorStrike != null) config.MeteorStrike.Damage = v; });
+                        AddRow("📏 폭발 반경 (Radius)", ms.ExplosionRadius, 1.0f, 8.0f, 0.2f, v => { ms.ExplosionRadius = v; mem.Radius = v; if (config?.MeteorStrike != null) config.MeteorStrike.Radius = v; });
+                        AddRow("🔥 화염구 수 (Count)", ms.FireballCount, 1f, 8f, 1f, v => { ms.FireballCount = (int)v; mem.Count = (int)v; if (config?.MeteorStrike != null) config.MeteorStrike.FireballCount = (int)v; }, isInt: true);
+                        AddRow("🎯 관통 횟수 (Pierces)", ms.PierceCount, 0f, 5f, 1f, v => { ms.PierceCount = (int)v; mem.ExtraParam1 = v; if (config?.MeteorStrike != null) config.MeteorStrike.PierceCount = (int)v; }, isInt: true);
+                        AddRow("🚀 탄속 (Speed)", ms.Speed, 5f, 35f, 1f, v => { ms.Speed = v; mem.Speed = v; if (config?.MeteorStrike != null) config.MeteorStrike.Speed = v; });
                     }
                     if (cdTrigger != null)
                         AddRow("⏱️ 쿨다운 (Cooldown)", cdTrigger.Cooldown, 0.2f, 4.0f, 0.1f, v => { cdTrigger.Cooldown = isInfiniteSpam ? 0.06f : v; mem.Cooldown = v; if (config?.MeteorStrike != null) config.MeteorStrike.Cooldown = v; });
