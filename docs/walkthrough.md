@@ -45,6 +45,17 @@
 - **몬스터 속성별 처치 미니 파티클 VFX (무할당 64개 풀링)**:
   - 몬스터 사망 시 고유 속성에 맞는 찰진 미니 파티클(3~6개)이 톡 튀어나오며 부드럽게 페이드아웃 (골렘-황금 룬 스파크, 거미-형광 독즙, 임프/보스-화염 불씨, 해골-아이보리 뼈가루, 슬라임-에메랄드 젤리).
 
+### 5) GitHub Actions CI/CD Windows (.exe) 자동 빌드 플로우 ([.github/workflows/build.yml](file:///k:/unityprojects/shoot1/shoot1/.github/workflows/build.yml), [BuildScript.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/Editor/BuildScript.cs))
+- **Unity Batchmode 헤드리스 빌드 자동화 (`BuildScript.BuildWindows`)**:
+  - `EditorBuildSettings`에 등록된 씬을 자동 감지하여 `Builds/StandaloneWindows64/HappyShoot.exe`를 안전하게 빌드하고 빌드 리포트(용량/에러)를 로깅.
+- **GitHub Actions 워크플로우 (`.github/workflows/build.yml`)**:
+  - `main` 브랜치 푸시 또는 깃허브 웹에서 **[Run workflow]** 버튼 클릭 시 자동 빌드 수행.
+  - `Library` 캐싱으로 재빌드 시간 대폭 단축.
+  - 빌드 산출물을 `HappyShoot-Windows-x64.zip` 압축 아티팩트로 자동 업로드하여 **깃허브 웹에서 원클릭으로 실행 파일 다운로드 가능!**
+  - 버전 태그(`v*`) 푸시 시 GitHub Releases에 자동 릴리즈 생성 및 파일 첨부.
+- **라이선스 등록 가이드 ([docs/GITHUB_ACTIONS_SETUP.md](file:///k:/unityprojects/shoot1/shoot1/docs/GITHUB_ACTIONS_SETUP.md))**:
+  - 1회성 Unity 라이선스 등록 방법 상세 안내 문서 제공.
+
 ---
 
 ## 3. 검증 결과

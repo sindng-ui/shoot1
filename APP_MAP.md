@@ -119,7 +119,11 @@ graph TD
 | | `CharacterStats.cs [UPDATED]` | `CharacterStats` | **기본 크리티컬 확률 10% (0.10f)**, 치명타 피해량(1.5x), 이동속도, 공격력, 방어력, 쿨감 등 종합 스탯 |
 | | `PlayerClassFactory.cs [UPDATED]` | `PlayerClassFactory`, `CharacterClassType` | 전사/마법사 기본 크리 10%, 궁수 기본 크리 20% 및 전용 크리 배율(1.75x) 팩토리 |
 | | `MonsterEntity.cs [UPDATED]` | `MonsterEntity` | 몬스터 도메인 로직, `TakeDamage(float damage, bool isCritical = false)` 지원 |
-| | `MonsterType.cs` | `MonsterType`, `MonsterDefinition` | 7종 일반 몬스터 및 보스 아키타입 정의 |
+| | `MonsterType.cs`| `MonsterType`, `MonsterDefinition` | 7종 일반 몬스터 및 보스 아키타입 정의 |
+| **Editor / CI/CD** | `BuildScript.cs [NEW]` | `BuildScript` | **GitHub Actions CI/CD 배치모드 헤드리스 빌드 자동화 스크립트** (`BuildWindows()`, SampleScene 자동 수집, BuildReport 검증 및 종료코드 반환) (90줄) |
+| | `.github/workflows/build.yml [NEW]` | `CI Workflow` | **GitHub Actions Windows Standalone (.exe) 자동 빌드 & Zip 아티팩트 업로드 및 Release 게시 플로우** |
+| | `.github/workflows/activation.yml [NEW]` | `Activation Workflow` | **Unity 라이선스 활성화 요청 파일(.alf) 자동 생성 워크플로우** |
+| | `docs/GITHUB_ACTIONS_SETUP.md [NEW]` | `CI Setup Guide` | **Unity 라이선스 Secrets 등록 및 원클릭 빌드 다운로드 상세 가이드** |
 | | `MonsterSpawnerView.cs [UPDATED]` | `MonsterSpawnerView` | 몬스터 스폰 & 페이즈 관리, **도망 방향 120도 부채꼴 스폰 억제(90% 후방/측면 스폰 & 도주로 확보)**, **레벨업 경험치 순증가분의 30% 비례 최대 몹 수 완만 스케일링**, **경험치 증가분 대비 몹 체력 제곱근(Square Root) 완만 감쇠 공식(`1.0 + sqrt(expIncrease) * ratio`) 및 최대 상한선(`MobHpMaxCapMultiplier`) 클램핑 실시간 동적 체력 스케일링(`GetExpGrowthHpScale()`)** 뷰 매니저 |
 | | `MonsterSpawner.cs [UPDATED]` | `MonsterSpawner` | 도메인 몬스터 스포너 (1,280 오브젝트 풀링, SpatialGrid2D 공간분할 쿼리) |
 | | `ProjectileEntity.cs [UPDATED]` | `ProjectileEntity` | 투사체 관통 적중 및 미니 AoE 폭발 시 개별 크리티컬 롤링 판정 지원 |

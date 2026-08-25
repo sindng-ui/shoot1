@@ -1,0 +1,73 @@
+name: 🚀 Build HappyShoot (Windows Standalone)
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  buildWindows:
+    name: 🎮 Build Windows 64-bit Standalone (.exe)
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout repository
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      # 2. Cache Library folder to speed up subsequent builds
+      - name: ⚡ Cache Unity Library Folder
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-StandaloneWindows64-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-StandaloneWindows64-
+            Library-
+
+      # 3. Execute Unity StandaloneWindows64 Build via Game-CI
+      - name: 🔨 Execute Unity Build
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          targetPlatform: StandaloneWindows64
+          unityVersion: 6000.3.22f1
+          buildsPath: Builds
+          buildName: HappyShoot
+          customParameters: -executeMethod HappyShoot.Editor.BuildScript.BuildWindows
+
+      # 4. Zip the build output for clean artifact download
+      - name: 📦 Compress Build Output
+        run: |
+          cd Builds/StandaloneWindows64
+          zip -r ../../HappyShoot-Windows-x64.zip ./*
+          cd ../..
+
+      # 5. Upload artifact to GitHub Actions summary page
+      - name: 📤 Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HappyShoot-Windows-x64
+          path: HappyShoot-Windows-x64.zip
+          retention-days: 14
+
+      # 6. If triggered by a release tag (e.g. v0.3.5), automatically publish a GitHub Release
+      - name: 🏷️ Publish GitHub Release (Tag Triggers Only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: HappyShoot-Windows-x64.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
