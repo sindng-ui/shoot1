@@ -40,6 +40,7 @@ namespace HappyShoot.View.Monsters
 
         private EnemyProjectileManagerView _enemyProjManager;
         private BossLaserBeamManagerView _laserManager;
+        private BossHazardZoneManagerView _hazardManager;
         private readonly WavePhaseController _phaseCtrl = new WavePhaseController();
 
         public MonsterSpawner DomainSpawner => _domainSpawner;
@@ -59,6 +60,11 @@ namespace HappyShoot.View.Monsters
             var laserGo = new GameObject("BossLaserManager");
             laserGo.transform.SetParent(transform, false);
             _laserManager = laserGo.AddComponent<BossLaserBeamManagerView>();
+
+            // Hazard zone system
+            var hazardGo = new GameObject("BossHazardManager");
+            hazardGo.transform.SetParent(transform, false);
+            _hazardManager = hazardGo.AddComponent<BossHazardZoneManagerView>();
         }
 
         private void PrewarmViewPool(int count)
@@ -80,7 +86,7 @@ namespace HappyShoot.View.Monsters
             _activeViewMap.Clear();
             for (int v = 0; v < _viewPool.Count; v++) _viewPool[v].gameObject.SetActive(false);
 
-            float radius = 2.2f;
+            float radius = 3.0f;
             float step = (Mathf.PI * 2f) / count;
             for (int i = 0; i < count; i++)
             {
@@ -99,10 +105,9 @@ namespace HappyShoot.View.Monsters
             for (int i = 0; i < batCount; i++)
             {
                 float angle = Random.Range(0f, Mathf.PI * 2f);
-                float dist  = Random.Range(2.5f, 6.0f);
+                float dist = Random.Range(3.5f, 6.5f);
                 Vector2D pos = center + new Vector2D(Mathf.Cos(angle) * dist, Mathf.Sin(angle) * dist);
-                float speed  = Random.Range(3.8f, 5.2f);
-                var bat = _domainSpawner.SpawnMonster("박쥐 허수아비", 999999f, speed, 0f, 1, 0, pos, MonsterType.Bat);
+                var bat = _domainSpawner.SpawnMonster("박쥐 허수아비", 999999f, 0f, 0f, 1, 0, pos, MonsterType.Bat);
                 GetOrCreateView(bat);
             }
         }
@@ -117,8 +122,9 @@ namespace HappyShoot.View.Monsters
                 playerView.EventBus.Subscribe<MonsterDamagedEvent>(OnMonsterDamaged);
                 playerView.EventBus.Subscribe<BossDiedEvent>(OnBossDied);
 
-                // Give laser manager access to event bus and player
+                // Give laser and hazard managers access to event bus and player
                 _laserManager.Initialize(playerView.EventBus, playerView);
+                _hazardManager.Initialize(playerView.EventBus, playerView);
             }
         }
 
@@ -133,6 +139,7 @@ namespace HappyShoot.View.Monsters
             bool isSecondBoss = _spawnedBoss1 && evt.BossName != "Goblin King";
             _phaseCtrl.OnBossDefeated(isSecondBoss);
             _laserManager.ClearBoss();
+            _hazardManager.ClearBoss();
             _activeBoss = null;
         }
 
@@ -156,6 +163,7 @@ namespace HappyShoot.View.Monsters
             _elapsedTime += dt;
             _phaseCtrl.Update(dt);
 
+            // Boss Spawning checks
             CheckBossSpawns(playerPos);
 
             float currentSpawnInterval = GetSpawnInterval(_elapsedTime);
@@ -181,7 +189,7 @@ namespace HappyShoot.View.Monsters
 
             _domainSpawner.Update(_playerView.Entity, dt);
 
-            // Skeleton ranged attacks
+            // Skeleton & Dark Knight ranged projectile attacks
             if (_enemyProjManager != null)
             {
                 var activeMonsters = _domainSpawner.ActiveMonsters;
@@ -196,11 +204,23 @@ namespace HappyShoot.View.Monsters
                         float dy = playerPos.Y - m.Position.Y;
                         float dist = Mathf.Sqrt(dx * dx + dy * dy);
                         Vector2 dir = dist > 0.001f ? new Vector2(dx / dist, dy / dist) : Vector2.left;
-                        float skelProjSpeed = monsterCfg != null ? monsterCfg.Skeleton.ProjectileSpeed : 2.75f;
-                        float skelProjDmg = monsterCfg != null ? monsterCfg.Skeleton.ProjectileDamage : m.ContactDamage * 0.8f;
-                        _enemyProjManager.SpawnBoneProjectile(
-                            new Vector2(m.Position.X, m.Position.Y), dir,
-                            speed: skelProjSpeed, damage: skelProjDmg);
+
+                        if (m.Type == MonsterType.DarkKnight)
+                        {
+                            float dkProjSpeed = monsterCfg != null ? monsterCfg.DarkKnight.ProjectileSpeed : 3.5f;
+                            float dkProjDmg = monsterCfg != null ? monsterCfg.DarkKnight.ProjectileDamage : 20.0f;
+                            _enemyProjManager.SpawnDarkSlashProjectile(
+                                new Vector2(m.Position.X, m.Position.Y), dir,
+                                speed: dkProjSpeed, damage: dkProjDmg);
+                        }
+                        else
+                        {
+                            float skelProjSpeed = monsterCfg != null ? monsterCfg.Skeleton.ProjectileSpeed : 2.75f;
+                            float skelProjDmg = monsterCfg != null ? monsterCfg.Skeleton.ProjectileDamage : m.ContactDamage * 0.8f;
+                            _enemyProjManager.SpawnBoneProjectile(
+                                new Vector2(m.Position.X, m.Position.Y), dir,
+                                speed: skelProjSpeed, damage: skelProjDmg);
+                        }
                     }
                 }
             }
@@ -230,6 +250,7 @@ namespace HappyShoot.View.Monsters
                 GetOrCreateView(boss);
                 _activeBoss = boss;
                 _laserManager.SetActiveBoss(boss);
+                _hazardManager.SetActiveBoss(boss);
             }
             // Phase 2: after wave 3 fully deployed (110s post boss1 defeat)
             else if (_phaseCtrl.CurrentPhase == WavePhaseController.Phase.Boss2Spawned && !_spawnedBoss2)
@@ -240,6 +261,7 @@ namespace HappyShoot.View.Monsters
                 GetOrCreateView(boss);
                 _activeBoss = boss;
                 _laserManager.SetActiveBoss(boss);
+                _hazardManager.SetActiveBoss(boss);
             }
         }
 

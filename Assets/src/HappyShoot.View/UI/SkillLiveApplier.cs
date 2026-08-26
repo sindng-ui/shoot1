@@ -34,7 +34,9 @@ namespace HappyShoot.View.UI
                     if (skill.Effect is GroundStompEffect stomp)
                     {
                         stomp.BaseDamage = config.GroundStomp.Damage;
-                        stomp.StompRadius = config.GroundStomp.Radius;
+                        stomp.Length = config.GroundStomp.Length;
+                        stomp.StepRadius = config.GroundStomp.Radius;
+                        stomp.LineCount = config.GroundStomp.LineCount;
                     }
                     if (skill.Trigger is CooldownTrigger cdStomp) cdStomp.Cooldown = cooldown(config.GroundStomp.Cooldown);
                     break;
@@ -229,7 +231,9 @@ namespace HappyShoot.View.UI
                     if (skill.Effect is GroundStompEffect stomp)
                     {
                         config.GroundStomp.Damage = stomp.BaseDamage;
-                        config.GroundStomp.Radius = stomp.StompRadius;
+                        config.GroundStomp.Length = stomp.Length;
+                        config.GroundStomp.Radius = stomp.StepRadius;
+                        config.GroundStomp.LineCount = stomp.LineCount;
                     }
                     if (skill.Trigger is CooldownTrigger cdStomp) config.GroundStomp.Cooldown = cdStomp.Cooldown;
                     break;

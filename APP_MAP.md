@@ -102,7 +102,7 @@ graph TD
 | | `PiercingArrowEffect.cs [UPDATED]` | `PiercingArrowEffect` | [궁수 전용] 화면 끝까지 무제한 관통 사격, 투사체별 개별 크리티컬 롤링 및 **발사 시마다 시원한 BowShoot 활시위/공기 가르기 사운드 이벤트 100% 발행 연동** |
 | | `GreatswordSlashEffect.cs [UPDATED]` | `GreatswordSlashEffect` | [전사 전용] **전방 부채꼴 궤적 판정(30°~360° 전방위 각도 완벽 지원) 및 크리티컬 대미지 롤링 연동** |
 | | `WhirlwindEffect.cs [UPDATED]` | `WhirlwindEffect` | [전사 전용] 360도 전방위 회전 검기 연속 크리티컬 롤링 연동 |
-| | `GroundStompEffect.cs [UPDATED]` | `GroundStompEffect` | [전사 전용] 대지 균열 지진파 크리티컬 롤링 연동 |
+| | `GroundStompEffect.cs [UPDATED]` | `GroundStompEffect` | [전사 전용] **디아블로4 야만용사 [지각변동(Upheaval)] 스타일 방향성 연쇄 지진 충격파 (LV1~2: 1줄기, LV3~4: 2줄기 부채꼴, LV5: 3줄기 광역 지각변동, 사거리/반경/줄기수 튜닝 연동)** |
 | | `BloodEaterEffect.cs [UPDATED]` | `BloodEaterEffect` | [전사 진화 1] **대검 + 뱀파이어 이빨 -> 흡혈 대검 베기 (부채꼴 각도 30°~360° 커스텀 튜닝 및 라이브 동기화 지원)** |
 | | `TempestWhirlwindEffect.cs [NEW]` | `TempestWhirlwindEffect` | [전사 진화 2] 휠윈드 + 바람의 깃털 -> 2연속 초고속 사이클론 + 4방향 칼바람 참격 파동 |
 | | `EarthshakerEffect.cs [NEW]` | `EarthshakerEffect` | [전사 진화 3] 지면강타 + 강철 갑옷 -> 중심 마그마 크레이터 + 십자 4방향 3단 지진 균열 충격파 |
@@ -118,12 +118,12 @@ graph TD
 | **Entities** | `PlayerEntity.cs [UPDATED]` | `PlayerEntity`, `ISpatialEntity` | 플레이어 도메인 로직, `RollDamage(float rawDamage)` 크리티컬 롤러 제공 |
 | | `CharacterStats.cs [UPDATED]` | `CharacterStats` | **기본 크리티컬 확률 10% (0.10f)**, 치명타 피해량(1.5x), 이동속도, 공격력, 방어력, 쿨감 등 종합 스탯 |
 | | `PlayerClassFactory.cs [UPDATED]` | `PlayerClassFactory`, `CharacterClassType` | 전사/마법사 기본 크리 10%, 궁수 기본 크리 20% 및 전용 크리 배율(1.75x) 팩토리 |
-| | `MonsterEntity.cs [UPDATED]` | `MonsterEntity` | 몬스터 도메인 로직, `TakeDamage(float damage, bool isCritical = false)` 지원 |
-| | `MonsterType.cs`| `MonsterType`, `MonsterDefinition` | 7종 일반 몬스터 및 보스 아키타입 정의 |
+| | `MonsterEntity.cs [UPDATED]` | `MonsterEntity` | 몬스터 도메인 로직, `TakeDamage(float damage, bool isCritical = false)` 및 원거리 AI 타이머 지원 |
+| | `MonsterType.cs [UPDATED]`| `MonsterType`, `MonsterDefinition` | **흑기사(DarkKnight) 원거리 암흑 검기 공격 속성(`isRanged: true, preferredDistance: 4.8f, attackInterval: 2.5f`)** 및 7종 일반 몬스터/보스 아키타입 정의 |
 | **Editor / CI/CD** | `BuildScript.cs [NEW]` | `BuildScript` | **GitHub Actions CI/CD 배치모드 헤드리스 빌드 자동화 스크립트** (`BuildWindows()`, SampleScene 자동 수집, BuildReport 검증 및 종료코드 반환) (90줄) |
 | | `.github/workflows/build.yml [NEW]` | `CI Workflow` | **GitHub Actions Windows Standalone (.exe) 자동 빌드 & Zip 아티팩트 업로드 및 Release 게시 플로우** |
-| | `.github/workflows/activation.yml [NEW]` | `Activation Workflow` | **Unity 라이선스 활성화 요청 파일(.alf) 자동 생성 워크플로우** |
-| | `docs/GITHUB_ACTIONS_SETUP.md [NEW]` | `CI Setup Guide` | **Unity 라이선스 Secrets 등록 및 원클릭 빌드 다운로드 상세 가이드** |
+| | `.github/workflows/activation.yml [NEW]` | `Activation Workflow` | **Game-CI v2 공식 Unity 활성화 요청 파일(.alf) 자동 생성 워크플로우** |
+| | `docs/GITHUB_ACTIONS_SETUP.md [NEW]` | `CI Setup Guide` | **Unity 활성화 및 라이선스(`UNITY_LICENSE`) 등록 가이드** |
 | | `MonsterSpawnerView.cs [UPDATED]` | `MonsterSpawnerView` | 몬스터 스폰 & 페이즈 관리, **도망 방향 120도 부채꼴 스폰 억제(90% 후방/측면 스폰 & 도주로 확보)**, **레벨업 경험치 순증가분의 30% 비례 최대 몹 수 완만 스케일링**, **경험치 증가분 대비 몹 체력 제곱근(Square Root) 완만 감쇠 공식(`1.0 + sqrt(expIncrease) * ratio`) 및 최대 상한선(`MobHpMaxCapMultiplier`) 클램핑 실시간 동적 체력 스케일링(`GetExpGrowthHpScale()`)** 뷰 매니저 |
 | | `MonsterSpawner.cs [UPDATED]` | `MonsterSpawner` | 도메인 몬스터 스포너 (1,280 오브젝트 풀링, SpatialGrid2D 공간분할 쿼리) |
 | | `ProjectileEntity.cs [UPDATED]` | `ProjectileEntity` | 투사체 관통 적중 및 미니 AoE 폭발 시 개별 크리티컬 롤링 판정 지원 |
@@ -143,12 +143,13 @@ graph TD
 | | `CriticalHitVfxManagerView.cs [UPDATED]` | `CriticalHitVfxManagerView` | **황금빛 십자 섬광 + 8방향 스타버스트 크리티컬 스파크 VFX(sortingOrder = 35) 및 샌드박스 설정 연동 크리티컬 역경직(Hit-Stop) 트리거** |
 | | `HitStopManager.cs [UPDATED]` | `HitStopManager` | **GC Zero-Allocation Update 루프 타이머 기반 초경량 타격 역경직 매니저 (코루틴/가비지 압박 제거, 찰진 20% 슬로우모션 최적화)** |
 | **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | 클래스별 외형 3단 분기, **플레이어 몸체(sortingOrder = 15) 및 무기(평상시 16, 스윙 시 30 동적 승격)**, **대검 베기 & 블러드 이터 부채꼴 각도(`ArcAngleDegrees`)에 연동된 동적 스윙 궤적(-halfArc ~ +halfArc) 및 100% 선명 회전(sortingOrder = 30)** |
-| **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **2.5D Blob Shadow 타원 그림자(sortingOrder = 9)**, **몬스터 몸체(sortingOrder = 10)**, **피격 시 탄성 스쿼시(0.28/-0.22) & 타격 진동 반동(Jolt) 대폭 강화로 시원한 피격 손맛 선사** |
-| | `MonsterSpawnerView.cs [UPDATED]` | `MonsterSpawnerView` | `MonsterDamagedEvent.IsCritical`을 `MonsterView.OnHitFeedback(evt.IsCritical)`로 전달 |
+| | `MonsterSpawnerView.cs [UPDATED]` | `MonsterSpawnerView` | `MonsterDamagedEvent.IsCritical`을 `MonsterView.OnHitFeedback(evt.IsCritical)`로 전달, **보스 1/2 처치 후 페이즈별 웨이브 진행(`_phaseCtrl.Update`) 및 원거리 몬스터(흑기사/스켈레톤) 투사체 발사 제어 (402줄)** |
+| | `WavePhaseController.cs [UPDATED]` | `WavePhaseController` | **보스 1 처치 후 시간 경과(30s, 70s, 110s)에 따른 Phase 2 다채로운 몬스터 생태계(화염임프/독거미/흑기사/골렘/스켈레톤 조합) 순차 전개 및 Boss 2 스폰 제어 (124줄)** |
 | **Projectiles** | `ProjectileView.cs [UPDATED]` | `ProjectileManagerView`, `ProjectileView` | 관통 화살(Piercing Arrow, sortingOrder = 24), 황금빛 앰버 골드 일관 유지 (128개 사전 생성 Prewarm 및 0-Allocation 풀링) |
 | | `OrbitingBladeView.cs [UPDATED]` | `OrbitingBladeView` | 공통 수호의 검(sortingOrder = 22)으로 몬스터(10) 및 플레이어(15) 상단에서 선명하게 회전 |
 | | `WhirlwindManagerView.cs [UPDATED]` | `WhirlwindManagerView` | 전사 휠윈드 회전 검날(sortingOrder = 28) 및 바람 스파크(sortingOrder = 29)로 몬스터 상단에서 사이클론 폭풍 선명 연출 |
-| | `GroundStompManagerView.cs [UPDATED]` | `GroundStompManagerView` | 전사 지면 강타 바닥 크레이터(sortingOrder = 2) 및 튀어오르는 암석 파편(sortingOrder = 26) |
+| | `GroundStompManagerView.cs [UPDATED]` | `GroundStompManagerView` | **💥 전사 지각변동(Upheaval) 뷰 매니저: 0.030초 초고속 간격으로 전방을 향해 쐐기형 V자 지진 충격파(Wedge Shockwave Crest, sortingOrder = 6)가 두두두두! 뻗어나가며 좌우 지반 바위 슬래브(Earth Chunks, sortingOrder = 5)가 들썩이는 역동적 지진 연출 (365줄)** |
+| | `UpheavalSpriteHelper.cs [NEW]` | `UpheavalSpriteHelper` | **전사 지각변동 전용 쐐기형 지진파 아크, 파쇄 바위 슬래브, 암석 가시 픽셀아트 생성기 (179줄)** |
 | | `MagicSkillManagerView.cs [UPDATED]` | `MagicSkillManagerView` | 서리폭발(sortingOrder = 26), 빙하샤드(27), 기가스톰/체인라이트닝 플라즈마 빔(28, 29) |
 
 ---
@@ -157,7 +158,7 @@ graph TD
 
 | 카테고리 | 파일명 | 주요 컴포넌트 | 설명 |
 | :--- | :--- | :--- | :--- |
-| **Audio** | `ProceduralAudioHelper.cs [UPDATED]` | `ProceduralAudioHelper` | **초극상 찰진 슬랩 스냅(1450Hz)+단단한 미트 펀치 럼블(240Hz)+바삭한 육질 크런치 타격음(`GeneratePunchHit`) 신규 합성**, **관통화살(BowShoot) 전용 활시위 릴리즈 + 날카로운 공기 가르기 휘이잉 Whoosh(`GenerateBowArrowWhoosh`) 사운드**, 화염구/서리폭발/연쇄번개 등 15종 프로시저럴 SFX 및 BGM 생성기 |
+| **Audio** | `ProceduralAudioHelper.cs [UPDATED]` | `ProceduralAudioHelper` | **초극상 찰진 슬랩 스냅+미트 펀치 타격음**, **관통화살 Whoosh 사운드**, **🦶 전사 지면강타(지각변동) 전용 단단한 지면 쿵(Low Thud 120->48Hz) + 대지 진동 럼블(68Hz) + 바삭한 암석 파쇄 크런치 스냅(`GenerateGroundStompQuake`) 사운드**, 16종 프로시저럴 SFX 및 BGM 생성기 |
 | | `SoundManagerView.cs [UPDATED]` | `SoundManagerView` | **32채널 풀링, 관통 피격음 볼륨 0.85f~1.0f 대폭 상향, 프레임당 최대 4개 지능형 캡핑(`MaxHitsPerFrame`) & 피치 랜덤 변조(0.90~1.15x)로 100마리 관통 시에도 귀가 안 아프고 찰진 연타 손맛 보장**, BGM 루프 재생, 도메인 이벤트 리액티브 오디오 |
 | **Projectiles & Spells** | `MeteorStrikeManagerView.cs [UPDATED]` | `MeteorStrikeManagerView` | **메테오 스트라이크 비주얼 대격변: 주변 붉은 번짐 절반 이하(`radius * 0.85f`) 축소, 황금빛 광선 림, 착탄 노바 섬광(Nova Flash), 지면 마그마 크레이터 룬, 중력 가속 혜성 꼬리 연출** |
 | **Bootstrap** | `GameBootstrap.cs [UPDATED]` | `GameBootstrap` | 마스터 부트스트랩 (카메라, 3영웅, 사운드 매니저, 마법 스킬 매니저, 메테오 매니저, 영구 상점, 세션, UI 일괄 생성 및 연동) |
@@ -177,17 +178,19 @@ graph TD
 | | `SkillTuningUiBuilder.cs [UPDATED]` | `SkillTuningUiBuilder` | 샌드박스 모드 UI 요소 생성 전담 헬퍼 (**6대 대분류 카테고리 탭: 전사/궁수/마법사/패시브/공통/시스템**, 500줄 규칙 준수 모듈화) |
 | | `SkillTuningPassiveConfigurator.cs [NEW]` | `SkillTuningPassiveConfigurator` | **🧬 9종 패시브 스킬 샌드박스 슬라이더 행 생성 및 실시간 핫리로드 연동 전담 헬퍼 (흡혈귀의 이빨, 바람의 깃털, 마나 룬, 강철 갑옷, 황금 반지, 생명의 펜던트, 발화의 불꽃, 과전류의 핵, 치명타의 눈)** |
 | | `SkillLiveApplier.cs [UPDATED]` | `SkillLiveApplier` | 스킬 수치 실시간 핫리로드 및 **`ApplyPassivesLive` 플레이어 보유 패시브 레벨 비례 `PlayerEntity.Stats` 실시간 재계산/동기화** |
-| | `SkillConfigRepository.cs [UPDATED]` | `SkillConfigRepository` | **📁 샌드박스 설정 파일 프로젝트 내부화** - `Assets/Config/skill_configs.json` 1순위 입출력 및 GitHub 동기화 보장 (AppData/PlayerPrefs 멀티 폴백 및 자동 마이그레이션) |
-| | `skill_configs.json [UPDATED]` | `Assets/Config/skill_configs.json` | **깃허브 형상관리 연동 샌드박스 튜닝 설정 파일** (전체 스킬/진화/패시브 9종/몬스터/경험치/크리티컬 커스텀 수치 보존) |
-| | `SkillConfigModels.cs [UPDATED]` | `SkillConfigData`, `PassiveConfigData`, `ExpConfig`, `CritStatConfig` | 전체 스킬/진화/**`PassiveConfigData`(9종 패시브 레벨당 증가 스탯/특수효과 수치)**, 경험치/몬스터 스탯, 플레이어 치명타/코어스탯 직렬화 모델 |
-| | `MonsterTuningConfig.cs [NEW]` | `MonsterTuningConfigData`, `MonsterStatConfig` | 7종 일반 몬스터(슬라임/박쥐/해골/골렘/화염임프/독거미/흑기사) 및 보스 스탯 설정 데이터 모델 |
+| | `SkillConfigRepository.cs [UPDATED]` | `SkillConfigRepository` | **📁 샌드박스 설정 파일 멀티 PC/Git 동기화 저장소** - `Assets/Resources/Config/skill_configs.json` 및 `Assets/Config/skill_configs.json` 이중 저장 & `Resources.Load<TextAsset>` 1순위 로드로 GitHub pull 시 다른 PC 및 빌드에서도 100% 최신 설정 공유 보장 (에디터 자동 AssetDatabase.Refresh 및 Fallback 지원) |
+| | `skill_configs.json [UPDATED]` | `Assets/Resources/Config/skill_configs.json` | **깃허브 형상관리 및 Unity Resources 공식 연동 샌드박스 튜닝 설정 파일** (전체 스킬/진화/패시브 9종/몬스터/경험치/크리티컬 커스텀 수치 보존 및 타 PC 즉각 공유) |
+| | `MonsterTuningConfig.cs [UPDATED]` | `MonsterTuningConfigData`, `DarkKnightStatConfig [NEW]`, `BossStatConfig [UPDATED]` | **흑기사 투사체 속도/대미지 (`DarkKnightStatConfig`) 및 보스 광역 장판 주기/대미지/반경 (`BossStatConfig`) 설정 데이터 모델** |
 | | `SkillTuningSliderFactory.cs [UPDATED]` | `SkillTuningSliderFactory` | **🎨 샌드박스 슬라이더 UI 팩토리: 슬라이더 + [-]/[+] 스텝 버튼 + 키보드 숫자 직접 입력창(`InputField`) 완벽 결합 및 100% 양방향 실시간 동기화** (271줄, 500줄 규칙 준수) |
 | | `SkillTuningMemoryCache.cs [NEW]` | `SkillTuningMemoryCache` | 스킬 테스트 모드에서 L1~L5 레벨 간 이동 시 각 레벨별로 튜닝한 수치(공격력, 쿨다운, 반경 등)를 메모리에 완벽 보존/복원하는 세션 캐시 관리자 |
+| **Boss & Attacks** | `BossHazardZoneManagerView.cs [NEW]` | `BossHazardZoneManagerView` | **💥 보스 대형 광역 장판 0-할당 풀링 매니저: 1.2s 붉은색 전조 경고 링 $\rightarrow$ 2.0s 마그마 지옥불 폭발 지속 피해 장판(직경 5.6m) $\rightarrow$ 소멸 (226줄)** |
+| | `EnemyProjectileManagerView.cs [UPDATED]` | `EnemyProjectileManagerView` | **해골 뼈 화살 + 흑기사 보라색 암흑 마법 검기(`SpawnDarkSlashProjectile`) 0-할당 풀링 매니저 (153줄)** |
+| | `EnemyAttackSpriteHelper.cs [NEW]` | `EnemyAttackSpriteHelper` | **보라색 암흑 검기, 보스 전조 경고 링, 보스 마그마 장판 프로시저럴 픽셀아트 생성기 (180줄)** |
 | **UI** | `InGameHudView.cs [UPDATED]` | `InGameHudView` | **메인 HUD 매니저: 하단 3단 EXP/스킬/HP 바 + 좌측 9종 패시브 슬롯 리스트 & 실시간 수치(ATK/SPD/RNG/ARM/EXP/HP/CRT 등) 표시 (442줄)** |
 | | `InGameHudBuilder.cs [NEW]` | `InGameHudBuilder` | 절차적 메인 HUD UI 팩토리 빌더 (하단 3단 및 좌측 패시브 슬롯 리스트 포함, 440줄) |
 | | `HudSpriteHelper.cs [NEW]` | `HudSpriteHelper` | 10칸 분할 EXP 프레임, 다이아몬드 레벨 뱃지, 골드 스킬 슬롯 보더, 투구 엠블럼, 체력바 프레임 프로시저럴 비주얼 생성기 (236줄) |
 | | `PlayerHealthBarView.cs` | `PlayerHealthBarView` | 플레이어 머리 위를 따라다니는 초경량 오버헤드 미니 체력바 (SpriteRenderer 기반 무할당) |
-| **Visual Feedback** | `AimReticleView.cs [UPDATED]` | `AimReticleView` | **마우스 4초 무조작(유휴) 시 레티클 부드러운 페이드아웃 숨김 및 마우스 이동/클릭 시 즉시 100% 복원, 인게임 플레이 중 OS 커서 숨김, UI 일시정지 시 OS 커서 자동 복원**, 소울스톤 스타일 48x48 네온 라임그린 레티클 (128줄) |
+| **Visual Feedback** | `AimReticleView.cs [UPDATED]` | `AimReticleView` | **최상위 Canvas Overlay (`ScreenSpaceOverlay`, sortingOrder: 32760) 기반 조준선**: 샌드박스 메뉴/HUD/팝업 등 모든 UI 위에서 가림 없이 100% 최상단 선명 렌더링, `raycastTarget = false`로 메뉴 조작 방해 제로, 마우스 4초 유휴 시 부드러운 페이드아웃, 클릭 펄스(1.35x), 브리딩 펄스(1.0~1.08x) (182줄) |
 | | `ReticleSpriteHelper.cs [NEW]` | `ReticleSpriteHelper` | 48x48 네온 라임-그린 십자선 과녁 링 프로시저럴 픽셀아트 생성기 (104줄) |
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
 | | `PauseMenuUiView.cs` | `PauseMenuUiView` | ESC 일시정지 다이얼로그 (계속하기, ⚙️ 환경 설정, 다시 시작, 게임 종료) |

@@ -76,13 +76,35 @@ namespace HappyShoot.Domain.Events
 
     public readonly struct GroundStompExecutedEvent : IDomainEvent
     {
-        public readonly Vector2D CenterPosition;
-        public readonly float Radius;
+        public readonly Vector2D Origin;
+        public readonly Vector2D MainDirection;
+        public readonly float Length;
+        public readonly float StepRadius;
+        public readonly int LineCount;
+        public readonly Vector2D[] StepPositions;
 
+        public GroundStompExecutedEvent(Vector2D origin, Vector2D mainDirection, float length, float stepRadius, int lineCount, Vector2D[] stepPositions)
+        {
+            Origin = origin;
+            MainDirection = mainDirection;
+            Length = length;
+            StepRadius = stepRadius;
+            LineCount = lineCount;
+            StepPositions = stepPositions;
+        }
+
+        public float Radius => StepRadius;
+        public Vector2D CenterPosition => Origin;
+
+        // Backward compatibility constructor for simple center/radius calls
         public GroundStompExecutedEvent(Vector2D centerPosition, float radius)
         {
-            CenterPosition = centerPosition;
-            Radius = radius;
+            Origin = centerPosition;
+            MainDirection = Vector2D.Right;
+            Length = radius * 2f;
+            StepRadius = radius;
+            LineCount = 1;
+            StepPositions = new[] { centerPosition };
         }
     }
 

@@ -25,10 +25,10 @@ namespace HappyShoot.View.Bootstrap
                 },
                 new[] { CharacterClassType.Warrior });
 
-            rewardManager.RegisterSkill("ground_stomp", "지면 강타", "발로 지면을 강하게 구르고 묵직한 지진 충격파를 일으켜 근처 적들을 타격 (레벨업 시 범위 및 파편 수 증가)",
+            rewardManager.RegisterSkill("ground_stomp", "지면 강타", "전방으로 지면을 강하게 내리쳐 연쇄 지진 충격파를 파파팍 솟구쳐 적들을 강타 (레벨업 시 줄기 수 및 사거리 증가)",
                 () => {
                     var cfg = SkillConfigRepository.Instance.GetConfig();
-                    return new CompositeSkill("ground_stomp", "지면 강타", new CooldownTrigger(cfg.GroundStomp.Cooldown), new ClosestEnemyTargeter(), new GroundStompEffect(cfg.GroundStomp.Damage, cfg.GroundStomp.Radius), range: cfg.GroundStomp.Radius);
+                    return new CompositeSkill("ground_stomp", "지면 강타", new CooldownTrigger(cfg.GroundStomp.Cooldown), new ClosestEnemyTargeter(), new GroundStompEffect(cfg.GroundStomp.Damage, cfg.GroundStomp.Length, cfg.GroundStomp.Radius, cfg.GroundStomp.LineCount), range: cfg.GroundStomp.Length);
                 },
                 new[] { CharacterClassType.Warrior });
 

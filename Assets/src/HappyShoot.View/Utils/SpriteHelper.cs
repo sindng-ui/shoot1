@@ -415,6 +415,9 @@ namespace HappyShoot.View.Utils
         public static Sprite GetOrCreateBloodOrbSprite(int size = 32) => SkillSpriteHelper.GetOrCreateBloodOrbSprite(size);
         public static Sprite GetOrCreateBoneSprite() => SkillSpriteHelper.GetOrCreateBoneSprite();
         public static Sprite GetOrCreateGroundStompSprite() => SkillSpriteHelper.GetOrCreateGroundStompSprite();
+        public static Sprite GetOrCreateUpheavalWaveSprite() => WarriorSkillSpriteHelper.GetOrCreateUpheavalWaveSprite();
+        public static Sprite GetOrCreateUpheavalChunkSprite() => WarriorSkillSpriteHelper.GetOrCreateUpheavalChunkSprite();
+        public static Sprite GetOrCreateUpheavalSpikeSprite() => WarriorSkillSpriteHelper.GetOrCreateUpheavalSpikeSprite();
         public static Sprite GetOrCreateWhirlwindBladeSprite() => SkillSpriteHelper.GetOrCreateWhirlwindBladeSprite();
 
         // Forwarding helpers for monsters and chests to MonsterSpriteHelper
@@ -426,6 +429,10 @@ namespace HappyShoot.View.Utils
         public static Sprite GetOrCreateToxicSpiderSprite(int size = 32) => MonsterSpriteHelper.GetOrCreateToxicSpiderSprite(size);
         public static Sprite GetOrCreateDarkKnightSprite(int size = 38) => MonsterSpriteHelper.GetOrCreateDarkKnightSprite(size);
         public static Sprite GetOrCreateChestSprite(int size = 24) => MonsterSpriteHelper.GetOrCreateChestSprite(size);
+        // Forwarding helpers for enemy projectiles and boss hazards to EnemyAttackSpriteHelper
+        public static Sprite GetOrCreateDarkSlashSprite(int w = 28, int h = 14) => EnemyAttackSpriteHelper.GetOrCreateDarkSlashSprite(w, h);
+        public static Sprite GetOrCreateWarningCircleSprite(int size = 64) => EnemyAttackSpriteHelper.GetOrCreateWarningCircleSprite(size);
+        public static Sprite GetOrCreateHazardMagmaSprite(int size = 64) => EnemyAttackSpriteHelper.GetOrCreateHazardMagmaSprite(size);
 
         public static Sprite GetOrCreateCircleSprite(int size = 32) => GetOrCreateWarriorSprite(size);
         public static Sprite GetOrCreateSquareSprite(int size = 16) => GetOrCreateGemSprite(size);

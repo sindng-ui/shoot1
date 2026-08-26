@@ -22,7 +22,7 @@ jobs:
         with:
           lfs: true
 
-      # 2. Cache Library folder to speed up subsequent builds
+      # 2. Cache Unity Library Folder
       - name: ⚡ Cache Unity Library Folder
         uses: actions/cache@v4
         with:

@@ -93,8 +93,10 @@ namespace HappyShoot.Domain.Skills
     [Serializable]
     public class GroundStompConfig
     {
-        public float Damage = 32f;
-        public float Radius = 2.2f;
+        public float Damage = 35f;
+        public float Length = 5.5f;
+        public float Radius = 0.70f;
+        public int LineCount = 1;
         public float Cooldown = 1.4f;
         public float CameraShakeScale = 0f;
         public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }

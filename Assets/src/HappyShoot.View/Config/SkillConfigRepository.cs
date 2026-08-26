@@ -24,8 +24,14 @@ namespace HappyShoot.View.Config
         {
             try
             {
+                string resPath = GetResourcesConfigFilePath();
+                if (File.Exists(resPath)) return true;
+
                 string projectPath = GetConfigFilePath();
                 if (File.Exists(projectPath)) return true;
+
+                var textAsset = Resources.Load<TextAsset>("Config/skill_configs");
+                if (textAsset != null && !string.IsNullOrEmpty(textAsset.text)) return true;
 
                 string persistentPath = GetPersistentConfigFilePath();
                 if (File.Exists(persistentPath)) return true;
@@ -51,7 +57,15 @@ namespace HappyShoot.View.Config
         {
             try
             {
-                // 1. Primary: Project Assets/Config directory (version controlled in Git)
+                // 1. Primary (Editor / Direct Filesystem): Assets/Resources/Config or Assets/Config (Git Tracked)
+                string resPath = GetResourcesConfigFilePath();
+                if (File.Exists(resPath))
+                {
+                    string json = File.ReadAllText(resPath);
+                    var loaded = JsonUtility.FromJson<SkillConfigData>(json);
+                    if (loaded != null) return loaded;
+                }
+
                 string projectPath = GetConfigFilePath();
                 if (File.Exists(projectPath))
                 {
@@ -60,30 +74,36 @@ namespace HappyShoot.View.Config
                     if (loaded != null) return loaded;
                 }
 
-                // 2. Secondary: Fallback to PersistentDataPath
+                // 2. Secondary (Unity Resources Bundle for Standalone Builds & Other PCs): Resources.Load
+                try
+                {
+                    var textAsset = Resources.Load<TextAsset>("Config/skill_configs");
+                    if (textAsset != null && !string.IsNullOrEmpty(textAsset.text))
+                    {
+                        var loaded = JsonUtility.FromJson<SkillConfigData>(textAsset.text);
+                        if (loaded != null) return loaded;
+                    }
+                }
+                catch
+                {
+                    // Fallback if Resources.Load is not available in non-Unity test runners
+                }
+
+                // 3. Tertiary: Fallback to StreamingAssets / PersistentDataPath
                 string persistentPath = GetPersistentConfigFilePath();
                 if (File.Exists(persistentPath))
                 {
                     string json = File.ReadAllText(persistentPath);
                     var loaded = JsonUtility.FromJson<SkillConfigData>(json);
-                    if (loaded != null)
-                    {
-                        // Auto-migrate to project directory for future Git tracking
-                        SaveToPath(projectPath, json);
-                        return loaded;
-                    }
+                    if (loaded != null) return loaded;
                 }
 
-                // 3. Tertiary: PlayerPrefs
+                // 4. Quaternary: PlayerPrefs
                 if (PlayerPrefs.HasKey(PrefsKey))
                 {
                     string json = PlayerPrefs.GetString(PrefsKey);
                     var loaded = JsonUtility.FromJson<SkillConfigData>(json);
-                    if (loaded != null)
-                    {
-                        SaveToPath(projectPath, json);
-                        return loaded;
-                    }
+                    if (loaded != null) return loaded;
                 }
             }
             catch (Exception ex)
@@ -103,13 +123,20 @@ namespace HappyShoot.View.Config
             {
                 string json = JsonUtility.ToJson(data, true);
 
-                // 1. Save directly to project Assets/Config folder for Git synchronization
-                string projectPath = GetConfigFilePath();
-                bool projectSaved = SaveToPath(projectPath, json);
+                // 1. Save directly to project Assets/Resources/Config & Assets/Config folder for Git synchronization
+                string resPath = GetResourcesConfigFilePath();
+                bool resSaved = SaveToPath(resPath, json);
 
-                // 2. Also save to persistentDataPath and PlayerPrefs as robust backup
+                string projectPath = GetConfigFilePath();
+                if (!string.Equals(resPath, projectPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    SaveToPath(projectPath, json);
+                }
+
+                // 2. Also save to persistentDataPath and PlayerPrefs as backup
                 string persistentPath = GetPersistentConfigFilePath();
-                if (!string.Equals(projectPath, persistentPath, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(projectPath, persistentPath, StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(resPath, persistentPath, StringComparison.OrdinalIgnoreCase))
                 {
                     SaveToPath(persistentPath, json);
                 }
@@ -117,9 +144,17 @@ namespace HappyShoot.View.Config
                 PlayerPrefs.SetString(PrefsKey, json);
                 PlayerPrefs.Save();
 
-                if (projectSaved)
+#if UNITY_EDITOR
+                try
                 {
-                    Debug.Log($"[SkillConfigRepository] Saved skill configs successfully to project: {projectPath}");
+                    UnityEditor.AssetDatabase.Refresh();
+                }
+                catch { }
+#endif
+
+                if (resSaved)
+                {
+                    Debug.Log($"[SkillConfigRepository] Saved skill configs successfully to: {resPath}");
                 }
                 return true;
             }
@@ -208,7 +243,9 @@ namespace HappyShoot.View.Config
                     if (skill.Effect is GroundStompEffect stomp)
                     {
                         if (match.Damage >= 0f) stomp.BaseDamage = match.Damage;
-                        if (match.Radius >= 0f) stomp.StompRadius = match.Radius;
+                        if (match.Radius >= 0f) stomp.StepRadius = match.Radius;
+                        if (match.ExtraParam1 >= 0f) stomp.Length = match.ExtraParam1;
+                        if (match.Count >= 1) stomp.LineCount = match.Count;
                     }
                     break;
 
@@ -320,6 +357,31 @@ namespace HappyShoot.View.Config
                     break;
             }
         }
+        private string GetResourcesConfigFilePath()
+        {
+            try
+            {
+                // Unity Editor or Runtime: Assets/Resources/Config/skill_configs.json
+                if (!string.IsNullOrEmpty(Application.dataPath))
+                {
+                    return Path.Combine(Application.dataPath, "Resources", "Config", "skill_configs.json");
+                }
+            }
+            catch
+            {
+                // Fallback for tests or headless runners
+            }
+
+            string currentDir = Directory.GetCurrentDirectory();
+            string candidate = Path.Combine(currentDir, "Assets", "Resources", "Config", "skill_configs.json");
+            if (File.Exists(candidate) || Directory.Exists(Path.Combine(currentDir, "Assets")))
+            {
+                return candidate;
+            }
+
+            return Path.Combine(currentDir, "Resources", "Config", "skill_configs.json");
+        }
+
         private string GetConfigFilePath()
         {
             try

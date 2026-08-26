@@ -46,6 +46,8 @@ namespace HappyShoot.View.Audio
                     return GenerateFanfare(0.8f, new[] { 440f, 415f, 392f, 330f });
                 case SoundEffectType.Victory:
                     return GenerateFanfare(0.8f, new[] { 523f, 659f, 784f, 1046f });
+                case SoundEffectType.GroundStomp:
+                    return GenerateGroundStompQuake(0.22f);
                 default:
                     return GeneratePunchHit(0.08f);
             }
@@ -320,6 +322,69 @@ namespace HappyShoot.View.Audio
             }
 
             var clip = AudioClip.Create("BowArrowWhoosh", count, 1, SampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        /// <summary>
+        /// Generates a distinctive 'Kung-Dudududuk!' sequential seismic earthquake sound:
+        /// 1. Solid Ground Impact Slam (240Hz -> 75Hz Punchy Kick)
+        /// 2. 4-Stage Progressive Earth Shatter Pulses (0.04s, 0.09s, 0.15s, 0.22s rock crunch bursts)
+        /// 3. Deep Seismic Sub-Rumble Tail (75Hz -> 45Hz with 18Hz ground tremor modulation)
+        /// Clear, highly distinctive, and synchronized with forward shockwave ripples (0.36s).
+        /// </summary>
+        private static AudioClip GenerateGroundStompQuake(float duration = 0.36f)
+        {
+            int count = (int)(SampleRate * duration);
+            float[] samples = new float[count];
+
+            // 4 progressive shatter pulse trigger times (seconds)
+            float[] pulseTimes = { 0.04f, 0.09f, 0.15f, 0.22f };
+            float[] pulsePitches = { 780f, 660f, 540f, 440f };
+
+            for (int i = 0; i < count; i++)
+            {
+                float t = (float)i / SampleRate; // current time in seconds
+                float normT = (float)i / count; // 0.0 to 1.0
+
+                // Overall envelope: sharp punch attack, rich sustain, smooth natural tail
+                float masterEnv = Mathf.Pow(1f - normT, 1.15f);
+
+                // 1. Initial Punchy Ground Slam Kick (쿵! 240Hz -> 75Hz)
+                float slamEnv = Mathf.Exp(-t * 26f);
+                float slamFreq = Mathf.Lerp(240f, 75f, Mathf.Clamp01(t * 14f));
+                float slam = Mathf.Sin(2f * Mathf.PI * slamFreq * t) * slamEnv;
+
+                // 2. 4-Stage Progressive Earth Shatter Pulses ("두-두-두-둑!" rock crackles)
+                float shatterMix = 0f;
+                for (int p = 0; p < pulseTimes.Length; p++)
+                {
+                    float dt = t - pulseTimes[p];
+                    if (dt >= 0f && dt < 0.07f)
+                    {
+                        float pEnv = Mathf.Sin(Mathf.Clamp01(dt / 0.07f) * Mathf.PI);
+                        float pFreq = pulsePitches[p] + Mathf.Sin(dt * 180f) * 40f;
+                        float pTone = Mathf.Sin(2f * Mathf.PI * pFreq * dt);
+                        float pNoise = (UnityEngine.Random.value * 2f - 1f) * 0.75f;
+                        float pWeight = 1.0f - (p * 0.15f); // Gradual decay per forward step
+                        shatterMix += (pTone * 0.45f + pNoise * 0.55f) * pEnv * pWeight;
+                    }
+                }
+
+                // 3. Deep Seismic Tremor / Earth Rumble (75Hz + 18Hz ground vibration)
+                float tremorWobble = 1.0f + 0.35f * Mathf.Sin(2f * Mathf.PI * 18f * t);
+                float tremorFreq = Mathf.Lerp(75f, 45f, normT);
+                float tremor = Mathf.Sin(2f * Mathf.PI * tremorFreq * t) * tremorWobble * Mathf.Clamp01(1.2f - normT);
+
+                // 4. Gravel Grit Texture (Low-passed ambient earth grinding)
+                float grit = (UnityEngine.Random.value * 2f - 1f) * Mathf.Exp(-t * 8f) * 0.22f;
+
+                // Master Composite Mix
+                float mixed = (slam * 0.65f + shatterMix * 0.55f + tremor * 0.35f + grit) * masterEnv;
+                samples[i] = Mathf.Clamp(mixed * 1.20f, -1f, 1f);
+            }
+
+            var clip = AudioClip.Create("GroundStompQuake", count, 1, SampleRate, false);
             clip.SetData(samples, 0);
             return clip;
         }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using HappyShoot.View.Utils;
 
@@ -6,17 +7,20 @@ namespace HappyShoot.View.Cameras
 {
     /// <summary>
     /// Presentation manager for the Soulstone-style Neon Lime-Green Aim Reticle.
-    /// Tracks the mouse cursor's 2D world position with smooth damping and pulse feedback.
-    /// Strictly modular and under 150 lines (500-line architecture rule).
+    /// Renders on a dedicated highest-layer ScreenSpaceOverlay Canvas (sortingOrder: 32760)
+    /// ensuring it always renders cleanly above Sandbox menus, HUDs, and world entities.
+    /// Strictly modular and under 180 lines (500-line architecture rule).
     /// </summary>
     public class AimReticleView : MonoBehaviour
     {
         public const float MouseIdleTimeout = 4.0f;
         public static bool IsMouseAimActive { get; private set; } = true;
 
-        private SpriteRenderer _renderer;
+        private Canvas _canvas;
+        private Image _reticleImage;
+        private RectTransform _reticleRt;
         private Camera _mainCamera;
-        private Vector2 _currentWorldPos;
+        private Vector2 _currentScreenPos;
         private float _clickPulseScale = 1.0f;
 
         private Vector2 _lastMouseScreenPos;
@@ -27,18 +31,35 @@ namespace HappyShoot.View.Cameras
         {
             _mainCamera = mainCam != null ? mainCam : Camera.main;
 
-            _renderer = gameObject.GetComponent<SpriteRenderer>();
-            if (_renderer == null)
-                _renderer = gameObject.AddComponent<SpriteRenderer>();
+            // 1. Setup dedicated topmost ScreenSpaceOverlay Canvas
+            _canvas = gameObject.GetComponent<Canvas>();
+            if (_canvas == null) _canvas = gameObject.AddComponent<Canvas>();
+            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            _canvas.overrideSorting = true;
+            _canvas.sortingOrder = 32760; // Topmost above Sandbox menu & HUD
 
-            _renderer.sprite = ReticleSpriteHelper.GetOrCreateAimReticleSprite(48);
-            _renderer.sortingOrder = 45; // Above monsters & ground effects
-            _renderer.color = Color.white;
+            var scaler = gameObject.GetComponent<CanvasScaler>();
+            if (scaler == null) scaler = gameObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
 
-            transform.localScale = Vector3.one * 1.1f;
+            // 2. Setup Reticle UI Image
+            var iconGo = new GameObject("ReticleImage");
+            iconGo.transform.SetParent(transform, false);
+            _reticleRt = iconGo.AddComponent<RectTransform>();
+            _reticleRt.anchorMin = _reticleRt.anchorMax = _reticleRt.pivot = new Vector2(0.5f, 0.5f);
+            _reticleRt.sizeDelta = new Vector2(48f, 48f);
+
+            _reticleImage = iconGo.AddComponent<Image>();
+            _reticleImage.sprite = ReticleSpriteHelper.GetOrCreateAimReticleSprite(48);
+            _reticleImage.color = Color.white;
+            _reticleImage.raycastTarget = false; // Does not block UI slider/button interactions
+
             IsMouseAimActive = true;
             _mouseIdleTimer = 0f;
             _currentAlpha = 1.0f;
+            _currentScreenPos = Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition;
         }
 
         private void OnEnable()
@@ -80,14 +101,13 @@ namespace HappyShoot.View.Cameras
             if (_mainCamera == null)
             {
                 _mainCamera = Camera.main;
-                if (_mainCamera == null) return;
             }
 
             // If game is paused (Time.timeScale == 0) for UI menus (LevelUp, Pause, Settings), show OS cursor and hide aim reticle
             if (Time.timeScale == 0f)
             {
                 if (!Cursor.visible) Cursor.visible = true;
-                if (_renderer != null && _renderer.enabled) _renderer.enabled = false;
+                if (_reticleImage != null && _reticleImage.enabled) _reticleImage.enabled = false;
                 return;
             }
             else
@@ -131,7 +151,7 @@ namespace HappyShoot.View.Cameras
 
             if (!isMouseActive)
             {
-                if (_renderer != null) _renderer.enabled = false;
+                if (_reticleImage != null) _reticleImage.enabled = false;
                 Cursor.visible = true;
                 IsMouseAimActive = false;
                 return;
@@ -141,26 +161,20 @@ namespace HappyShoot.View.Cameras
             float targetAlpha = IsMouseAimActive ? 1.0f : 0.0f;
             _currentAlpha = Mathf.MoveTowards(_currentAlpha, targetAlpha, Time.unscaledDeltaTime * 4.0f);
 
-            if (_renderer != null)
+            if (_reticleImage != null)
             {
-                Color c = _renderer.color;
+                Color c = _reticleImage.color;
                 c.a = _currentAlpha;
-                _renderer.color = c;
-                _renderer.enabled = _currentAlpha > 0.01f;
+                _reticleImage.color = c;
+                _reticleImage.enabled = _currentAlpha > 0.01f;
             }
 
-            if (_currentAlpha <= 0.01f)
+            if (_currentAlpha <= 0.01f || _reticleRt == null)
                 return;
 
-            // Convert mouse screen coordinates to 2D world plane (Z = 0)
-            Ray ray = _mainCamera.ScreenPointToRay(mouseScreenPos);
-            float distanceToPlane = -ray.origin.z / (ray.direction.z != 0 ? ray.direction.z : 1f);
-            Vector3 targetWorldPos = ray.origin + ray.direction * distanceToPlane;
-            Vector2 targetPos2D = new Vector2(targetWorldPos.x, targetWorldPos.y);
-
-            // Smooth position interpolation
-            _currentWorldPos = Vector2.Lerp(_currentWorldPos, targetPos2D, Time.unscaledDeltaTime * 35f);
-            transform.position = new Vector3(_currentWorldPos.x, _currentWorldPos.y, 0f);
+            // Direct smooth screen position interpolation
+            _currentScreenPos = Vector2.Lerp(_currentScreenPos, mouseScreenPos, Time.unscaledDeltaTime * 45f);
+            _reticleRt.position = new Vector3(_currentScreenPos.x, _currentScreenPos.y, 0f);
 
             // Click impulse decay
             _clickPulseScale = Mathf.MoveTowards(_clickPulseScale, 1.0f, Time.unscaledDeltaTime * 4.5f);
@@ -168,7 +182,7 @@ namespace HappyShoot.View.Cameras
             // Subtle breathing idle pulse (1.0 ~ 1.08x)
             float breath = 1.0f + 0.05f * Mathf.Sin(Time.unscaledTime * 4.2f);
             float finalScale = 1.15f * breath * _clickPulseScale;
-            transform.localScale = new Vector3(finalScale, finalScale, 1f);
+            _reticleRt.localScale = new Vector3(finalScale, finalScale, 1f);
         }
     }
 }

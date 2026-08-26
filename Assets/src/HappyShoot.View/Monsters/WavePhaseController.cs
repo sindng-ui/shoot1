@@ -79,22 +79,30 @@ namespace HappyShoot.View.Monsters
 
         public MonsterType RollPhase2Type()
         {
+            float r = UnityEngine.Random.value;
             switch (CurrentPhase)
             {
                 case Phase.Phase2Wave1:
-                    return MonsterType.FireImp;
+                    // Wave 1: Introduce FireImp with veteran skeletons, bats & slimes
+                    if (r < 0.45f) return MonsterType.FireImp;
+                    if (r < 0.70f) return MonsterType.Skeleton;
+                    if (r < 0.85f) return MonsterType.Bat;
+                    return MonsterType.Slime;
 
                 case Phase.Phase2Wave2:
-                    return UnityEngine.Random.value < 0.55f
-                        ? MonsterType.FireImp
-                        : MonsterType.ToxicSpider;
+                    // Wave 2: Toxic Spiders swarm with FireImps and Golems
+                    if (r < 0.35f) return MonsterType.ToxicSpider;
+                    if (r < 0.65f) return MonsterType.FireImp;
+                    if (r < 0.85f) return MonsterType.Golem;
+                    return MonsterType.Skeleton;
 
                 case Phase.Phase2Wave3:
                 case Phase.Boss2Spawned:
-                    float r = UnityEngine.Random.value;
-                    if (r < 0.35f) return MonsterType.FireImp;
-                    if (r < 0.70f) return MonsterType.ToxicSpider;
-                    return MonsterType.DarkKnight;
+                    // Wave 3: Dark Knights lead the invasion with Spiders, Imps & Golems
+                    if (r < 0.30f) return MonsterType.DarkKnight;
+                    if (r < 0.55f) return MonsterType.ToxicSpider;
+                    if (r < 0.80f) return MonsterType.FireImp;
+                    return MonsterType.Golem;
 
                 default:
                     return MonsterType.Slime;

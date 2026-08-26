@@ -78,7 +78,9 @@ namespace HappyShoot.View.UI
                     if (skill.Effect is GroundStompEffect stomp)
                     {
                         if (mem.Damage.HasValue) stomp.BaseDamage = mem.Damage.Value;
-                        if (mem.Radius.HasValue) stomp.StompRadius = mem.Radius.Value;
+                        if (mem.Radius.HasValue) stomp.StepRadius = mem.Radius.Value;
+                        if (mem.ExtraParam1.HasValue) stomp.Length = mem.ExtraParam1.Value;
+                        if (mem.Count.HasValue) stomp.LineCount = mem.Count.Value;
                     }
                     break;
 

@@ -7,9 +7,10 @@ using HappyShoot.View.Utils;
 namespace HappyShoot.View.Projectiles
 {
     /// <summary>
-    /// Visual Manager for Warrior Ground Stomp skill.
-    /// Spawns violent expanding earthquake tremors, flying rock debris particles, and camera shake.
-    /// Uses prewarmed zero-allocation pooling.
+    /// Visual Manager for Warrior Upheaval (Ground Stomp) skill.
+    /// Spawns forward-driving V-shape wedge earth shockwaves and fracturing rock slabs
+    /// that ripple forward in rapid succession (30ms per step) for an intense 'dudududu' seismic impact.
+    /// Zero-allocation pooling, under 350 lines.
     /// </summary>
     public class GroundStompManagerView : MonoBehaviour
     {
@@ -24,20 +25,41 @@ namespace HappyShoot.View.Projectiles
             public bool IsActive;
         }
 
-        private class GroundStompInstance
+        private class RockChunk
         {
             public GameObject GameObject;
             public Transform Transform;
             public SpriteRenderer Renderer;
-            public float TargetScale;
+            public Vector3 BaseLocalPos;
+            public Vector3 TargetScale;
+        }
+
+        private class RuptureWaveInstance
+        {
+            public GameObject GameObject;
+            public Transform Transform;
+            public SpriteRenderer WaveRenderer;
+            public Transform WaveTransform;
             public float Timer;
             public float Duration;
             public bool IsActive;
+            public Vector3 WaveTargetScale;
+            public List<RockChunk> Chunks = new List<RockChunk>(2);
             public List<RockDebris> DebrisList = new List<RockDebris>(8);
         }
 
-        private const int PoolCapacity = 16;
-        private readonly List<GroundStompInstance> _pool = new List<GroundStompInstance>(PoolCapacity);
+        private struct PendingRupture
+        {
+            public Vector2 Position;
+            public Vector2 ForwardDir;
+            public float Radius;
+            public float DelayTimer;
+            public bool IsEarthshaker;
+        }
+
+        private const int PoolCapacity = 48;
+        private readonly List<RuptureWaveInstance> _pool = new List<RuptureWaveInstance>(PoolCapacity);
+        private readonly List<PendingRupture> _pendingQueue = new List<PendingRupture>(64);
         private EventBus _eventBus;
 
         public void Initialize(EventBus eventBus)
@@ -59,38 +81,60 @@ namespace HappyShoot.View.Projectiles
         {
             if (_pool.Count > 0) return;
 
-            var stompSprite = SpriteHelper.GetOrCreateGroundStompSprite();
+            var waveSprite = SpriteHelper.GetOrCreateUpheavalWaveSprite();
+            var chunkSprite = SpriteHelper.GetOrCreateUpheavalChunkSprite();
             var rockSprite = SpriteHelper.GetOrCreateWhiteSprite();
 
             for (int i = 0; i < PoolCapacity; i++)
             {
-                var rootGo = new GameObject($"Earthquake_{i + 1}");
+                var rootGo = new GameObject($"UpheavalWaveNode_{i + 1}");
                 rootGo.transform.SetParent(transform, false);
 
-                var sr = rootGo.AddComponent<SpriteRenderer>();
-                sr.sprite = stompSprite;
-                sr.sortingOrder = 2; // Floor ground layer
-                rootGo.SetActive(false);
+                // 1. Forward-facing V-Shape Earth Shockwave Crest
+                var waveGo = new GameObject("ShockwaveCrest");
+                waveGo.transform.SetParent(rootGo.transform, false);
+                var waveSr = waveGo.AddComponent<SpriteRenderer>();
+                waveSr.sprite = waveSprite;
+                waveSr.sortingOrder = 6; // Floor shockwave crest layer
 
-                var instance = new GroundStompInstance
+                var instance = new RuptureWaveInstance
                 {
                     GameObject = rootGo,
                     Transform = rootGo.transform,
-                    Renderer = sr,
+                    WaveRenderer = waveSr,
+                    WaveTransform = waveGo.transform,
                     IsActive = false
                 };
 
-                // Create 12 flying rock debris and glowing magma ember particles
-                for (int d = 0; d < 12; d++)
+                // 2. Heavy fractured rock slabs lifting on both sides
+                for (int c = 0; c < 2; c++)
                 {
-                    var rockGo = new GameObject($"RockDebris_{d + 1}");
+                    var chunkGo = new GameObject($"EarthChunk_{c + 1}");
+                    chunkGo.transform.SetParent(rootGo.transform, false);
+                    var chunkSr = chunkGo.AddComponent<SpriteRenderer>();
+                    chunkSr.sprite = chunkSprite;
+                    chunkSr.sortingOrder = 5; // Under wave crest, above floor
+
+                    instance.Chunks.Add(new RockChunk
+                    {
+                        GameObject = chunkGo,
+                        Transform = chunkGo.transform,
+                        Renderer = chunkSr,
+                        BaseLocalPos = Vector3.zero,
+                        TargetScale = Vector3.one
+                    });
+                }
+
+                // 3. Fast flying rock fragments & magma embers
+                for (int d = 0; d < 8; d++)
+                {
+                    var rockGo = new GameObject($"Debris_{d + 1}");
                     rockGo.transform.SetParent(rootGo.transform, false);
-                    rockGo.transform.localScale = Vector3.one * Random.Range(0.12f, 0.22f);
+                    rockGo.transform.localScale = Vector3.one * Random.Range(0.09f, 0.16f);
 
                     var rockSr = rockGo.AddComponent<SpriteRenderer>();
                     rockSr.sprite = rockSprite;
-                    rockSr.color = new Color(0.42f, 0.25f, 0.12f, 1f);
-                    rockSr.sortingOrder = 26; // Fly above monsters (10)
+                    rockSr.sortingOrder = 7;
                     rockGo.SetActive(false);
 
                     instance.DebrisList.Add(new RockDebris
@@ -101,33 +145,71 @@ namespace HappyShoot.View.Projectiles
                     });
                 }
 
+                rootGo.SetActive(false);
                 _pool.Add(instance);
             }
         }
 
         private void OnGroundStompExecuted(GroundStompExecutedEvent evt)
         {
-            SpawnStompVisual(new Vector2(evt.CenterPosition.X, evt.CenterPosition.Y), evt.Radius * 2.0f);
+            if (evt.StepPositions == null || evt.StepPositions.Length == 0)
+            {
+                SpawnRuptureVisual(new Vector2((float)evt.Origin.X, (float)evt.Origin.Y), Vector2.right, evt.StepRadius);
+                return;
+            }
+
+            Vector2 mainDir = new Vector2((float)evt.MainDirection.X, (float)evt.MainDirection.Y);
+            if (mainDir.sqrMagnitude < 0.001f) mainDir = Vector2.right;
+
+            int lineCount = Mathf.Max(1, evt.LineCount);
+            int stepsPerLine = evt.StepPositions.Length / lineCount;
+
+            // Enqueue rapid forward seismic ripples (30ms interval for intense dudududu drive)
+            for (int i = 0; i < evt.StepPositions.Length; i++)
+            {
+                int stepIndex = (stepsPerLine > 0) ? (i % stepsPerLine) : i;
+                float delay = stepIndex * 0.030f;
+                Vector2 pos = new Vector2((float)evt.StepPositions[i].X, (float)evt.StepPositions[i].Y);
+
+                _pendingQueue.Add(new PendingRupture
+                {
+                    Position = pos,
+                    ForwardDir = mainDir,
+                    Radius = evt.StepRadius,
+                    DelayTimer = delay,
+                    IsEarthshaker = false
+                });
+            }
         }
 
         private void OnEarthshakerExecuted(EarthshakerExecutedEvent evt)
         {
-            Vector2 center = new Vector2(evt.CenterPosition.X, evt.CenterPosition.Y);
-            SpawnStompVisual(center, evt.Radius * 2.0f, isEarthshaker: true);
+            Vector2 center = new Vector2((float)evt.CenterPosition.X, (float)evt.CenterPosition.Y);
+            SpawnRuptureVisual(center, Vector2.up, evt.Radius, isEarthshaker: true);
 
-            // 4-cardinal direction fissure tremors
             Vector2[] dirs = { Vector2.up, Vector2.down, Vector2.left, Vector2.right };
             for (int d = 0; d < dirs.Length; d++)
             {
-                Vector2 fissurePos = center + dirs[d] * (evt.Radius * 0.55f);
-                SpawnStompVisual(fissurePos, evt.Radius * 1.1f, isEarthshaker: false);
+                for (int s = 1; s <= 4; s++)
+                {
+                    Vector2 fissurePos = center + dirs[d] * (s * 1.1f);
+                    _pendingQueue.Add(new PendingRupture
+                    {
+                        Position = fissurePos,
+                        ForwardDir = dirs[d],
+                        Radius = evt.Radius * 0.7f,
+                        DelayTimer = s * 0.038f,
+                        IsEarthshaker = true
+                    });
+                }
             }
         }
 
-        public void SpawnStompVisual(Vector2 position, float diameter, bool isEarthshaker = false)
+        public void SpawnRuptureVisual(Vector2 position, Vector2 forwardDir, float radius, bool isEarthshaker = false)
         {
-            // Camera impact shake (filtered by ground_stomp shake setting)
-            CameraFollowView.Instance?.TriggerShake(isEarthshaker ? "earthshaker" : "ground_stomp", duration: isEarthshaker ? 0.24f : 0.18f, intensity: isEarthshaker ? 0.32f : 0.26f);
+            CameraFollowView.Instance?.TriggerShake(isEarthshaker ? "earthshaker" : "ground_stomp", duration: 0.12f, intensity: isEarthshaker ? 0.26f : 0.18f);
+
+            float forwardAngle = Mathf.Atan2(forwardDir.y, forwardDir.x) * Mathf.Rad2Deg;
 
             for (int i = 0; i < _pool.Count; i++)
             {
@@ -136,34 +218,53 @@ namespace HappyShoot.View.Projectiles
                 {
                     fx.IsActive = true;
                     fx.Transform.position = position;
-                    // 128px sprite at 16 PPU = 8.0 units base width. Scale to exactly match world diameter.
-                    fx.TargetScale = Mathf.Max(0.5f, diameter / 8.0f);
                     fx.Timer = 0f;
-                    fx.Duration = 0.45f; // Heavy 450ms earthquake ground crater duration
-                    fx.Transform.localScale = Vector3.zero;
+                    fx.Duration = 0.32f; // Punchy crisp shockwave duration
 
-                    Color c = Color.white;
-                    c.a = 1.0f;
-                    fx.Renderer.color = c;
+                    // 1. Forward-facing V-Shape Earth Shockwave Crest (scales 1:1 with radius)
+                    float waveScale = (radius / 0.70f) * 1.15f;
+                    fx.WaveTargetScale = new Vector3(waveScale * 1.15f, waveScale * 1.05f, 1f);
+                    fx.WaveTransform.localScale = fx.WaveTargetScale * 0.5f; // Starts fast-expanding
+                    fx.WaveTransform.rotation = Quaternion.Euler(0f, 0f, forwardAngle);
+                    fx.WaveRenderer.color = Color.white;
 
-                    // Launch flying rock debris particles in all directions
+                    // 2. Heavy fractured rock slabs lifting on left and right flanks
+                    Vector2 perp = new Vector2(-forwardDir.y, forwardDir.x);
+                    for (int c = 0; c < fx.Chunks.Count; c++)
+                    {
+                        var chunk = fx.Chunks[c];
+                        chunk.GameObject.SetActive(true);
+
+                        float flankOffset = (c == 0 ? -0.38f : 0.38f) * (radius / 0.70f);
+                        chunk.BaseLocalPos = (Vector3)(perp * flankOffset);
+                        chunk.Transform.localPosition = chunk.BaseLocalPos;
+
+                        float chunkRot = forwardAngle + (c == 0 ? -25f : 25f);
+                        chunk.Transform.rotation = Quaternion.Euler(0f, 0f, chunkRot);
+
+                        float cScale = Random.Range(0.60f, 0.85f) * (radius / 0.70f);
+                        chunk.TargetScale = new Vector3(cScale, cScale * 0.9f, 1f);
+                        chunk.Transform.localScale = Vector3.zero;
+                        chunk.Renderer.color = Color.white;
+                    }
+
+                    // 3. Fast flying rock fragments
                     for (int d = 0; d < fx.DebrisList.Count; d++)
                     {
                         var debris = fx.DebrisList[d];
                         debris.IsActive = true;
                         debris.Transform.localPosition = Vector3.zero;
-                        debris.MaxLifetime = Random.Range(0.32f, 0.45f);
+                        debris.MaxLifetime = Random.Range(0.18f, 0.28f);
                         debris.Lifetime = debris.MaxLifetime;
-                        debris.Gravity = Random.Range(20.0f, 30.0f);
+                        debris.Gravity = Random.Range(22.0f, 32.0f);
 
-                        float angle = (d * (360f / fx.DebrisList.Count) + Random.Range(-12f, 12f)) * Mathf.Deg2Rad;
-                        float speed = Random.Range(4.0f, 7.5f);
-                        debris.Velocity = new Vector3(Mathf.Cos(angle) * speed, Mathf.Sin(angle) * speed + Random.Range(3.0f, 5.5f), 0f);
+                        float sprayAngle = (Random.Range(-35f, 35f) + forwardAngle) * Mathf.Deg2Rad;
+                        float speed = Random.Range(3.5f, 6.0f);
+                        debris.Velocity = new Vector3(Mathf.Cos(sprayAngle) * speed, Mathf.Sin(sprayAngle) * speed + Random.Range(1.5f, 3.5f), 0f);
 
-                        // Alternate between heavy rock brown and glowing ember orange/gold
-                        debris.Renderer.color = (d % 3 == 0) 
-                            ? new Color(1.0f, 0.75f, 0.20f, 1f) 
-                            : (d % 3 == 1 ? new Color(0.95f, 0.40f, 0.10f, 1f) : new Color(0.35f, 0.18f, 0.08f, 1f));
+                        debris.Renderer.color = (d % 2 == 0)
+                            ? new Color(1.0f, 0.85f, 0.30f, 1f) // Blazing amber gold
+                            : new Color(0.36f, 0.18f, 0.08f, 1f); // Dark basalt rock
                         debris.Transform.gameObject.SetActive(true);
                     }
 
@@ -177,6 +278,23 @@ namespace HappyShoot.View.Projectiles
         {
             float dt = Time.deltaTime;
 
+            // 1. Process pending sequential shockwaves (30ms per step)
+            for (int q = _pendingQueue.Count - 1; q >= 0; q--)
+            {
+                var item = _pendingQueue[q];
+                item.DelayTimer -= dt;
+                if (item.DelayTimer <= 0f)
+                {
+                    SpawnRuptureVisual(item.Position, item.ForwardDir, item.Radius, item.IsEarthshaker);
+                    _pendingQueue.RemoveAt(q);
+                }
+                else
+                {
+                    _pendingQueue[q] = item;
+                }
+            }
+
+            // 2. Animate active shockwave crests, rock chunks & debris
             for (int i = 0; i < _pool.Count; i++)
             {
                 var fx = _pool[i];
@@ -185,23 +303,35 @@ namespace HappyShoot.View.Projectiles
                 fx.Timer += dt;
                 float progress = Mathf.Clamp01(fx.Timer / fx.Duration);
 
-                // Fast slam expansion in first 80ms, then stable crater, then smooth fade
-                float scaleT = Mathf.Clamp01(fx.Timer / 0.08f);
-                float currentScale = Mathf.Lerp(fx.TargetScale * 0.3f, fx.TargetScale, Mathf.Sin(scaleT * Mathf.PI * 0.5f));
-                fx.Transform.localScale = Vector3.one * currentScale;
+                // Wave crest fast forward slam surge (0 -> 1 in 45ms)
+                float waveT = Mathf.Clamp01(fx.Timer / 0.045f);
+                float surge = Mathf.Sin(waveT * Mathf.PI * 0.5f);
+                fx.WaveTransform.localScale = Vector3.Lerp(fx.WaveTargetScale * 0.5f, fx.WaveTargetScale, surge);
 
-                Color c = fx.Renderer.color;
-                if (progress > 0.65f)
-                {
-                    c.a = Mathf.Clamp01((1.0f - progress) / 0.35f);
-                }
-                else
-                {
-                    c.a = 1.0f;
-                }
-                fx.Renderer.color = c;
+                // Fade out wave crest
+                Color wc = fx.WaveRenderer.color;
+                wc.a = progress > 0.45f ? Mathf.Clamp01((1.0f - progress) / 0.55f) : 1.0f;
+                fx.WaveRenderer.color = wc;
 
-                // Update flying rock debris physics
+                // Animate fracturing rock chunks lifting and settling
+                float chunkT = Mathf.Clamp01(fx.Timer / 0.06f);
+                float chunkRise = Mathf.Sin(chunkT * Mathf.PI * 0.5f);
+                for (int c = 0; c < fx.Chunks.Count; c++)
+                {
+                    var chunk = fx.Chunks[c];
+                    float alpha = 1.0f;
+                    if (progress > 0.45f)
+                    {
+                        alpha = Mathf.Clamp01((1.0f - progress) / 0.55f);
+                    }
+
+                    chunk.Transform.localScale = Vector3.Lerp(Vector3.zero, chunk.TargetScale, chunkRise);
+                    Color cc = chunk.Renderer.color;
+                    cc.a = alpha;
+                    chunk.Renderer.color = cc;
+                }
+
+                // Update flying debris physics
                 for (int d = 0; d < fx.DebrisList.Count; d++)
                 {
                     var debris = fx.DebrisList[d];

@@ -227,6 +227,11 @@ namespace HappyShoot.View.Utils
             return _groundStompSprite;
         }
 
+        // Upheaval sprites are modularized in UpheavalSpriteHelper.cs
+        public static Sprite GetOrCreateUpheavalWaveSprite(int size = 32) => UpheavalSpriteHelper.GetOrCreateUpheavalWaveSprite(size);
+        public static Sprite GetOrCreateUpheavalChunkSprite(int w = 24, int h = 20) => UpheavalSpriteHelper.GetOrCreateUpheavalChunkSprite(w, h);
+        public static Sprite GetOrCreateUpheavalSpikeSprite(int w = 18, int h = 24) => UpheavalSpriteHelper.GetOrCreateUpheavalSpikeSprite(w, h);
+
         /// <summary>
         /// 128x128 360-Degree Steel Cyclone 3-Blade Whirlwind Sprite.
         /// </summary>

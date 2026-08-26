@@ -11,8 +11,8 @@ namespace HappyShoot.Domain.Entities
         public MonsterStatConfig Golem = new MonsterStatConfig(hp: 160f, speed: 1.2f, damage: 22f, exp: 4, gold: 5);
         public MonsterStatConfig FireImp = new MonsterStatConfig(hp: 150f, speed: 3.8f, damage: 18f, exp: 5, gold: 6);
         public MonsterStatConfig ToxicSpider = new MonsterStatConfig(hp: 280f, speed: 2.2f, damage: 20f, exp: 8, gold: 9);
-        public MonsterStatConfig DarkKnight = new MonsterStatConfig(hp: 600f, speed: 1.5f, damage: 35f, exp: 14, gold: 18);
-        public BossStatConfig Boss = new BossStatConfig(hp: 800f, speed: 2.2f, damage: 25f, laserInterval: 8.0f, laserDamage: 25f, exp: 30, gold: 100);
+        public DarkKnightStatConfig DarkKnight = new DarkKnightStatConfig(hp: 600f, speed: 1.5f, damage: 35f, projSpeed: 3.5f, projDamage: 20f, exp: 14, gold: 18);
+        public BossStatConfig Boss = new BossStatConfig(hp: 800f, speed: 2.2f, damage: 25f, laserInterval: 8.0f, laserDamage: 25f, hazardInterval: 6.5f, hazardDamage: 18f, hazardRadius: 2.8f, exp: 30, gold: 100);
     }
 
     [Serializable]
@@ -53,18 +53,40 @@ namespace HappyShoot.Domain.Entities
     }
 
     [Serializable]
+    public class DarkKnightStatConfig : MonsterStatConfig
+    {
+        public float ProjectileSpeed;
+        public float ProjectileDamage;
+
+        public DarkKnightStatConfig() { }
+
+        public DarkKnightStatConfig(float hp, float speed, float damage, float projSpeed, float projDamage, int exp, int gold)
+            : base(hp, speed, damage, exp, gold)
+        {
+            ProjectileSpeed = projSpeed;
+            ProjectileDamage = projDamage;
+        }
+    }
+
+    [Serializable]
     public class BossStatConfig : MonsterStatConfig
     {
         public float LaserInterval;
         public float LaserDamage;
+        public float HazardInterval;
+        public float HazardDamage;
+        public float HazardRadius;
 
         public BossStatConfig() { }
 
-        public BossStatConfig(float hp, float speed, float damage, float laserInterval, float laserDamage, int exp, int gold)
+        public BossStatConfig(float hp, float speed, float damage, float laserInterval, float laserDamage, float hazardInterval, float hazardDamage, float hazardRadius, int exp, int gold)
             : base(hp, speed, damage, exp, gold)
         {
             LaserInterval = laserInterval;
             LaserDamage = laserDamage;
+            HazardInterval = hazardInterval;
+            HazardDamage = hazardDamage;
+            HazardRadius = hazardRadius;
         }
     }
 }

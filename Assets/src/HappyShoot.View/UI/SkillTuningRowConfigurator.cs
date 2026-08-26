@@ -153,7 +153,9 @@ namespace HappyShoot.View.UI
                     if (skill.Effect is GroundStompEffect stomp)
                     {
                         AddRow("💥 공격력 (Damage)", stomp.BaseDamage, 10f, 300f, 5f, v => { stomp.BaseDamage = v; mem.Damage = v; });
-                        AddRow("📏 지진 반경 (Radius)", stomp.StompRadius, 1.0f, 8.0f, 0.2f, v => { stomp.StompRadius = v; mem.Radius = v; });
+                        AddRow("🏹 사거리/길이 (Length)", stomp.Length, 2.0f, 15.0f, 0.5f, v => { stomp.Length = v; mem.ExtraParam1 = v; });
+                        AddRow("📏 충격파 너비/반경 (Width/Radius)", stomp.StepRadius, 0.10f, 2.50f, 0.05f, v => { stomp.StepRadius = v; mem.Radius = v; });
+                        AddRow("🌊 줄기 개수 (Fissure Lines)", stomp.LineCount, 1f, 5f, 1f, v => { stomp.LineCount = (int)v; mem.Count = (int)v; }, isInt: true);
                     }
                     if (cdTrigger != null)
                         AddRow("⏱️ 쿨다운 (Cooldown)", cdTrigger.Cooldown, 0.2f, 4.0f, 0.1f, v => { cdTrigger.Cooldown = isInfiniteSpam ? 0.06f : v; mem.Cooldown = v; });
@@ -424,11 +426,18 @@ namespace HappyShoot.View.UI
                 case 3: AddCommonMonsterRows("🗿 골렘", mConfig.Golem, AddRow); break;
                 case 4: AddCommonMonsterRows("🔥 화염 임프", mConfig.FireImp, AddRow); break;
                 case 5: AddCommonMonsterRows("🕷️ 독 거미", mConfig.ToxicSpider, AddRow); break;
-                case 6: AddCommonMonsterRows("⚔️ 흑기사", mConfig.DarkKnight, AddRow); break;
+                case 6:
+                    AddCommonMonsterRows("⚔️ 흑기사", mConfig.DarkKnight, AddRow);
+                    AddRow("🚀 암흑 검기 속도 (Speed)", mConfig.DarkKnight.ProjectileSpeed, 1.0f, 10.0f, 0.25f, v => mConfig.DarkKnight.ProjectileSpeed = v);
+                    AddRow("🗡️ 암흑 검기 피해량 (Damage)", mConfig.DarkKnight.ProjectileDamage, 5.0f, 100.0f, 1f, v => mConfig.DarkKnight.ProjectileDamage = v);
+                    break;
                 case 7:
                     AddCommonMonsterRows("👹 고블린 킹 (보스)", mConfig.Boss, AddRow);
                     AddRow("⏱️ 광선 주기 (Laser Interval)", mConfig.Boss.LaserInterval, 3.0f, 20.0f, 1f, v => mConfig.Boss.LaserInterval = v);
                     AddRow("☄️ 광선 초당 피해 (Laser DPS)", mConfig.Boss.LaserDamage, 5.0f, 100.0f, 5f, v => mConfig.Boss.LaserDamage = v);
+                    AddRow("🌋 장판 공격 주기 (Hazard Interval)", mConfig.Boss.HazardInterval, 3.0f, 20.0f, 0.5f, v => mConfig.Boss.HazardInterval = v);
+                    AddRow("🔥 장판 초당 피해 (Hazard DPS)", mConfig.Boss.HazardDamage, 5.0f, 100.0f, 1f, v => mConfig.Boss.HazardDamage = v);
+                    AddRow("📐 장판 공격 반경 (Hazard Radius)", mConfig.Boss.HazardRadius, 1.5f, 6.0f, 0.1f, v => mConfig.Boss.HazardRadius = v);
                     break;
             }
         }

@@ -75,9 +75,9 @@ namespace HappyShoot.Domain.Entities
         public static MonsterDefinition ToxicSpider => new MonsterDefinition(
             MonsterType.ToxicSpider, "Toxic Spider", baseMaxHealth: 280f, baseMoveSpeed: 2.2f, baseDamage: 20f, radius: 0.52f, expValue: 8, goldValue: 9);
 
-        // Phase 2 Wave 3: Dark Knight - very high HP, slow and lethal
+        // Phase 2 Wave 3: Dark Knight - very high HP, armored, shoots dark slashes
         public static MonsterDefinition DarkKnight => new MonsterDefinition(
-            MonsterType.DarkKnight, "Dark Knight", baseMaxHealth: 600f, baseMoveSpeed: 1.5f, baseDamage: 35f, radius: 0.75f, expValue: 14, goldValue: 18);
+            MonsterType.DarkKnight, "Dark Knight", baseMaxHealth: 600f, baseMoveSpeed: 1.5f, baseDamage: 35f, radius: 0.75f, expValue: 14, goldValue: 18, isRanged: true, preferredDistance: 4.8f, attackInterval: 2.5f);
 
         public static MonsterDefinition CreateBoss(string name, float hp, float speed, float damage, int exp, int gold)
         {
@@ -113,7 +113,7 @@ namespace HappyShoot.Domain.Entities
                 case MonsterType.ToxicSpider:
                     return new MonsterDefinition(MonsterType.ToxicSpider, "Toxic Spider", cfg.ToxicSpider.MaxHealth, cfg.ToxicSpider.MoveSpeed, cfg.ToxicSpider.ContactDamage, 0.52f, cfg.ToxicSpider.ExpValue, cfg.ToxicSpider.GoldValue);
                 case MonsterType.DarkKnight:
-                    return new MonsterDefinition(MonsterType.DarkKnight, "Dark Knight", cfg.DarkKnight.MaxHealth, cfg.DarkKnight.MoveSpeed, cfg.DarkKnight.ContactDamage, 0.75f, cfg.DarkKnight.ExpValue, cfg.DarkKnight.GoldValue);
+                    return new MonsterDefinition(MonsterType.DarkKnight, "Dark Knight", cfg.DarkKnight.MaxHealth, cfg.DarkKnight.MoveSpeed, cfg.DarkKnight.ContactDamage, 0.75f, cfg.DarkKnight.ExpValue, cfg.DarkKnight.GoldValue, isRanged: true, preferredDistance: 4.8f, attackInterval: 2.5f);
                 case MonsterType.Boss:
                     return CreateBoss("Goblin King", cfg.Boss.MaxHealth, cfg.Boss.MoveSpeed, cfg.Boss.ContactDamage, cfg.Boss.ExpValue, cfg.Boss.GoldValue);
                 case MonsterType.Slime:

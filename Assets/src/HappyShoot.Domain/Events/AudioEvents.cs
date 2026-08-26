@@ -16,7 +16,8 @@ namespace HappyShoot.Domain.Events
         ChestOpen,
         PlayerHurt,
         GameOver,
-        Victory
+        Victory,
+        GroundStomp
     }
 
     public readonly struct PlaySoundEvent : IDomainEvent

@@ -88,6 +88,8 @@ namespace HappyShoot.View.Audio
             _eventBus.Subscribe<PlayerLevelUpEvent>(evt => PlaySfx(SoundEffectType.LevelUp, 0.9f, 0.2f));
             _eventBus.Subscribe<SkillEvolvedEvent>(evt => PlaySfx(SoundEffectType.WeaponEvolve, 1.0f, 0.3f));
             _eventBus.Subscribe<BossSpawnedEvent>(evt => PlaySfx(SoundEffectType.BossSpawn, 1.0f, 0.5f));
+            _eventBus.Subscribe<GroundStompExecutedEvent>(evt => PlaySfx(SoundEffectType.GroundStomp, 0.95f, 0.08f));
+            _eventBus.Subscribe<EarthshakerExecutedEvent>(evt => PlaySfx(SoundEffectType.GroundStomp, 1.0f, 0.08f));
             _eventBus.Subscribe<TreasureChestOpenedEvent>(evt => PlaySfx(SoundEffectType.ChestOpen, 0.85f, 0.2f));
             _eventBus.Subscribe<PlayerDamagedEvent>(evt => PlaySfx(SoundEffectType.PlayerHurt, 0.8f, 0.1f));
             _eventBus.Subscribe<PlayerDiedEvent>(evt => {
