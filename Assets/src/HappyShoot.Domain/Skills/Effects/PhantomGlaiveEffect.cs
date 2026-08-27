@@ -74,7 +74,7 @@ namespace HappyShoot.Domain.Skills.Effects
                         if (perpDistSq <= maxPerpDistSq)
                         {
                             var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
-                            monster.TakeDamage(hitDmg, isCrit);
+                            monster.TakeDamage(hitDmg, isCrit, DamageType.WindGlaive);
                         }
                     }
                 }

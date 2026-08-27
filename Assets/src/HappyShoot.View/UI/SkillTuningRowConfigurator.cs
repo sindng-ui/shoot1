@@ -374,6 +374,7 @@ namespace HappyShoot.View.UI
                     if (skill.Effect is GigastormLightningEffect gl)
                     {
                         AddRow("⚡ 공격력 (Damage)", gl.BaseDamage, 20f, 400f, 5f, v => { gl.BaseDamage = v; mem.Damage = v; });
+                        AddRow("⚡ 번개 줄기 수 (StreamCount: 1~3)", gl.StreamCount, 1f, 3f, 1f, v => { gl.StreamCount = (int)v; if (config?.GigastormLightning != null) config.GigastormLightning.StreamCount = (int)v; }, isInt: true);
                         AddRow("🔢 연쇄 횟수 (ChainCount)", gl.ChainCount, 2f, 16f, 1f, v => { gl.ChainCount = (int)v; mem.Count = (int)v; }, isInt: true);
                         AddRow("📏 점프 반경 (ChainRange)", gl.ChainRange, 2.0f, 12.0f, 0.5f, v => { gl.ChainRange = v; mem.Radius = v; });
                         AddRow("💥 뇌격 폭발 반경 (SparkRadius)", gl.SparkRadius, 0.8f, 4.0f, 0.2f, v => { gl.SparkRadius = v; mem.ExtraParam1 = v; });

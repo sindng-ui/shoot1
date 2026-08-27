@@ -303,11 +303,11 @@ namespace HappyShoot.View.Projectiles
                     if (_playerView != null && _playerView.Entity != null)
                     {
                         var (hitDmg, isCrit) = _playerView.Entity.RollDamage(damage);
-                        monster.TakeDamage(hitDmg, isCrit);
+                        monster.TakeDamage(hitDmg, isCrit, DamageType.StellarRain);
                     }
                     else
                     {
-                        monster.TakeDamage(damage);
+                        monster.TakeDamage(damage, false, DamageType.StellarRain);
                     }
                 }
             }

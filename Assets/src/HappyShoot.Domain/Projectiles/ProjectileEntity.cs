@@ -110,7 +110,7 @@ namespace HappyShoot.Domain.Projectiles
                         // 1. Direct Pierce Damage with Critical Strike
                         bool isCrit = CritChance > 0f && (_random.NextDouble() < CritChance);
                         float hitDmg = isCrit ? Damage * CritDamageMultiplier : Damage;
-                        monster.TakeDamage(hitDmg, isCrit);
+                        monster.TakeDamage(hitDmg, isCrit, DamageType.Arrow);
 
                         // 2. Storm Bow Mini AoE Explosion at hit point!
                         if (HasExplosionOnHit)
@@ -124,7 +124,7 @@ namespace HappyShoot.Domain.Projectiles
                                 {
                                     bool isSplashCrit = CritChance > 0f && (_random.NextDouble() < CritChance);
                                     float splashDmg = isSplashCrit ? ExplosionDamage * CritDamageMultiplier : ExplosionDamage;
-                                    splashTarget.TakeDamage(splashDmg, isSplashCrit);
+                                    splashTarget.TakeDamage(splashDmg, isSplashCrit, DamageType.Arrow);
                                 }
                             }
 

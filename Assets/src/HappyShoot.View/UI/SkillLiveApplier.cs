@@ -195,6 +195,7 @@ namespace HappyShoot.View.UI
                         gl.ChainCount = config.GigastormLightning.ChainCount;
                         gl.ChainRange = config.GigastormLightning.JumpRadius;
                         gl.SparkRadius = config.GigastormLightning.SparkRadius;
+                        gl.StreamCount = config.GigastormLightning.StreamCount;
                     }
                     if (skill.Trigger is CooldownTrigger cdGl) cdGl.Cooldown = cooldown(config.GigastormLightning.Cooldown);
                     break;
@@ -392,6 +393,7 @@ namespace HappyShoot.View.UI
                         config.GigastormLightning.ChainCount = gl.ChainCount;
                         config.GigastormLightning.JumpRadius = gl.ChainRange;
                         config.GigastormLightning.SparkRadius = gl.SparkRadius;
+                        config.GigastormLightning.StreamCount = gl.StreamCount;
                     }
                     if (skill.Trigger is CooldownTrigger cdGlPull) config.GigastormLightning.Cooldown = cdGlPull.Cooldown;
                     break;

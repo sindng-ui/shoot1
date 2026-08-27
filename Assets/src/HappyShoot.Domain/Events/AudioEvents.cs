@@ -17,7 +17,13 @@ namespace HappyShoot.Domain.Events
         PlayerHurt,
         GameOver,
         Victory,
-        GroundStomp
+        GroundStomp,
+        ArrowHit,
+        WindGlaiveHit,
+        StellarRainHit,
+        FireballHit,
+        BurnTick,
+        ShockTick
     }
 
     public readonly struct PlaySoundEvent : IDomainEvent

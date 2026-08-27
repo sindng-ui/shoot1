@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using HappyShoot.Domain.Entities;
+using HappyShoot.View.SkillTree;
 using HappyShoot.View.Utils;
 
 namespace HappyShoot.View.UI
@@ -15,6 +16,7 @@ namespace HappyShoot.View.UI
         private GameObject _panelRoot;
         private Action<CharacterClassType, bool, bool> _onSelectedCallback;
         private SettingsDialogUiView _settingsDialog;
+        private SkillTreeUiView _skillTreeUiView;
         private bool _isDevMode = false;
         private bool _isSkillTestMode = false;
         private Text _devModeBtnText;
@@ -25,6 +27,11 @@ namespace HappyShoot.View.UI
         public void SetSettingsDialog(SettingsDialogUiView dialog)
         {
             _settingsDialog = dialog;
+        }
+
+        public void SetSkillTreeUiView(SkillTreeUiView treeView)
+        {
+            _skillTreeUiView = treeView;
         }
 
         public void Initialize(Action<CharacterClassType, bool, bool> onSelectedCallback)
@@ -131,6 +138,26 @@ namespace HappyShoot.View.UI
             // Title Banner
             CreateText(_panelRoot.transform, "Title", "⚔️ 출격할 영웅을 선택하세요 ⚔️", 36, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -80f), new Vector2(800f, 60f), new Color(1f, 0.88f, 0.35f, 1f));
             CreateText(_panelRoot.transform, "Subtitle", "각 영웅은 고유한 능력치와 전용 무기를 보유하고 있습니다", 18, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -135f), new Vector2(800f, 30f), new Color(0.75f, 0.82f, 0.90f, 0.8f));
+
+            // Skill Tree Entry Button (Top Right)
+            var treeBtnGo = new GameObject("BtnOpenSkillTree");
+            treeBtnGo.transform.SetParent(_panelRoot.transform, false);
+            var treeRt = treeBtnGo.AddComponent<RectTransform>();
+            treeRt.anchorMin = new Vector2(1f, 1f);
+            treeRt.anchorMax = new Vector2(1f, 1f);
+            treeRt.pivot = new Vector2(1f, 1f);
+            treeRt.anchoredPosition = new Vector2(-40f, -40f);
+            treeRt.sizeDelta = new Vector2(230f, 54f);
+
+            var treeImg = treeBtnGo.AddComponent<Image>();
+            treeImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            treeImg.color = new Color(0.75f, 0.20f, 0.45f, 0.95f);
+
+            var treeBtn = treeBtnGo.AddComponent<Button>();
+            treeBtn.targetGraphic = treeImg;
+            treeBtn.onClick.AddListener(() => _skillTreeUiView?.Show());
+
+            CreateText(treeBtnGo.transform, "BtnText", "💎 스킬 트리 (영구 성장)", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
 
             // Card Container (Expanded to accommodate 3 Heroes)
             var cardsContainer = new GameObject("CardsContainer");

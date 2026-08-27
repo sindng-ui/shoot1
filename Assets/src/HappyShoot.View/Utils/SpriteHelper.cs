@@ -378,9 +378,10 @@ namespace HappyShoot.View.Utils
         private static Sprite _blobShadowSprite;
 
         /// <summary>
-        /// 32x16 Soft Gaussian-falloff translucent black elliptical Blob Shadow for 2.5D fake depth.
+        /// 48x24 Balanced translucent black elliptical Blob Shadow for 2.5D fake depth.
+        /// Features a natural 58% peak opacity with smooth gentle falloff, clearly visible without being overly dark.
         /// </summary>
-        public static Sprite GetOrCreateBlobShadowSprite(int width = 32, int height = 16)
+        public static Sprite GetOrCreateBlobShadowSprite(int width = 48, int height = 24)
         {
             if (_blobShadowSprite != null) return _blobShadowSprite;
 
@@ -396,7 +397,10 @@ namespace HappyShoot.View.Utils
                     float distSq = nx * nx + ny * ny;
                     if (distSq <= 1.0f)
                     {
-                        float alpha = Mathf.Pow(1.0f - Mathf.Sqrt(distSq), 1.4f) * 0.45f;
+                        float dist = Mathf.Sqrt(distSq);
+                        // Natural soft falloff with 58% maximum opacity at center
+                        float t = Mathf.Clamp01(1.0f - dist);
+                        float alpha = Mathf.Pow(t, 1.15f) * 0.58f;
                         pixels[y * width + x] = new Color(0f, 0f, 0f, alpha);
                     }
                     else pixels[y * width + x] = Color.clear;
@@ -405,7 +409,8 @@ namespace HappyShoot.View.Utils
 
             tex.SetPixels(pixels);
             tex.Apply();
-            _blobShadowSprite = Sprite.Create(tex, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), 16);
+            // PPU = 24 maintains exact 2.0x1.0 world unit size as original 32x16 with PPU 16
+            _blobShadowSprite = Sprite.Create(tex, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f), 24);
             return _blobShadowSprite;
         }
 

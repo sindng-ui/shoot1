@@ -1,64 +1,31 @@
-# 🎮 HappyShoot 프로젝트 작업 내역 보고서 (Walkthrough)
-
-형님! 로드맵의 전체 4단계(**Phase 1 ~ Phase 4**)가 모두 성공적으로 완성되었습니다! 🐧✨👾👑
-
----
+# 🏛️ 무한 배경 타일링 시스템 및 고대 던전 전장 비주얼 구현 결과
 
 ## 1. 개요
-- **목표**: 쿼터뷰 액션 서바이벌 스타일의 고퀄리티 비주얼, 신규 3단 HUD & 패시브 리스트, 오늘 시작 시의 100% 원본 귀여운 치비 영웅 복원 & 9방향 조준, 그리고 **7종 몬스터 + 2종 보스 고퀄리티 비주얼 때깔 & 속성별 처치 VFX** 완벽 연동.
-- **아키텍처 원칙**: 도메인 순수 C# 모델, 이벤트 기반 느슨한 결합(EventBus), 0-Allocation 무할당 풀링, 파일당 500줄 이하 엄수.
+플레이어가 광활한 전장을 이동할 때 카메라 영역에 맞춰 배경 타일이 끊김 없이 자연스럽게 순환 이동(Wrap-around)하는 무한 배경 타일링 시스템을 구축하였습니다.
+기존의 밋밋한 단색 카메라 배경에서 벗어나, 고대 석판 바닥 질감, 금 간 석판, 고대 마법 룬 문양, 미세한 이끼 디테일, 그리고 전장에 깊이감을 부여하는 앰비언트 부유 먼지 입자까지 갖춘 **"진짜 서바이버즈 게임다운 고품질 전장"**을 완성하였습니다.
 
 ---
 
-## 2. 주요 구현 내역
-
-### 1) Phase 1: 하단 3단 메인 HUD 전면 개편
-- **1단 (최하단)**: 10칸(Segments) 분할 메탈/골드 EXP 게이지 + 다이아몬드 레벨 뱃지 (`Lv.17`) + 경험치 수치 (`EXP 1,250 / 2,000 (62.5%)`).
-- **2단 (중앙 중단)**: 6칸 액티브 스킬 슬롯 + 360° 시계방향 쿨타임 회전 마스크(Radial Fill) + 레벨 뱃지 (`Lv.3`) + 투사체 개수 뱃지 + 대시(Space) 슬롯.
-- **3단 (중앙 상단)**: 황금 투구 엠블럼 뱃지 + 루비 레드 플레이어 대형 HP 게이지 (`1000 / 1000`) + 피격 시 서서히 줄어드는 고스트 화이트 잔상 게이지 (Juice).
-
-### 2) Phase 2: 화면 좌측 패시브 리스트 HUD & 네온 에임 타겟 링
-- **화면 좌측(Left) 9종 패시브 슬롯 리스트**:
-  - 보유한 패시브 아이콘 + 우하단 레벨 뱃지 + **실시간 누적 수치(예: `+15% ATK`, `+24% SPD`, `+30% RNG`, `+10 ARM`, `+20% EXP`, `+40 HP`, `+16% CRT` 등)** 동기화.
-- **네온 라임-그린 에임 타겟 링 (Aim Reticle)**:
-  - 4방향 다이아몬드 돌기 십자선 과녁 링이 마우스 2D 월드 좌표를 부드럽게 추종하며, 인게임 중 OS 커서를 숨겨 몰입감 극대화.
-
-### 3) Phase 3: 오늘 시작 시의 100% 원본 귀여운 치비 영웅 복원 & 9방향 조준
-- **치비 3영웅 원본 복원**:
-  - ⚔️ **전사**: 둥근 철제 투구 + 황금 크레스트 + 시안 눈 + 빨간 망토 + 골드 견갑.
-  - 🏹 **궁수**: 초록 후드 + 황금 눈 + 붉은 깃털 + 가죽 튜닉 & 등 뒤 화살통.
-  - 🔮 **마법사**: 바이올렛 롭 + 황금 띠 고깔모자 + 시안 눈 + 골드 트림.
-- **궁수 사격 반동 (Recoil Snap Kickback)**: 화살 발사 시 활이 탄력 있게 튕기고 몸체가 살짝 젖혀지는 찰진 손맛.
-- **마법사 치켜든 지팡이 & 꼭대기 발사**: 지팡이가 얼굴을 가리지 않는 바깥 대각선 파지 자세 + 지팡이 꼭대기 크리스탈 오브에서 투사체 발사 및 캐스팅 펄스.
-- **지능형 시선 제어**: 마우스 조작 시 9방향 조준 → 마우스 4초 멈춤 시 즉시 귀여운 기본 정면(Front) 샷 복귀 → WASD 이동 시 이동 방향 질주 → 멈추면 즉시 정면 복귀.
-
-### 4) Phase 4: 7종 몬스터 + 2종 보스 비주얼 때깔 강화 & 속성별 처치 VFX
-- **7종 일반 몬스터 & 보스 고퀄리티 픽셀아트 때깔 업그레이드**:
-  - 🟢 **Slime (슬라임 28x28)**: 에메랄드 반투명 젤리 셰이딩 + 상단 하이라이트 글레어 + 눈동자 반사광.
-  - 🦇 **Bat (박쥐 28x28)**: 흑자주빛 벨벳 날개막 + 날개 뼈마디 디테일 + 뾰족한 송곳니 + 루비 레드 안광.
-  - 💀 **Skeleton (해골 궁수 32x32)**: 음영이 뚜렷한 백골 두개골 + 갈비뼈 & 척추 + 핏빛 붉은 안광 + 뼈 활.
-  - 🗿 **Golem King (골렘 킹 36x36)**: 화강암 바위 큐브 + 어깨 바위 숄더패드 + 가슴 중앙과 이마의 황금빛 룬 코어 맥동 발광.
-  - 🔥 **FireImp (화염 임프 30x30)**: 진홍빛 악마 몸체 + 뾰족한 악마 뿔 + 불꽃 왕관 + 꼬리 끝 불씨 발광.
-  - 🕷️ **ToxicSpider (맹독 거미 34x34)**: 형광 라임/퍼플 독낭 발광 + 8개 관절 마디 다리 + 4개의 섬뜩한 붉은 눈.
-  - ⚔️ **DarkKnight (암흑 기사 40x40)**: 칠흑의 옵시디언 다크 플레이트 아머 + 바이저 슬릿 퍼플 안광 + 대형 다크 클레이모어 대검.
-  - 👿 **Laser Archdemon (악마 군주 보스 56x56)**: 웅장한 대형 악마 날개 + 거대한 흑요석 뿔 + 이마 중앙의 레이저 캐논 3안 코어 발광.
-- **몬스터 속성별 처치 미니 파티클 VFX (무할당 64개 풀링)**:
-  - 몬스터 사망 시 고유 속성에 맞는 찰진 미니 파티클(3~6개)이 톡 튀어나오며 부드럽게 페이드아웃 (골렘-황금 룬 스파크, 거미-형광 독즙, 임프/보스-화염 불씨, 해골-아이보리 뼈가루, 슬라임-에메랄드 젤리).
-
-### 5) GitHub Actions CI/CD Windows (.exe) 자동 빌드 플로우 ([.github/workflows/build.yml](file:///k:/unityprojects/shoot1/shoot1/.github/workflows/build.yml), [BuildScript.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/Editor/BuildScript.cs))
-- **Unity Batchmode 헤드리스 빌드 자동화 (`BuildScript.BuildWindows`)**:
-  - `EditorBuildSettings`에 등록된 씬을 자동 감지하여 `Builds/StandaloneWindows64/HappyShoot.exe`를 안전하게 빌드하고 빌드 리포트(용량/에러)를 로깅.
-- **GitHub Actions 워크플로우 (`.github/workflows/build.yml`)**:
-  - `main` 브랜치 푸시 또는 깃허브 웹에서 **[Run workflow]** 버튼 클릭 시 자동 빌드 수행.
-  - `Library` 캐싱으로 재빌드 시간 대폭 단축.
-  - 빌드 산출물을 `HappyShoot-Windows-x64.zip` 압축 아티팩트로 자동 업로드하여 **깃허브 웹에서 원클릭으로 실행 파일 다운로드 가능!**
-  - 버전 태그(`v*`) 푸시 시 GitHub Releases에 자동 릴리즈 생성 및 파일 첨부.
-- **라이선스 등록 가이드 ([docs/GITHUB_ACTIONS_SETUP.md](file:///k:/unityprojects/shoot1/shoot1/docs/GITHUB_ACTIONS_SETUP.md))**:
-  - 1회성 Unity 라이선스 등록 방법 상세 안내 문서 제공.
+## 2. 신규 모듈 구성 및 라인 수 (500줄 규칙 100% 준수)
+- [BackgroundTileView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Background/BackgroundTileView.cs): 56줄
+- [BackgroundAmbientDustView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Background/BackgroundAmbientDustView.cs): 125줄
+- [BackgroundManager.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Background/BackgroundManager.cs): 156줄
+- [BackgroundSpriteHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Background/BackgroundSpriteHelper.cs): 277줄
+- [GameBootstrap.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Bootstrap/GameBootstrap.cs): 365줄
 
 ---
 
-## 3. 검증 결과
-- **단위 테스트**: 124개 도메인 단위 테스트 전체 100% 통과 (**124/124 ALL PASS**).
-- **모듈화**: `MonsterSpriteHelper.cs` (367줄), `MonsterDeathFxManagerView.cs` (154줄), `PlayerView.cs` (450줄) 등 모든 파일 500줄 이하 엄수.
-- **문서화**: [`APP_MAP.md`](file:///k:/unityprojects/shoot1/shoot1/APP_MAP.md) 최신화 완료.
+## 3. 주요 핵심 기능
+1. **3x3 무한 랩어라운드 타일링**:
+   - 24m x 24m 타일 9장(72m x 72m 커버).
+   - 21:9 울트라와이드 모니터 및 메테오/지각변동 쉐이크 시에도 화면 끝이 비지 않는 여유 마진.
+   - 매 프레임 GC Alloc = 0 Bytes, float 오프셋 기반 무할당 순환 이동.
+2. **4종 고대 석판 바리에이션 프로시저럴 픽셀아트**:
+   - Classic(기본), Cracked(균열), Runic(마법룬), Moss(이끼) 4종 타일 자동 스왑 배치.
+3. **28개 앰비언트 부유 먼지 입자 (Ambient Floating Motes)**:
+   - 전장에 공기감과 깊이감을 제공하며 화면 이탈 시 무할당 순환.
+4. **2.5D 캐릭터/몬스터 그림자 시인성 대폭 강화**:
+   - 기존 32x16의 옅은 가우시안 알파(45%)에서 **48x24 고해상도 + 85% 불투명도 코어**의 선명한 카툰 타원 블롭 섀도우로 개편.
+   - 배경 석판 타일의 명암비를 자연스러운 중세 슬레이트 톤(`RGB 0.22~0.25`)으로 조화롭게 밸런싱하여, 어두운 바닥 위에서도 발밑 그림자가 깔끔하고 선명하게 도드라지도록 완성.
+5. **소팅 오더 무결성**:
+   - 배경 타일: `-100`, 앰비언트 입자: `-50`, 그림자: `-10`, 몬스터: `10`, 플레이어: `15`, 투사체: `20~30` 분리로 완벽한 렌더링 순서 보장.

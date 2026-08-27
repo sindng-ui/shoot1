@@ -205,7 +205,7 @@ namespace HappyShoot.Domain.Entities
                 if (_burnTickTimer >= 0.5f)
                 {
                     _burnTickTimer = 0f;
-                    TakeDamage(BurnDamagePerTick);
+                    TakeDamage(BurnDamagePerTick, false, DamageType.BurnDot);
                 }
             }
 
@@ -216,7 +216,7 @@ namespace HappyShoot.Domain.Entities
                 if (_shockTickTimer >= 0.7f)
                 {
                     _shockTickTimer = 0f;
-                    TakeDamage(ShockDamagePerTick);
+                    TakeDamage(ShockDamagePerTick, false, DamageType.ShockDot);
                 }
             }
         }
@@ -334,13 +334,13 @@ namespace HappyShoot.Domain.Entities
         /// <summary>
         /// Applies damage to the monster and triggers events (regular, boss, ice shatter).
         /// </summary>
-        public void TakeDamage(float damage, bool isCritical = false)
+        public void TakeDamage(float damage, bool isCritical = false, DamageType damageType = DamageType.Default)
         {
             if (!IsActive || IsDead || damage <= 0f) return;
 
             bool wasChilled = IsChilled;
             CurrentHealth = Math.Max(0f, CurrentHealth - damage);
-            _eventBus?.Publish(new MonsterDamagedEvent(Id, damage, CurrentHealth, MaxHealth, Position, isCritical));
+            _eventBus?.Publish(new MonsterDamagedEvent(Id, damage, CurrentHealth, MaxHealth, Position, isCritical, damageType));
 
             if (IsBoss)
             {

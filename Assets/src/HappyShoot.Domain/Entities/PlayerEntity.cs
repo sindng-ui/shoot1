@@ -70,6 +70,7 @@ namespace HappyShoot.Domain.Entities
         }
 
         public bool IsGodMode { get; set; }
+        public Progression.PlayerProgressionFlags ProgressionFlags { get; set; } = Progression.PlayerProgressionFlags.Empty;
 
         /// <summary>
         /// Applies mitigated damage based on Armor and publishes PlayerDamagedEvent or PlayerDiedEvent.
@@ -77,6 +78,15 @@ namespace HappyShoot.Domain.Entities
         public void TakeDamage(float rawDamage)
         {
             if (IsDead || rawDamage <= 0f || IsGodMode) return;
+
+            // Ranger Dodge Tree Talent (r_dodge)
+            if (ProgressionFlags.HasDodgeChance && ProgressionFlags.DodgeChance > 0f)
+            {
+                if (_random.NextDouble() < ProgressionFlags.DodgeChance)
+                {
+                    return; // Dodged! Zero damage taken.
+                }
+            }
 
             float damageToApply = Stats.CalculateMitigatedDamage(rawDamage);
             CurrentHealth = Math.Max(0f, CurrentHealth - damageToApply);

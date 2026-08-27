@@ -135,6 +135,7 @@
         "JumpRadius": 7.0,
         "SparkRadius": 1.7999999523162842,
         "Cooldown": 1.0925697088241578,
+        "StreamCount": 1,
         "CameraShakeScale": 0.0
     },
     "BlizzardNova": {

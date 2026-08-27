@@ -4,8 +4,10 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Meta;
+using HappyShoot.Domain.Progression;
 using HappyShoot.Domain.Session;
 using HappyShoot.View.Shop;
+using HappyShoot.View.SkillTree;
 
 namespace HappyShoot.View.UI
 {
@@ -28,13 +30,27 @@ namespace HappyShoot.View.UI
         private EventBus _eventBus;
         private MetaShopManager _shopManager;
         private MetaShopUiView _shopView;
+        private SkillTreeManager _skillTreeManager;
+        private SkillTreeUiView _skillTreeUiView;
+        private InGameGemCounterHudView _gemCounter;
+        private Text _gemsEarnedText;
 
-        public void Initialize(GameSessionEntity gameSession, EventBus eventBus, MetaShopManager shopManager = null, MetaShopUiView shopView = null)
+        public void Initialize(
+            GameSessionEntity gameSession,
+            EventBus eventBus,
+            MetaShopManager shopManager = null,
+            MetaShopUiView shopView = null,
+            SkillTreeManager skillTreeManager = null,
+            SkillTreeUiView skillTreeUiView = null,
+            InGameGemCounterHudView gemCounter = null)
         {
             _gameSession = gameSession;
             _eventBus = eventBus;
             _shopManager = shopManager;
             _shopView = shopView;
+            _skillTreeManager = skillTreeManager;
+            _skillTreeUiView = skillTreeUiView;
+            _gemCounter = gemCounter;
 
             if (_shopView != null)
             {
@@ -104,7 +120,24 @@ namespace HappyShoot.View.UI
 
                 if (_goldEarnedText != null)
                 {
-                    _goldEarnedText.text = $"💰 Gold Collected: +{_gameSession.GoldEarned}";
+                    _goldEarnedText.text = $"💰 획득한 골드: +{_gameSession.GoldEarned}";
+                }
+
+                // Settle gems into permanent SkillTree storage
+                if (_gemCounter != null && _skillTreeManager != null)
+                {
+                    int r = _gemCounter.RunRubyCount;
+                    int e = _gemCounter.RunEmeraldCount;
+                    int a = _gemCounter.RunAmethystCount;
+
+                    if (r > 0) _skillTreeManager.AddGems(HappyShoot.Domain.Progression.GemType.Ruby, r);
+                    if (e > 0) _skillTreeManager.AddGems(HappyShoot.Domain.Progression.GemType.Emerald, e);
+                    if (a > 0) _skillTreeManager.AddGems(HappyShoot.Domain.Progression.GemType.Amethyst, a);
+
+                    if (_gemsEarnedText != null)
+                    {
+                        _gemsEarnedText.text = $"💎 획득 보석: 🔴+{r}  🟢+{e}  🟣+{a}";
+                    }
                 }
 
                 // Settle gold into permanent storage
@@ -148,6 +181,12 @@ namespace HappyShoot.View.UI
 
         public void OnOpenShopClicked()
         {
+            if (_skillTreeUiView != null)
+            {
+                _skillTreeUiView.Show();
+                return;
+            }
+
             if (_shopView != null)
             {
                 if (_panelRoot != null)
@@ -206,21 +245,22 @@ namespace HappyShoot.View.UI
             var dialogRt = dialogGo.AddComponent<RectTransform>();
             dialogRt.anchorMin = new Vector2(0.5f, 0.5f);
             dialogRt.anchorMax = new Vector2(0.5f, 0.5f);
-            dialogRt.sizeDelta = new Vector2(440f, 520f);
+            dialogRt.sizeDelta = new Vector2(440f, 560f);
             dialogGo.AddComponent<Image>().color = new Color(0.18f, 0.12f, 0.15f, 0.98f);
 
             // Title
             CreateText(dialogGo.transform, "Title", "💀 게임 오버 💀", 32, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -44f), new Vector2(360f, 50f), new Color(1f, 0.3f, 0.3f, 1f));
 
             // Stats items
-            _survivalTimeText = CreateText(dialogGo.transform, "TimeText", "⏱️ 생존 시간: 00:00", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 70f), new Vector2(340f, 32f), Color.white);
-            _killCountText = CreateText(dialogGo.transform, "KillsText", "💀 처치한 적: 0 마리", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(340f, 32f), Color.white);
-            _levelReachedText = CreateText(dialogGo.transform, "LevelText", "🌟 달성 레벨: Lv.1", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -10f), new Vector2(340f, 32f), Color.white);
-            _goldEarnedText = CreateText(dialogGo.transform, "GoldText", "💰 획득한 골드: +0 G", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -50f), new Vector2(340f, 32f), new Color(1f, 0.85f, 0.3f, 1f));
+            _survivalTimeText = CreateText(dialogGo.transform, "TimeText", "⏱️ 생존 시간: 00:00", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 85f), new Vector2(340f, 32f), Color.white);
+            _killCountText = CreateText(dialogGo.transform, "KillsText", "💀 처치한 적: 0 마리", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 48f), new Vector2(340f, 32f), Color.white);
+            _levelReachedText = CreateText(dialogGo.transform, "LevelText", "🌟 달성 레벨: Lv.1", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 12f), new Vector2(340f, 32f), Color.white);
+            _goldEarnedText = CreateText(dialogGo.transform, "GoldText", "💰 획득한 골드: +0 G", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -24f), new Vector2(340f, 32f), new Color(1f, 0.85f, 0.3f, 1f));
+            _gemsEarnedText = CreateText(dialogGo.transform, "GemsText", "💎 획득 보석: 🔴+0  🟢+0  🟣+0", 18, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(340f, 32f), new Color(0.9f, 0.6f, 1f, 1f));
 
             // Buttons: Power Up Shop & Retry
-            _openShopButton = CreateButton(dialogGo.transform, "ShopBtn", "🏛️ 영구 강화 상점", new Vector2(0f, -115f), new Color(0.85f, 0.65f, 0.15f, 1f), OnOpenShopClicked);
-            _retryButton = CreateButton(dialogGo.transform, "RetryBtn", "🔄 다시 도전하기", new Vector2(0f, -180f), new Color(0.2f, 0.7f, 0.4f, 1f), OnRetryClicked);
+            _openShopButton = CreateButton(dialogGo.transform, "ShopBtn", "💎 스킬 트리 (영구 성장)", new Vector2(0f, -125f), new Color(0.85f, 0.35f, 0.55f, 1f), OnOpenShopClicked);
+            _retryButton = CreateButton(dialogGo.transform, "RetryBtn", "🔄 다시 도전하기", new Vector2(0f, -190f), new Color(0.2f, 0.7f, 0.4f, 1f), OnRetryClicked);
         }
 
         private Button CreateButton(Transform parent, string name, string label, Vector2 anchoredPos, Color btnColor, UnityEngine.Events.UnityAction onClick)

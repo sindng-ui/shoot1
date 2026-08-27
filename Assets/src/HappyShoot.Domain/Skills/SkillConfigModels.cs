@@ -288,6 +288,7 @@ namespace HappyShoot.Domain.Skills
         public float JumpRadius = 7.5f;
         public float SparkRadius = 2.2f;
         public float Cooldown = 1.2f;
+        public int StreamCount = 1;
         public float CameraShakeScale = 0f;
         public bool EnableCameraShake { get => CameraShakeScale > 0.001f; set => CameraShakeScale = value ? 100f : 0f; }
     }

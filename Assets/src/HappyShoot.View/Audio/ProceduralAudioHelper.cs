@@ -44,10 +44,20 @@ namespace HappyShoot.View.Audio
                     return GeneratePunchHit(0.15f);
                 case SoundEffectType.GameOver:
                     return GenerateFanfare(0.8f, new[] { 440f, 415f, 392f, 330f });
-                case SoundEffectType.Victory:
-                    return GenerateFanfare(0.8f, new[] { 523f, 659f, 784f, 1046f });
                 case SoundEffectType.GroundStomp:
                     return GenerateGroundStompQuake(0.22f);
+                case SoundEffectType.ArrowHit:
+                    return ProceduralSkillAudioHelper.GenerateArrowPierceHit(0.055f);
+                case SoundEffectType.WindGlaiveHit:
+                    return ProceduralSkillAudioHelper.GenerateWindGlaiveHit(0.065f);
+                case SoundEffectType.StellarRainHit:
+                    return ProceduralSkillAudioHelper.GenerateStellarRainHit(0.075f);
+                case SoundEffectType.FireballHit:
+                    return ProceduralSkillAudioHelper.GenerateFireballExplosionHit(0.12f);
+                case SoundEffectType.BurnTick:
+                    return ProceduralSkillAudioHelper.GenerateBurnTick(0.045f);
+                case SoundEffectType.ShockTick:
+                    return ProceduralSkillAudioHelper.GenerateShockTick(0.040f);
                 default:
                     return GeneratePunchHit(0.08f);
             }

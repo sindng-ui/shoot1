@@ -4,12 +4,14 @@ using UnityEngine.InputSystem.UI;
 using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Leveling;
+using HappyShoot.Domain.Progression;
 using HappyShoot.Domain.Session;
 using HappyShoot.Domain.Skills;
 using HappyShoot.Domain.Skills.Effects;
 using HappyShoot.Domain.Skills.Evolution;
 using HappyShoot.Domain.Skills.Targeters;
 using HappyShoot.Domain.Skills.Triggers;
+using HappyShoot.View.Background;
 using HappyShoot.View.Cameras;
 using HappyShoot.View.Config;
 using HappyShoot.View.Effects;
@@ -17,6 +19,7 @@ using HappyShoot.View.Gems;
 using HappyShoot.View.Monsters;
 using HappyShoot.View.Player;
 using HappyShoot.View.Projectiles;
+using HappyShoot.View.SkillTree;
 using HappyShoot.View.Timeline;
 using HappyShoot.View.UI;
 using HappyShoot.View.Utils;
@@ -106,6 +109,11 @@ namespace HappyShoot.View.Bootstrap
             mainCam.orthographicSize = 9.0f; // Wide, expansive 16:9 field of view
             mainCam.backgroundColor = new Color(0.12f, 0.14f, 0.18f, 1.0f); // Sleek dark slate background
 
+            // 1.1. Create Infinite Background Tiling Manager
+            var bgGo = new GameObject("BackgroundManager");
+            var bgManager = bgGo.AddComponent<BackgroundManager>();
+            bgManager.Initialize(mainCam);
+
             // 2. Create Player GameObject
             var playerGo = new GameObject("Player");
             var playerSr = playerGo.AddComponent<SpriteRenderer>();
@@ -183,6 +191,10 @@ namespace HappyShoot.View.Bootstrap
             var gemManagerView = gemGo.AddComponent<GemManagerView>();
             gemManagerView.Initialize(playerView.EventBus, playerView);
 
+            var gemStoneGo = new GameObject("GemStoneManager");
+            var gemStoneManagerView = gemStoneGo.AddComponent<Gems.GemStoneManagerView>();
+            gemStoneManagerView.Initialize(gemManagerView.DomainManager);
+
             var damageTextGo = new GameObject("DamageTextManager");
             var damageTextView = damageTextGo.AddComponent<DamageTextManagerView>();
             damageTextView.Initialize(playerView.EventBus);
@@ -246,12 +258,14 @@ namespace HappyShoot.View.Bootstrap
             var evoPopupView = evoPopupGo.AddComponent<EvolutionPopupView>();
             evoPopupView.Initialize(playerView.EventBus);
 
-            // 6. Setup Game Session, Meta Shop & InGame HUD / Pause / GameOver UI
-            var metaStorage = new Shop.JsonPlayerPrefsStorage();
-            var metaShopManager = new HappyShoot.Domain.Meta.MetaShopManager(metaStorage);
+            // 6. Setup Game Session, Meta Skill Tree & InGame HUD / Pause / GameOver UI
+            var skillTreeStorage = new JsonSkillTreeStorage();
+            var skillTreeManager = new SkillTreeManager(skillTreeStorage);
+            SkillTreeRegistry.RegisterAll(skillTreeManager);
 
-            // Apply permanent upgrades to player starting stats
-            playerView.Entity.Stats = HappyShoot.Domain.Meta.MetaUpgradeApplier.ApplyUpgrades(playerView.Entity.Stats, metaShopManager.SaveData);
+            // Apply permanent skill tree upgrades to player starting stats
+            playerView.Entity.Stats = SkillTreeApplier.ApplyStats(playerView.Entity.Stats, skillTreeManager, _selectedClass);
+            playerView.Entity.ProgressionFlags = SkillTreeApplier.BuildFlags(skillTreeManager, _selectedClass);
 
             // Apply saved custom sandbox stats if available
             var skillConfig = SkillConfigRepository.Instance.GetConfig();
@@ -262,9 +276,9 @@ namespace HappyShoot.View.Bootstrap
                 playerView.Entity.Stats = new CharacterStats(s.MaxHealth, s.HealthRegen, c.MoveSpeed, c.AttackPowerMultiplier, c.Armor, c.CritChance, c.CritDamageMultiplier, c.CooldownReduction, s.AreaMultiplier, s.ProjectileSpeedMultiplier, s.ExtraProjectiles, s.PickupRadius);
             }
 
-            var metaShopGo = new GameObject("MetaShopUI");
-            var metaShopView = metaShopGo.AddComponent<Shop.MetaShopUiView>();
-            metaShopView.Initialize(metaShopManager);
+            var skillTreeGo = new GameObject("SkillTreeUI");
+            var skillTreeUiView = skillTreeGo.AddComponent<SkillTreeUiView>();
+            skillTreeUiView.Initialize(skillTreeManager);
 
             _gameSession = new GameSessionEntity(playerView.EventBus);
             _gameSession.StartGame();
@@ -277,6 +291,10 @@ namespace HappyShoot.View.Bootstrap
             var hudView = hudGo.AddComponent<InGameHudView>();
             hudView.SetSettingsDialog(settingsDialogView);
             hudView.Initialize(playerView, levelSystem, _gameSession);
+
+            var gemCounterGo = new GameObject("GemCounterHUD");
+            var gemCounterView = gemCounterGo.AddComponent<InGameGemCounterHudView>();
+            gemCounterView.Initialize(playerView.EventBus, hudGo.transform);
 
             var bossBarGo = new GameObject("BossHealthBarUI");
             var bossBarView = bossBarGo.AddComponent<BossHealthBarView>();
@@ -297,9 +315,8 @@ namespace HappyShoot.View.Bootstrap
 
             var gameOverGo = new GameObject("GameOverUI");
             var gameOverView = gameOverGo.AddComponent<GameOverResultUiView>();
-            gameOverView.Initialize(_gameSession, playerView.EventBus, metaShopManager, metaShopView);
+            gameOverView.Initialize(_gameSession, playerView.EventBus, null, null, skillTreeManager, skillTreeUiView, gemCounterView);
 
-            // 6. Character Select Screen (Warrior vs Ranger)
             // 7. Developer Skill Selector & Cheat Console UI
             var devConsoleGo = new GameObject("DevSkillSelectorUI");
             var devConsoleView = devConsoleGo.AddComponent<DevSkillSelectorUiView>();
@@ -316,10 +333,15 @@ namespace HappyShoot.View.Bootstrap
             var charSelectGo = new GameObject("CharacterSelectUI");
             var charSelectView = charSelectGo.AddComponent<CharacterSelectUiView>();
             charSelectView.SetSettingsDialog(settingsDialogView);
+            charSelectView.SetSkillTreeUiView(skillTreeUiView);
             charSelectView.Initialize((selectedClass, isDevMode, isSkillTestMode) =>
             {
                 _selectedClass = selectedClass;
                 playerView.SetClassType(selectedClass);
+
+                // Re-apply class-specific skill tree progression stats and elemental flags
+                playerView.Entity.Stats = HappyShoot.Domain.Progression.SkillTreeApplier.ApplyStats(playerView.Entity.Stats, skillTreeManager, selectedClass);
+                playerView.Entity.ProgressionFlags = HappyShoot.Domain.Progression.SkillTreeApplier.BuildFlags(skillTreeManager, selectedClass);
                 foreach (var s in playerView.Entity.Skills)
                 {
                     SkillConfigRepository.Instance.ApplyConfigToSkillLevel(s, s.Level);

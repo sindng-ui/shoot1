@@ -348,7 +348,7 @@ namespace HappyShoot.View.Projectiles
                 {
                     monster.ApplyBurn(duration: 7.0f, damagePerTick: damage * 0.12f);
                     var (hitDmg, isCrit) = _playerView != null ? _playerView.Entity.RollDamage(damage) : (damage, false);
-                    monster.TakeDamage(hitDmg, isCrit);
+                    monster.TakeDamage(hitDmg, isCrit, HappyShoot.Domain.Events.DamageType.Fireball);
                 }
             }
         }

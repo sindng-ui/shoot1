@@ -82,7 +82,7 @@ namespace HappyShoot.View.Audio
             _eventBus.Subscribe<StopBgmEvent>(OnStopBgm);
 
             // Gameplay reactive audio hooks: Smart Throttling for mass combat (crisp punch without ear fatigue)
-            _eventBus.Subscribe<MonsterDamagedEvent>(evt => HandleMonsterDamagedAudio(evt.IsCritical));
+            _eventBus.Subscribe<MonsterDamagedEvent>(evt => HandleMonsterDamagedAudio(evt.IsCritical, evt.DamageType));
             _eventBus.Subscribe<MonsterDiedEvent>(evt => PlaySfx(SoundEffectType.MonsterDeath, 0.50f, 0.03f));
             _eventBus.Subscribe<ExpGainedEvent>(evt => PlaySfx(SoundEffectType.GemCollect, 0.35f, 0.02f));
             _eventBus.Subscribe<PlayerLevelUpEvent>(evt => PlaySfx(SoundEffectType.LevelUp, 0.9f, 0.2f));
@@ -101,16 +101,41 @@ namespace HappyShoot.View.Audio
             Domain.Settings.GameSettings.OnSettingsChanged += ApplySettingsVolume;
         }
 
-        private void HandleMonsterDamagedAudio(bool isCritical)
+        private int _lastBurnDotFrame = -1;
+        private int _lastShockDotFrame = -1;
+
+        private void HandleMonsterDamagedAudio(bool isCritical, DamageType damageType)
         {
             int currentFrame = Time.frameCount;
+
+            // 1. Elemental DoT Damage Handling (Dedicated audio throttled to max 1 per frame)
+            if (damageType == DamageType.BurnDot)
+            {
+                if (_lastBurnDotFrame != currentFrame)
+                {
+                    _lastBurnDotFrame = currentFrame;
+                    PlaySfx(SoundEffectType.BurnTick, 0.40f, 0.06f);
+                }
+                return;
+            }
+            if (damageType == DamageType.ShockDot)
+            {
+                if (_lastShockDotFrame != currentFrame)
+                {
+                    _lastShockDotFrame = currentFrame;
+                    PlaySfx(SoundEffectType.ShockTick, 0.45f, 0.07f);
+                }
+                return;
+            }
+
+            // 2. Direct Hit Damage Handling
             if (_lastHitFrame != currentFrame)
             {
                 _lastHitFrame = currentFrame;
                 _currentFrameHitCount = 0;
             }
 
-            // Frame-level cap: max 4 hits per frame to prevent audio clipping when hitting 50-100 mobs
+            // Frame-level cap: max 4 hits per frame to prevent audio clutter when hitting 50-100 mobs
             if (_currentFrameHitCount >= MaxHitsPerFrame)
             {
                 return;
@@ -118,10 +143,28 @@ namespace HappyShoot.View.Audio
 
             _currentFrameHitCount++;
 
-            // Rich & audible punchy volume with slight side-chain compression
             float baseVol = isCritical ? 1.0f : 0.85f;
             float volume = baseVol * (1.0f - (_currentFrameHitCount - 1) * 0.04f);
-            PlaySfx(SoundEffectType.MonsterHit, volume, 0.004f);
+
+            // Play distinctive sound based on damage source!
+            switch (damageType)
+            {
+                case DamageType.Arrow:
+                    PlaySfx(SoundEffectType.ArrowHit, volume, 0.09f); // Sharp piercing thwip snap!
+                    break;
+                case DamageType.WindGlaive:
+                    PlaySfx(SoundEffectType.WindGlaiveHit, volume * 0.95f, 0.07f); // Razor whirlwind slice
+                    break;
+                case DamageType.StellarRain:
+                    PlaySfx(SoundEffectType.StellarRainHit, volume * 0.90f, 0.07f); // Sparkling crystal chime
+                    break;
+                case DamageType.Fireball:
+                    PlaySfx(SoundEffectType.FireballHit, volume, 0.05f); // Fiery magma explosion boom
+                    break;
+                default:
+                    PlaySfx(SoundEffectType.MonsterHit, volume, 0.04f); // Solid melee punch/slash
+                    break;
+            }
         }
 
         private void OnDestroy()

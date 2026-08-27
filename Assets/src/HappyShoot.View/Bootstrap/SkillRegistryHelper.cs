@@ -214,7 +214,7 @@ namespace HappyShoot.View.Bootstrap
                 "chain_lightning", "passive_overcharge", "gigastorm_lightning", "기가스톰 체인",
                 () => {
                     var cfg = SkillConfigRepository.Instance.GetConfig();
-                    return new CompositeSkill("gigastorm_lightning", "기가스톰 체인", new CooldownTrigger(cfg.GigastormLightning.Cooldown), new ClosestEnemyTargeter(), new GigastormLightningEffect(cfg.GigastormLightning.Damage, cfg.GigastormLightning.ChainCount, cfg.GigastormLightning.JumpRadius, cfg.GigastormLightning.SparkRadius), range: 8.5f);
+                    return new CompositeSkill("gigastorm_lightning", "기가스톰 체인", new CooldownTrigger(cfg.GigastormLightning.Cooldown), new ClosestEnemyTargeter(), new GigastormLightningEffect(cfg.GigastormLightning.Damage, cfg.GigastormLightning.ChainCount, cfg.GigastormLightning.JumpRadius, cfg.GigastormLightning.SparkRadius, cfg.GigastormLightning.StreamCount), range: 8.5f);
                 }));
 
             evolutionManager.RegisterRecipe(new SkillEvolutionRecipe(
