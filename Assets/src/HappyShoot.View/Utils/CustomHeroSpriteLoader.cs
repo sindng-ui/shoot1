@@ -75,15 +75,45 @@ namespace HappyShoot.View.Utils
             return result;
         }
 
+        public static void ClearCache()
+        {
+            _customCache.Clear();
+        }
+
         private static Sprite LoadSpriteInternal(string subFolder, string fileName, Vector2 pivot, float ppu)
         {
             string resPath = $"{subFolder}/{fileName}";
             Texture2D tex = null;
 
-            // 1. Try loading Texture2D directly from Resources
-            tex = Resources.Load<Texture2D>(resPath);
+            // 1. In Editor or standalone runtime, direct disk loading ensures 100% instant hot-reload without stale Resources cache
+            string diskPath = Path.Combine(Application.dataPath, "Resources", subFolder, $"{fileName}.png");
+            if (File.Exists(diskPath))
+            {
+                try
+                {
+                    byte[] fileData = File.ReadAllBytes(diskPath);
+                    var diskTex = new Texture2D(2, 2, TextureFormat.RGBA32, mipChain: false);
+                    if (diskTex.LoadImage(fileData))
+                    {
+                        diskTex.filterMode = FilterMode.Point;
+                        diskTex.anisoLevel = 0;
+                        diskTex.Apply(updateMipmaps: false, makeNoLongerReadable: false);
+                        tex = diskTex;
+                    }
+                }
+                catch
+                {
+                    // Ignore and fallback to Resources.Load
+                }
+            }
 
-            // 2. If null, try loading Sprite and borrow its underlying Texture2D
+            // 2. Fallback: Try loading Texture2D directly from Resources
+            if (tex == null)
+            {
+                tex = Resources.Load<Texture2D>(resPath);
+            }
+
+            // 3. Fallback: Try loading Sprite and borrow its underlying Texture2D
             if (tex == null)
             {
                 var sprite = Resources.Load<Sprite>(resPath);
@@ -93,36 +123,11 @@ namespace HappyShoot.View.Utils
                 }
             }
 
-            // 3. If still null, try direct file I/O fallback
-            if (tex == null)
-            {
-                try
-                {
-                    string diskPath = Path.Combine(Application.dataPath, "Resources", subFolder, $"{fileName}.png");
-                    if (File.Exists(diskPath))
-                    {
-                        byte[] fileData = File.ReadAllBytes(diskPath);
-                        var diskTex = new Texture2D(2, 2, TextureFormat.RGBA32, mipChain: true);
-                        if (diskTex.LoadImage(fileData))
-                        {
-                            diskTex.filterMode = FilterMode.Bilinear;
-                            diskTex.anisoLevel = 4;
-                            diskTex.Apply(updateMipmaps: true, makeNoLongerReadable: false);
-                            tex = diskTex;
-                        }
-                    }
-                }
-                catch
-                {
-                    // Ignore file read error
-                }
-            }
-
             // 4. Force Create Sprite with explicit Pivot and PPU
             if (tex != null)
             {
-                tex.filterMode = FilterMode.Bilinear;
-                tex.anisoLevel = 4;
+                tex.filterMode = FilterMode.Point;
+                tex.anisoLevel = 0;
                 return Sprite.Create(
                     tex,
                     new Rect(0, 0, tex.width, tex.height),

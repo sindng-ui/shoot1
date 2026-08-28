@@ -227,10 +227,10 @@ graph TD
 | **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | **스마트 하이브리드 시선 제어 및 무기 파지 위임**: WASD 이동 즉시 시선 질주, 마우스 실시간 조작 시 즉시 조준 전환, 레인저 활 정방향 파지 및 좌우 flipX, 마법사 지팡이 배치를 `WizardWeaponPlacementHelper`로 위임하여 488줄로 대폭 감량 (500줄 규칙 철저 준수) |
 | | `WizardWeaponPlacementHelper.cs [NEW]` | `WizardWeaponPlacementHelper` | **🧙‍♂️ 마법사 전 방향(8방향 + 정면/후면) 지팡이 오른손(Right Hand) 1:1 결합 및 중앙 그립 순수 계산 헬퍼**: FrontDiagonal(SE: -0.19m, SW: +0.19m, Y=-0.09m), Side(±0.08m, Y=-0.10m), Front/Back 맞춤형 스냅, 캐스팅 펄스 리프트, flipX 및 소팅오더 완전 제어 (60줄) |
 | | `HeroSpriteHelper.cs [UPDATED]` | `HeroSpriteHelper` | **고화질 9방향 스프라이트 우선 로드 및 32x32 원본 치비 3영웅 절차적 픽셀아트 안전 폴백 매니저 (370줄)** |
-| | `CustomHeroSpriteLoader.cs [UPDATED]` | `CustomHeroSpriteLoader` | **고해상도 커스텀 영웅 스프라이트 4단계 안전 로더: 전사(PPU 520f), 레인저(PPU 400f), 마법사(PPU 450f) 고유 스케일링/피벗 제어, GPU Mipmap 체인 자동 생성(`mipChain: true`), Bilinear/Aniso4 필터링으로 축소 렌더링 계단 현상 완벽 제거 (137줄, 500줄 규칙 준수)** |
-| | `Warrior Sprites [UPDATED]` | `Assets/Resources/Characters/Warrior/*.png` | **전사 고화질 9방향 대응 5종 개별 투명 PNG 스프라이트: 스마트 디프린징(Defringe) 및 서브픽셀 알파 페더링 적용으로 흰색 잔여 헤일로 완전 제거 및 매끄러운 다크 아웃라인 완성, 350x450 표준 캔버스 및 발바닥 중심 피벗/PPU=520 최적화 정렬 완료** |
-| | `Ranger Sprites [UPDATED]` | `Assets/Resources/Characters/Ranger/*.png` | **궁수 고화질 9방향 대응 5종 개별 투명 PNG 스프라이트: 스마트 디프린징 및 서브픽셀 알파 페더링 적용, 텍스트 라벨 및 바닥 회색 그림자 완벽 제거, 피벗(0.5, 0.30) / PPU=400 최적화 정렬 완료** |
-| | `Wizard Sprites [UPDATED]` | `Assets/Resources/Characters/Wizard/*.png` | **마법사 고화질 9방향 대응 5종 개별 투명 PNG 스프라이트: 스마트 디프린징 및 서브픽셀 알파 페더링 적용으로 모자/로브 테두리 자글거림 완전 제거, 피벗(0.5, 0.30) / PPU=450 최적화 정렬 완료** |
+| | `CustomHeroSpriteLoader.cs [UPDATED]` | `CustomHeroSpriteLoader` | **고해상도 커스텀 영웅 스프라이트 4단계 안전 로더: 전사(PPU 520f), 레인저(PPU 400f), 마법사(PPU 450f) 고유 스케일링/피벗 제어, 도트 픽셀 아트 선명도 보장을 위한 `FilterMode.Point` 적용 (137줄, 500줄 규칙 준수)** |
+| | `Warrior Sprites [UPDATED]` | `Assets/Resources/Characters/Warrior/*.png` | **전사 9방향 대응 5종 투명 PNG 스프라이트: 인게임 몬스터 및 도트 리소스와 조화되는 세련된 픽셀아트(BlockSize=3, ~116x150 도트 급) 도트화 변환 완료, 350x450 표준 캔버스 및 발바닥 중심 피벗/PPU=520 최적화 정렬 100% 보존** |
+| | `Ranger Sprites [UPDATED]` | `Assets/Resources/Characters/Ranger/*.png` | **궁수 9방향 대응 5종 투명 PNG 스프라이트: 인게임 도트 분위기에 맞춘 정밀 픽셀아트(BlockSize=3, 화살깃/모자 디테일 보존) 도트화 변환 완료, 350x450 표준 캔버스 및 피벗(0.5, 0.30) / PPU=400 최적화 정렬 100% 보존** |
+| | `Wizard Sprites [UPDATED]` | `Assets/Resources/Characters/Wizard/*.png` | **마법사 9방향 대응 5종 투명 PNG 스프라이트: 인게임 도트 분위기에 맞춘 정밀 픽셀아트(BlockSize=3, 눈빛/로브/모자 곡선 보존) 도트화 변환 완료, 피벗(0.5, 0.30) / PPU=450 및 지팡이 파지 위치 100% 호환 보존** |
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
 | **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **7종 몬스터(Slime, Bat, Skeleton, Golem, FireImp, ToxicSpider, DarkKnight) + 2종 보스(Golem King, Laser Archdemon) 고퀄리티 픽셀아트 때깔/명암/발광 코어 강화**, 2.5D Blob Shadow 타원 그림자, 타입별 젤리 물리 모션 (316줄) |
 | | `MonsterDeathFxManagerView.cs [NEW]` | `MonsterDeathFxManagerView` | **몬스터 속성별(암석 파편/형광 독즙/화염 불씨/영혼 가루/골드 룬) 처치 미니 파티클 무할당 풀링(64개) 뷰 매니저 (154줄)** |
@@ -268,6 +268,7 @@ graph TD
 ### 3. 🧪 Tests Layer (`Assets/tests/HappyShoot.Domain.Tests` & `HappyShoot.View.Tests`)
 *총 135개 NUnit 단위 테스트 스위트 (100% ALL PASS)*
 - **`WizardStaffPlacementTests.cs [NEW]`**: **마법사 전 방향(8방향 + 정면/후면) 지팡이 오른손 1:1 스냅, 각도, flipX, 소팅오더, 캐스팅 펄스 고도화 및 중심 고정 검증 단위 테스트 (11개 테스트 100% ALL PASS, 결과: `docs/wizard_staff_placement_test_result.txt`)**
+- **`Character Pixel Art Verification [NEW]`**: **전사/궁수/마법사 3영웅 18개 스프라이트 파일 350x450 도트 픽셀아트 포맷, 바닥 Y=431 정렬 무결성 및 누락 검증 (18개 파일 100% PASS, 결과: `docs/character_pixel_art_test_result.txt`)**
 - `WarriorSkillsTests.cs [UPDATED]`: 지면 강타 도메인 반경 검증, 휠윈드 360도 전방위 4방향 타격 검증, 휠윈드 레벨업 시 대미지/반경 스케일링, 블러드 이터 150도 전방 부채꼴 적중 및 플레이어 라이프스틸 회복 검증 등
 - `LevelSystemTests.cs [UPDATED]`: 레벨업 경험치 스케일링 및 **경험치 증가분 대비 몹 체력 배율(`MobHpScalingRatio`) 연산 검증**
 - `StatusEffectTests.cs [UPDATED]`: 메테오 스트라이크 대미지 및 화상(Burn) DoT 적용 검증 등
