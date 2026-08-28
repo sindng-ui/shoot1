@@ -1,0 +1,73 @@
+================================================================================
+  HappyShoot - Wizard Staff Placement Unit Test (All Directions)
+  Executed on: 2026-08-28T15:30:53.739Z
+================================================================================
+
+[PASS] SE (SouthEast / 오른쪽 아래)
+       Hand Snapped Position: (-0.190, -0.090) (Dist Error: 0.0000m)
+       Rotation Z: 25° (Expected: 25°)
+       FlipX: true (Expected: true)
+       SortingOrder: 16 (Expected: 16)
+
+[PASS] SW (SouthWest / 왼쪽 아래)
+       Hand Snapped Position: (0.190, -0.090) (Dist Error: 0.0000m)
+       Rotation Z: -25° (Expected: -25°)
+       FlipX: false (Expected: false)
+       SortingOrder: 16 (Expected: 16)
+
+[PASS] East (동쪽 / 오른쪽)
+       Hand Snapped Position: (0.080, -0.100) (Dist Error: 0.0000m)
+       Rotation Z: -25° (Expected: -25°)
+       FlipX: false (Expected: false)
+       SortingOrder: 16 (Expected: 16)
+
+[PASS] West (서쪽 / 왼쪽)
+       Hand Snapped Position: (-0.080, -0.100) (Dist Error: 0.0000m)
+       Rotation Z: 25° (Expected: 25°)
+       FlipX: true (Expected: true)
+       SortingOrder: 16 (Expected: 16)
+
+[PASS] South (정면 우측)
+       Hand Snapped Position: (-0.190, -0.090) (Dist Error: 0.0000m)
+       Rotation Z: 25° (Expected: 25°)
+       FlipX: true (Expected: true)
+       SortingOrder: 16 (Expected: 16)
+
+[PASS] South (정면 좌측)
+       Hand Snapped Position: (0.190, -0.090) (Dist Error: 0.0000m)
+       Rotation Z: -25° (Expected: -25°)
+       FlipX: false (Expected: false)
+       SortingOrder: 16 (Expected: 16)
+
+[PASS] North (후면 우측)
+       Hand Snapped Position: (-0.190, -0.090) (Dist Error: 0.0000m)
+       Rotation Z: 25° (Expected: 25°)
+       FlipX: true (Expected: true)
+       SortingOrder: 14 (Expected: 14)
+
+[PASS] North (후면 좌측)
+       Hand Snapped Position: (0.190, -0.090) (Dist Error: 0.0000m)
+       Rotation Z: -25° (Expected: -25°)
+       FlipX: false (Expected: false)
+       SortingOrder: 14 (Expected: 14)
+
+[PASS] NE (NorthEast / 오른쪽 위)
+       Hand Snapped Position: (-0.190, -0.090) (Dist Error: 0.0000m)
+       Rotation Z: 25° (Expected: 25°)
+       FlipX: true (Expected: true)
+       SortingOrder: 14 (Expected: 14)
+
+[PASS] NW (NorthWest / 왼쪽 위)
+       Hand Snapped Position: (0.190, -0.090) (Dist Error: 0.0000m)
+       Rotation Z: -25° (Expected: -25°)
+       FlipX: false (Expected: false)
+       SortingOrder: 14 (Expected: 14)
+
+[PASS] Casting Pulse Elevation & Center Lock Test
+       Base Y: -0.090m -> Pulse Peak Y: -0.040m
+       Horizontal Drift: 0.0000m (Must be 0.0000m)
+
+================================================================================
+  TOTAL: 11 Tests | PASSED: 11 | FAILED: 0
+  VERDICT: ALL 100% PASS! PERFECT HAND SNAPPING CONFIRMED!
+================================================================================

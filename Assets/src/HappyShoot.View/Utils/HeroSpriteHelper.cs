@@ -28,6 +28,14 @@ namespace HappyShoot.View.Utils
             if (_spriteCache.TryGetValue(key, out var cached) && cached != null)
                 return cached;
 
+            // Check if high-resolution custom sprite is available
+            var customSprite = CustomHeroSpriteLoader.TryGetCustomHeroSprite(classType, dir);
+            if (customSprite != null)
+            {
+                _spriteCache[key] = customSprite;
+                return customSprite;
+            }
+
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Point;
             Color[] pixels = new Color[size * size];

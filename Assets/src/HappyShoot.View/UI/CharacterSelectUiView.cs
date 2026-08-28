@@ -356,10 +356,10 @@ namespace HappyShoot.View.UI
             iconRt.anchorMin = new Vector2(0.5f, 0.5f);
             iconRt.anchorMax = new Vector2(0.5f, 0.5f);
             iconRt.pivot = new Vector2(0.5f, 0.5f);
-            iconRt.anchoredPosition = Vector2.zero;
-            iconRt.sizeDelta = new Vector2(80f, 80f);
+            iconRt.sizeDelta = new Vector2(86f, 86f);
             var iconImg = iconGo.AddComponent<Image>();
             iconImg.sprite = heroSprite;
+            iconImg.preserveAspect = true;
 
             // Class Title
             CreateText(cardGo.transform, "Title", title, 22, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(320f, 32f), accentColor);

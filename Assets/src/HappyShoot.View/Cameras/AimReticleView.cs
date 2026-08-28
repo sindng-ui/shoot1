@@ -13,8 +13,9 @@ namespace HappyShoot.View.Cameras
     /// </summary>
     public class AimReticleView : MonoBehaviour
     {
-        public const float MouseIdleTimeout = 4.0f;
-        public static bool IsMouseAimActive { get; private set; } = true;
+        public const float MouseIdleTimeout = 2.0f;
+        public static bool IsMouseAimActive { get; private set; } = false;
+        public static bool IsMouseActivelyMoving { get; private set; } = false;
 
         private Canvas _canvas;
         private Image _reticleImage;
@@ -25,7 +26,9 @@ namespace HappyShoot.View.Cameras
 
         private Vector2 _lastMouseScreenPos;
         private float _mouseIdleTimer;
-        private float _currentAlpha = 1.0f;
+        private float _activeMoveCooldown;
+        private float _currentAlpha = 0.0f;
+        private bool _wasPaused = true;
 
         public void Initialize(Camera mainCam = null)
         {
@@ -53,13 +56,17 @@ namespace HappyShoot.View.Cameras
 
             _reticleImage = iconGo.AddComponent<Image>();
             _reticleImage.sprite = ReticleSpriteHelper.GetOrCreateAimReticleSprite(48);
-            _reticleImage.color = Color.white;
+            _reticleImage.color = new Color(1f, 1f, 1f, 0f);
             _reticleImage.raycastTarget = false; // Does not block UI slider/button interactions
 
-            IsMouseAimActive = true;
-            _mouseIdleTimer = 0f;
-            _currentAlpha = 1.0f;
+            IsMouseAimActive = false;
+            IsMouseActivelyMoving = false;
+            _mouseIdleTimer = MouseIdleTimeout;
+            _activeMoveCooldown = 0f;
+            _currentAlpha = 0.0f;
             _currentScreenPos = Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition;
+            _lastMouseScreenPos = _currentScreenPos;
+            _wasPaused = true;
         }
 
         private void OnEnable()
@@ -68,20 +75,29 @@ namespace HappyShoot.View.Cameras
             {
                 Cursor.visible = false;
             }
-            IsMouseAimActive = true;
-            _mouseIdleTimer = 0f;
+            IsMouseAimActive = false;
+            IsMouseActivelyMoving = false;
+            _mouseIdleTimer = MouseIdleTimeout;
+            _activeMoveCooldown = 0f;
+            _currentAlpha = 0.0f;
+            _currentScreenPos = Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition;
+            _lastMouseScreenPos = _currentScreenPos;
+            _wasPaused = true;
+            if (_reticleImage != null) _reticleImage.color = new Color(1f, 1f, 1f, 0f);
         }
 
         private void OnDisable()
         {
             Cursor.visible = true;
-            IsMouseAimActive = true;
+            IsMouseAimActive = false;
+            IsMouseActivelyMoving = false;
         }
 
         private void OnDestroy()
         {
             Cursor.visible = true;
-            IsMouseAimActive = true;
+            IsMouseAimActive = false;
+            IsMouseActivelyMoving = false;
         }
 
         private void OnApplicationFocus(bool hasFocus)
@@ -103,11 +119,13 @@ namespace HappyShoot.View.Cameras
                 _mainCamera = Camera.main;
             }
 
-            // If game is paused (Time.timeScale == 0) for UI menus (LevelUp, Pause, Settings), show OS cursor and hide aim reticle
+            // If game is paused (Time.timeScale == 0) for UI menus (CharacterSelect, LevelUp, Pause, Settings), show OS cursor and hide aim reticle
             if (Time.timeScale == 0f)
             {
                 if (!Cursor.visible) Cursor.visible = true;
                 if (_reticleImage != null && _reticleImage.enabled) _reticleImage.enabled = false;
+                _wasPaused = true;
+                IsMouseActivelyMoving = false;
                 return;
             }
             else
@@ -123,18 +141,41 @@ namespace HappyShoot.View.Cameras
                 mouseScreenPos = Mouse.current.position.ReadValue();
                 isMouseActive = true;
 
+                // When resuming from pause / character select, sync last position to prevent false mouse delta trigger
+                if (_wasPaused)
+                {
+                    _wasPaused = false;
+                    _lastMouseScreenPos = mouseScreenPos;
+                    _mouseIdleTimer = MouseIdleTimeout;
+                    _activeMoveCooldown = 0f;
+                    IsMouseAimActive = false;
+                    IsMouseActivelyMoving = false;
+                    return;
+                }
+
                 // Mouse movement & click idle timer detection
                 float deltaDistSqr = (mouseScreenPos - _lastMouseScreenPos).sqrMagnitude;
                 bool isClicked = Mouse.current.leftButton.wasPressedThisFrame;
 
-                if (deltaDistSqr > 3.0f || isClicked)
+                if (deltaDistSqr > 4.0f || isClicked)
                 {
                     _mouseIdleTimer = 0f;
+                    _activeMoveCooldown = 0.25f;
                     IsMouseAimActive = true;
+                    IsMouseActivelyMoving = true;
                     _lastMouseScreenPos = mouseScreenPos;
                 }
                 else
                 {
+                    if (_activeMoveCooldown > 0f)
+                    {
+                        _activeMoveCooldown -= Time.unscaledDeltaTime;
+                        if (_activeMoveCooldown <= 0f)
+                        {
+                            IsMouseActivelyMoving = false;
+                        }
+                    }
+
                     _mouseIdleTimer += Time.unscaledDeltaTime;
                     if (_mouseIdleTimer >= MouseIdleTimeout)
                     {
@@ -154,6 +195,7 @@ namespace HappyShoot.View.Cameras
                 if (_reticleImage != null) _reticleImage.enabled = false;
                 Cursor.visible = true;
                 IsMouseAimActive = false;
+                IsMouseActivelyMoving = false;
                 return;
             }
 

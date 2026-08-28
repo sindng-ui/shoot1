@@ -117,8 +117,7 @@ namespace HappyShoot.View.Bootstrap
             // 2. Create Player GameObject
             var playerGo = new GameObject("Player");
             var playerSr = playerGo.AddComponent<SpriteRenderer>();
-            playerSr.sprite = SpriteHelper.GetOrCreateCircleSprite();
-            playerSr.color = Color.cyan;
+            playerSr.enabled = false; // Disabled: PlayerView renders cute chibi hero in child BodyVisual
             playerGo.transform.localScale = Vector3.one * 0.9f;
 
             var playerView = playerGo.AddComponent<PlayerView>();

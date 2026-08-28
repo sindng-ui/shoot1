@@ -201,7 +201,7 @@ graph TD
 | | `TreasureChestManagerView.cs`| `TreasureChestManagerView` | 도메인 보물상자 매니저 업데이트 및 뷰 풀링 (상자 오픈/이벤트 종료 시 즉시 필드 디스폰) |
 | | `TreasureChestPopupView.cs [UPDATED]` | `TreasureChestPopupView` | 상자 획득 시 1~3개 스킬 보상 및 골드 획득 연출 팝업 (Space/Enter/1/2/3 키보드 즉시 확인) |
 | **UI** | `SettingsDialogUiView.cs` | `SettingsDialogUiView` | 3개 탭 종합 환경 설정 모달 다이얼로그 (자동/수동조준, 볼륨, UI스케일) |
-| | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **첫 시작 영웅 선택 화면** (전사/궁수/마법사 3영웅 카드, 🛠️ 개발자모드, 🧪 샌드박스, ⚙️ 환경설정, **🚪 게임 종료 버튼**) |
+| | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **첫 시작 영웅 선택 화면**: 전사/궁수/마법사 3영웅 카드, 영웅 아바타 아이콘 비율 보존(`preserveAspect = true`) 적용으로 UI 찌그러짐 및 외곽선 왜곡 완전 방지, 🛠️ 개발자모드, 🧪 샌드박스, ⚙️ 환경설정, **🚪 게임 종료 버튼** (415줄) |
 | | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | [개발자 모드] 인게임 실시간 스킬(10종)/진화/패시브 원클릭 장착 및 **우클릭 즉시 Lv.0 해제/제거**, 치트(무적, 레벨업, 전멸, 배속 등) UI |
 | | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 (Combat Sandbox)** - 실시간 10종 스킬 + 9종 진화 스킬 + **🧬 9종 패시브 스킬 튜닝**, **💎 경험치 & 레벨업 시스템 튜닝**, **👾 7종 몬스터 + 보스 스탯**, **🎯 치명타 확률/배율 및 플레이어 코어 스탯 실시간 조절 및 프로젝트 내부 JSON 파일(`Assets/Config/skill_configs.json`) 영구 저장/GitHub 동기화 지원** |
 | | `SkillTuningUiBuilder.cs [UPDATED]` | `SkillTuningUiBuilder` | 샌드박스 모드 UI 요소 생성 전담 헬퍼 (**6대 대분류 카테고리 탭: 전사/궁수/마법사/패시브/공통/시스템**, 500줄 규칙 준수 모듈화) |
@@ -218,14 +218,19 @@ graph TD
 | **UI** | `InGameHudView.cs [UPDATED]` | `InGameHudView` | **메인 HUD 매니저: 하단 3단 EXP/스킬/HP 바 + 좌측 9종 패시브 슬롯 리스트 & 실시간 수치(ATK/SPD/RNG/ARM/EXP/HP/CRT 등) 표시 (442줄)** |
 | | `InGameHudBuilder.cs [NEW]` | `InGameHudBuilder` | 절차적 메인 HUD UI 팩토리 빌더 (하단 3단 및 좌측 패시브 슬롯 리스트 포함, 440줄) |
 | | `HudSpriteHelper.cs [NEW]` | `HudSpriteHelper` | 10칸 분할 EXP 프레임, 다이아몬드 레벨 뱃지, 골드 스킬 슬롯 보더, 투구 엠블럼, 체력바 프레임 프로시저럴 비주얼 생성기 (236줄) |
-| | `PlayerHealthBarView.cs` | `PlayerHealthBarView` | 플레이어 머리 위를 따라다니는 초경량 오버헤드 미니 체력바 (SpriteRenderer 기반 무할당) |
-| **Visual Feedback** | `AimReticleView.cs [UPDATED]` | `AimReticleView` | **최상위 Canvas Overlay (`ScreenSpaceOverlay`, sortingOrder: 32760) 기반 조준선**: 샌드박스 메뉴/HUD/팝업 등 모든 UI 위에서 가림 없이 100% 최상단 선명 렌더링, `raycastTarget = false`로 메뉴 조작 방해 제로, 마우스 4초 유휴 시 부드러운 페이드아웃, 클릭 펄스(1.35x), 브리딩 펄스(1.0~1.08x) (182줄) |
+| | `PlayerHealthBarView.cs [UPDATED]` | `PlayerHealthBarView` | 플레이어 머리 위 오버헤드 미니 체력바 (SpriteRenderer 기반 무할당, 고화질 캐릭터 최적화 오프셋 `(0, 0.95, 0)` 및 sortingOrder 20/21 적용, 124줄) |
+| **Visual Feedback** | `AimReticleView.cs [UPDATED]` | `AimReticleView` | **최상위 Canvas Overlay (`ScreenSpaceOverlay`, sortingOrder: 32760) 기반 조준선**: UI/캐릭터선택 일시정지 복귀 시 마우스 델타 오인식 방지(`_wasPaused`), 실시간 마우스 능동 조작 감지(`IsMouseActivelyMoving`), 마우스 2초 유휴 시 부드러운 페이드아웃 및 이동 방향 자동 복귀, 클릭 펄스(1.35x), 브리딩 펄스(1.0~1.08x) (193줄) |
 | | `ReticleSpriteHelper.cs [NEW]` | `ReticleSpriteHelper` | 48x48 네온 라임-그린 십자선 과녁 링 프로시저럴 픽셀아트 생성기 (104줄) |
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
 | | `PauseMenuUiView.cs` | `PauseMenuUiView` | ESC 일시정지 다이얼로그 (계속하기, ⚙️ 환경 설정, 다시 시작, 게임 종료) |
 | | `DamageTextView.cs` | `DamageTextManagerView`, `DamageTextView` | 이벤트 기반 무할당 32개 풀링 (GameSettings.ShowDamageText 옵션 적용) |
-| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | **지능형 시선 제어: (1) 마우스 조작 시 Aim 9방향 실시간 조준, (2) 마우스 유휴(4s) 시 Aim 숨김 및 즉시 기본 정면(Front) 샷 복귀, (3) 키보드(WASD) 이동 시 누른 방향(9방향) 질주 및 멈추면 즉시 정면 복귀, (4) 마우스 움직임 시 즉시 Aim 복원**, 오늘 시작 시의 100% 원본 치비 픽셀아트, 2.5D Blob Shadow, Brotato 젤리 물리 모션 (495줄) |
-| | `HeroSpriteHelper.cs [NEW]` | `HeroSpriteHelper` | **오늘 시작 시의 100% 원본 32x32 귀여운 치비 3영웅(전사 둥근투구/빨간망토, 궁수 그린후드/화살통, 마법사 롭/고깔모자) 9방향 스프라이트 및 원본 브로드소드/리커브활/크리스탈스태프 연동 (368줄)** |
+| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | **스마트 하이브리드 시선 제어 및 무기 파지 위임**: WASD 이동 즉시 시선 질주, 마우스 실시간 조작 시 즉시 조준 전환, 레인저 활 정방향 파지 및 좌우 flipX, 마법사 지팡이 배치를 `WizardWeaponPlacementHelper`로 위임하여 488줄로 대폭 감량 (500줄 규칙 철저 준수) |
+| | `WizardWeaponPlacementHelper.cs [NEW]` | `WizardWeaponPlacementHelper` | **🧙‍♂️ 마법사 전 방향(8방향 + 정면/후면) 지팡이 오른손(Right Hand) 1:1 결합 및 중앙 그립 순수 계산 헬퍼**: FrontDiagonal(SE: -0.19m, SW: +0.19m, Y=-0.09m), Side(±0.08m, Y=-0.10m), Front/Back 맞춤형 스냅, 캐스팅 펄스 리프트, flipX 및 소팅오더 완전 제어 (60줄) |
+| | `HeroSpriteHelper.cs [UPDATED]` | `HeroSpriteHelper` | **고화질 9방향 스프라이트 우선 로드 및 32x32 원본 치비 3영웅 절차적 픽셀아트 안전 폴백 매니저 (370줄)** |
+| | `CustomHeroSpriteLoader.cs [UPDATED]` | `CustomHeroSpriteLoader` | **고해상도 커스텀 영웅 스프라이트 4단계 안전 로더: 전사(PPU 520f), 레인저(PPU 400f), 마법사(PPU 450f) 고유 스케일링/피벗 제어, GPU Mipmap 체인 자동 생성(`mipChain: true`), Bilinear/Aniso4 필터링으로 축소 렌더링 계단 현상 완벽 제거 (137줄, 500줄 규칙 준수)** |
+| | `Warrior Sprites [UPDATED]` | `Assets/Resources/Characters/Warrior/*.png` | **전사 고화질 9방향 대응 5종 개별 투명 PNG 스프라이트: 스마트 디프린징(Defringe) 및 서브픽셀 알파 페더링 적용으로 흰색 잔여 헤일로 완전 제거 및 매끄러운 다크 아웃라인 완성, 350x450 표준 캔버스 및 발바닥 중심 피벗/PPU=520 최적화 정렬 완료** |
+| | `Ranger Sprites [UPDATED]` | `Assets/Resources/Characters/Ranger/*.png` | **궁수 고화질 9방향 대응 5종 개별 투명 PNG 스프라이트: 스마트 디프린징 및 서브픽셀 알파 페더링 적용, 텍스트 라벨 및 바닥 회색 그림자 완벽 제거, 피벗(0.5, 0.30) / PPU=400 최적화 정렬 완료** |
+| | `Wizard Sprites [UPDATED]` | `Assets/Resources/Characters/Wizard/*.png` | **마법사 고화질 9방향 대응 5종 개별 투명 PNG 스프라이트: 스마트 디프린징 및 서브픽셀 알파 페더링 적용으로 모자/로브 테두리 자글거림 완전 제거, 피벗(0.5, 0.30) / PPU=450 최적화 정렬 완료** |
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
 | **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **7종 몬스터(Slime, Bat, Skeleton, Golem, FireImp, ToxicSpider, DarkKnight) + 2종 보스(Golem King, Laser Archdemon) 고퀄리티 픽셀아트 때깔/명암/발광 코어 강화**, 2.5D Blob Shadow 타원 그림자, 타입별 젤리 물리 모션 (316줄) |
 | | `MonsterDeathFxManagerView.cs [NEW]` | `MonsterDeathFxManagerView` | **몬스터 속성별(암석 파편/형광 독즙/화염 불씨/영혼 가루/골드 룬) 처치 미니 파티클 무할당 풀링(64개) 뷰 매니저 (154줄)** |
@@ -260,8 +265,9 @@ graph TD
 
 ---
 
-### 3. 🧪 Tests Layer (`Assets/tests/HappyShoot.Domain.Tests`)
-*총 124개 NUnit 단위 테스트 스위트 (100% ALL PASS)*
+### 3. 🧪 Tests Layer (`Assets/tests/HappyShoot.Domain.Tests` & `HappyShoot.View.Tests`)
+*총 135개 NUnit 단위 테스트 스위트 (100% ALL PASS)*
+- **`WizardStaffPlacementTests.cs [NEW]`**: **마법사 전 방향(8방향 + 정면/후면) 지팡이 오른손 1:1 스냅, 각도, flipX, 소팅오더, 캐스팅 펄스 고도화 및 중심 고정 검증 단위 테스트 (11개 테스트 100% ALL PASS, 결과: `docs/wizard_staff_placement_test_result.txt`)**
 - `WarriorSkillsTests.cs [UPDATED]`: 지면 강타 도메인 반경 검증, 휠윈드 360도 전방위 4방향 타격 검증, 휠윈드 레벨업 시 대미지/반경 스케일링, 블러드 이터 150도 전방 부채꼴 적중 및 플레이어 라이프스틸 회복 검증 등
 - `LevelSystemTests.cs [UPDATED]`: 레벨업 경험치 스케일링 및 **경험치 증가분 대비 몹 체력 배율(`MobHpScalingRatio`) 연산 검증**
 - `StatusEffectTests.cs [UPDATED]`: 메테오 스트라이크 대미지 및 화상(Burn) DoT 적용 검증 등

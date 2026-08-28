@@ -10,26 +10,16 @@ namespace HappyShoot.View.Player
 {
     /// <summary>
     /// Unity MonoBehaviour View for Player characters.
-    /// Features:
-    /// - 100% original cute Chibi 9-directional sprites
-    /// - Intelligent Aim/Look State Machine:
-    ///   1. Mouse active -> Aim reticle shown, looks at Mouse Aim.
-    ///   2. Mouse idle (4s) -> Aim reticle hidden, looks at WASD movement direction.
-    ///   3. Move idle (4.5s) -> Smoothly auto-resets to default cute Front posture.
-    /// - Warrior broadsword swing, Ranger bow recoil kickback, Wizard raised staff posture.
-    /// Strictly modular and under 460 lines (500-line architecture rule).
+    /// Intelligent hybrid aim/movement direction state machine, 9-dir high-res sprites,
+    /// dynamic weapon poses & recoil animations. Strictly modular under 500 lines.
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
     public class PlayerView : MonoBehaviour
     {
         [Header("Character Configuration")]
         [SerializeField] private CharacterClassType _classType = CharacterClassType.Warrior;
-
-        [Header("Visual Feedback")]
         [SerializeField] private Color _flashDamageColor = Color.red;
         [SerializeField] private float _flashDuration = 0.1f;
-
-        [Header("External Systems (Optional in Scene)")]
         [SerializeField] private Monsters.MonsterSpawnerView _spawnerView;
         [SerializeField] private Projectiles.ProjectileManagerView _projectileManagerView;
 
@@ -266,38 +256,44 @@ namespace HappyShoot.View.Player
 
         private void UpdateHeroAimVisuals(Vector2 mouseAimDir, Vector2 moveDir, float dt)
         {
-            bool isMouseAimActive = Cameras.AimReticleView.IsMouseAimActive;
+            bool isMoving = moveDir.sqrMagnitude > 0.001f;
+            bool isMouseActive = Cameras.AimReticleView.IsMouseAimActive;
+            bool isMouseMoving = Cameras.AimReticleView.IsMouseActivelyMoving;
 
             HeroSpriteHelper.ViewDirection newDir;
             bool isFacingLeft = false;
             Vector2 finalSkillAimDir;
 
-            if (isMouseAimActive)
+            // (1) If moving with Keyboard and mouse is NOT actively moving -> Look towards Movement direction IMMEDIATELY!
+            if (isMoving && !isMouseMoving)
             {
-                // (1) Mouse Active -> Look & Aim towards Mouse (9-way)
+                float moveAngleDeg = Mathf.Atan2(moveDir.y, moveDir.x) * Mathf.Rad2Deg;
+                isFacingLeft = moveDir.x < -0.05f;
+                newDir = EvaluateViewDirection(moveAngleDeg);
+                finalSkillAimDir = isMouseActive ? mouseAimDir : moveDir;
+            }
+            // (2) If mouse is actively moving or aiming -> Look & Aim towards Mouse (9-way)
+            else if (isMouseActive)
+            {
                 float angleDeg = Mathf.Atan2(mouseAimDir.y, mouseAimDir.x) * Mathf.Rad2Deg;
                 isFacingLeft = mouseAimDir.x < -0.05f;
                 newDir = EvaluateViewDirection(angleDeg);
                 finalSkillAimDir = mouseAimDir;
             }
+            // (3) Fallback keyboard movement
+            else if (isMoving)
+            {
+                float moveAngleDeg = Mathf.Atan2(moveDir.y, moveDir.x) * Mathf.Rad2Deg;
+                isFacingLeft = moveDir.x < -0.05f;
+                newDir = EvaluateViewDirection(moveAngleDeg);
+                finalSkillAimDir = moveDir;
+            }
+            // (4) Completely idle -> Look Front
             else
             {
-                // (2) Mouse Idle (Aim hidden)
-                if (moveDir.sqrMagnitude > 0.001f)
-                {
-                    // (2-a) Moving with Keyboard -> Look towards WASD Move Direction (9-way)
-                    float moveAngleDeg = Mathf.Atan2(moveDir.y, moveDir.x) * Mathf.Rad2Deg;
-                    isFacingLeft = moveDir.x < -0.05f;
-                    newDir = EvaluateViewDirection(moveAngleDeg);
-                    finalSkillAimDir = moveDir;
-                }
-                else
-                {
-                    // (2-b) Movement Stopped -> Look Front immediately when mouse aim is idle
-                    newDir = HeroSpriteHelper.ViewDirection.Front;
-                    isFacingLeft = false;
-                    finalSkillAimDir = Vector2.down;
-                }
+                newDir = HeroSpriteHelper.ViewDirection.Front;
+                isFacingLeft = false;
+                finalSkillAimDir = Vector2.down;
             }
 
             _entity.AimDirection = new Vector2D(finalSkillAimDir.x, finalSkillAimDir.y);
@@ -344,48 +340,46 @@ namespace HappyShoot.View.Player
                     bowScaleBonus = snap * 0.22f;
                 }
 
-                float sideOffset = isFacingLeft ? -0.25f : 0.25f;
-                _weaponPivotGo.transform.localPosition = new Vector3(sideOffset + recoilX, -0.05f + recoilY, 0f);
-                float restAngle = isFacingLeft ? 135f : -45f;
+                float sideOffset = isFacingLeft ? -0.20f : 0.20f;
+                float handY = -0.16f;
+                _weaponPivotGo.transform.localPosition = new Vector3(sideOffset + recoilX, handY + recoilY, 0f);
+
+                float restAngle = isFacingLeft ? 25f : -25f;
                 _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, restAngle);
-                if (_weaponGo != null) _weaponGo.transform.localScale = Vector3.one * (1.3f + bowScaleBonus);
+                if (_weaponSr != null) _weaponSr.flipX = isFacingLeft;
+                if (_weaponGo != null) _weaponGo.transform.localScale = Vector3.one * (1.2f + bowScaleBonus);
             }
             else if (_classType == CharacterClassType.Wizard)
             {
-                // Wizard Raised Staff Pose (Pointing outward away from face, never covers eyes/hat)
-                float castAngleOffset = 0f;
-                float castHeightOffset = 0f;
+                float castProgress = (_wizardCastPulseTimer > 0f) ? Mathf.Clamp01(1.0f - (_wizardCastPulseTimer / WizardCastPulseDuration)) : 0f;
+                if (_wizardCastPulseTimer > 0f) _wizardCastPulseTimer -= dt;
 
-                if (_wizardCastPulseTimer > 0f)
+                var placement = WizardWeaponPlacementHelper.CalculatePlacement(newDir, isFacingLeft, castProgress);
+                _weaponPivotGo.transform.localPosition = placement.LocalPosition;
+                _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, placement.RotationZ);
+                if (_weaponSr != null)
                 {
-                    _wizardCastPulseTimer -= dt;
-                    float p = Mathf.Clamp01(1.0f - (_wizardCastPulseTimer / WizardCastPulseDuration));
-                    float pulse = Mathf.Sin(p * Mathf.PI);
-                    castAngleOffset = isFacingLeft ? pulse * 16f : -pulse * 16f;
-                    castHeightOffset = pulse * 0.06f;
+                    _weaponSr.flipX = placement.FlipX;
+                    _weaponSr.sortingOrder = placement.SortingOrder;
                 }
-
-                float sideOffset = isFacingLeft ? -0.28f : 0.28f;
-                float baseAngle = isFacingLeft ? 28f : -28f;
-                _weaponPivotGo.transform.localPosition = new Vector3(sideOffset, -0.06f + castHeightOffset, 0f);
-                _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, baseAngle + castAngleOffset);
-                if (_weaponGo != null) _weaponGo.transform.localScale = Vector3.one * 1.3f;
+                if (_weaponGo != null) _weaponGo.transform.localScale = placement.Scale;
             }
             else
             {
                 // Warrior Classic Broadsword Pose
-                float sideOffset = isFacingLeft ? -0.25f : 0.25f;
-                _weaponPivotGo.transform.localPosition = new Vector3(sideOffset, -0.05f, 0f);
-                float restAngle = isFacingLeft ? 135f : -45f;
-                _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, restAngle);
+                _weaponPivotGo.transform.localPosition = new Vector3(isFacingLeft ? -0.25f : 0.25f, -0.05f, 0f);
+                _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, isFacingLeft ? 135f : -45f);
                 if (_weaponGo != null) _weaponGo.transform.localScale = Vector3.one * 1.3f;
             }
 
             if (_weaponSr != null)
             {
                 _weaponSr.flipY = false;
-                _weaponSr.flipX = false;
-                _weaponSr.sortingOrder = (newDir == HeroSpriteHelper.ViewDirection.Back || newDir == HeroSpriteHelper.ViewDirection.BackDiagonal) ? 14 : 16;
+                if (_classType != CharacterClassType.Wizard)
+                {
+                    if (_classType == CharacterClassType.Warrior) _weaponSr.flipX = false;
+                    _weaponSr.sortingOrder = (newDir == HeroSpriteHelper.ViewDirection.Back || newDir == HeroSpriteHelper.ViewDirection.BackDiagonal) ? 14 : 16;
+                }
             }
         }
 

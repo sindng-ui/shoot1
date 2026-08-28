@@ -11,7 +11,7 @@ namespace HappyShoot.View.UI
     /// </summary>
     public class PlayerHealthBarView : MonoBehaviour
     {
-        [SerializeField] private Vector3 _offset = new Vector3(0f, 0.75f, 0f);
+        [SerializeField] private Vector3 _offset = new Vector3(0f, 0.95f, 0f);
         [SerializeField] private Vector2 _barSize = new Vector2(0.9f, 0.12f);
 
         private SpriteRenderer _backgroundSr;
@@ -56,7 +56,7 @@ namespace HappyShoot.View.UI
             _backgroundSr = bgGo.AddComponent<SpriteRenderer>();
             _backgroundSr.sprite = SpriteHelper.GetOrCreateSquareSprite();
             _backgroundSr.color = new Color(0.1f, 0.1f, 0.12f, 0.85f);
-            _backgroundSr.sortingOrder = 10;
+            _backgroundSr.sortingOrder = 20;
 
             var fillPivot = new GameObject("HpFillPivot");
             fillPivot.transform.SetParent(transform, false);
@@ -70,7 +70,7 @@ namespace HappyShoot.View.UI
             _fillSr = fillGo.AddComponent<SpriteRenderer>();
             _fillSr.sprite = SpriteHelper.GetOrCreateSquareSprite();
             _fillSr.color = new Color(0.2f, 0.85f, 0.35f, 0.95f);
-            _fillSr.sortingOrder = 11;
+            _fillSr.sortingOrder = 21;
 
             _fillTransform = fillPivot.transform;
         }
