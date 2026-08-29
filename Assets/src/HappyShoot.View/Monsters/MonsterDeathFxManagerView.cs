@@ -68,7 +68,7 @@ namespace HappyShoot.View.Monsters
             // Spawn 3~5 juicy elemental particles around monster death position
             Vector2 origin = new Vector2(evt.Position.X, evt.Position.Y);
             Color baseColor = GetDeathColor(evt.MonsterType);
-            int count = (evt.MonsterType == MonsterType.Boss || evt.MonsterType == MonsterType.Golem) ? 6 : 4;
+            int count = (evt.MonsterType == MonsterType.Boss || evt.MonsterType == MonsterType.Boss3 || evt.MonsterType == MonsterType.Golem || evt.MonsterType == MonsterType.Abomination) ? 6 : 4;
 
             for (int i = 0; i < count; i++)
             {
@@ -94,6 +94,16 @@ namespace HappyShoot.View.Monsters
                     return new Color(1.0f, 0.80f, 0.30f, 1.0f); // Amber Rune Spark
                 case MonsterType.Boss:
                     return new Color(1.0f, 0.20f, 0.35f, 1.0f); // Crimson Hellfire
+                case MonsterType.Boss3:
+                    return new Color(0.20f, 0.85f, 1.0f, 1.0f); // Arch-Lich Soul Azure
+                case MonsterType.Wraith:
+                    return new Color(0.35f, 0.85f, 0.95f, 1.0f); // Ghost Cyan
+                case MonsterType.Necromancer:
+                    return new Color(0.60f, 0.20f, 0.85f, 1.0f); // Cursed Purple
+                case MonsterType.Abomination:
+                    return new Color(0.40f, 0.55f, 0.30f, 1.0f); // Toxic Flesh
+                case MonsterType.Reaper:
+                    return new Color(0.85f, 0.10f, 0.20f, 1.0f); // Reaper Crimson Glint
                 case MonsterType.Bat:
                     return new Color(0.85f, 0.30f, 0.95f, 1.0f); // Velvet Violet
                 case MonsterType.Skeleton:

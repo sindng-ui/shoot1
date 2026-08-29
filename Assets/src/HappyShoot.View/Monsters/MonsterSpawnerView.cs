@@ -35,12 +35,16 @@ namespace HappyShoot.View.Monsters
         private bool _spawnedBoss1;
         // Phase 2 boss
         private bool _spawnedBoss2;
+        // Phase 3 boss
+        private bool _spawnedBoss3;
         // Boss tracking for laser system
         private MonsterEntity _activeBoss;
 
         private EnemyProjectileManagerView _enemyProjManager;
         private BossLaserBeamManagerView _laserManager;
         private BossHazardZoneManagerView _hazardManager;
+        private ArchLichPatternController _lichPatternCtrl;
+        private UI.StageVictoryUiView _victoryUiView;
         private readonly WavePhaseController _phaseCtrl = new WavePhaseController();
 
         public MonsterSpawner DomainSpawner => _domainSpawner;
@@ -49,6 +53,23 @@ namespace HappyShoot.View.Monsters
 
         public void SetEnemyProjectileManager(EnemyProjectileManagerView mgr) => _enemyProjManager = mgr;
         public void SetLevelSystem(HappyShoot.Domain.Leveling.LevelSystem levelSystem) => _levelSystem = levelSystem;
+        public void SetVictoryUiView(UI.StageVictoryUiView victoryUiView) => _victoryUiView = victoryUiView;
+
+        public void JumpToPhase(int phaseNumber)
+        {
+            _phaseCtrl.JumpToPhase(phaseNumber);
+            _spawnedBoss1 = phaseNumber >= 2;
+            _spawnedBoss2 = phaseNumber >= 3;
+            _spawnedBoss3 = false;
+            _elapsedTime = phaseNumber switch { 2 => 65f, 3 => 120f, _ => 0f };
+            _domainSpawner?.DespawnAll();
+            _activeViewMap.Clear();
+            for (int v = 0; v < _viewPool.Count; v++) _viewPool[v].gameObject.SetActive(false);
+            _activeBoss = null;
+            _lichPatternCtrl?.Clear();
+            _laserManager?.ClearBoss();
+            _hazardManager?.ClearBoss();
+        }
 
         private void Awake()
         {
@@ -65,6 +86,7 @@ namespace HappyShoot.View.Monsters
             var hazardGo = new GameObject("BossHazardManager");
             hazardGo.transform.SetParent(transform, false);
             _hazardManager = hazardGo.AddComponent<BossHazardZoneManagerView>();
+            _lichPatternCtrl = gameObject.AddComponent<ArchLichPatternController>();
         }
 
         private void PrewarmViewPool(int count)
@@ -136,8 +158,30 @@ namespace HappyShoot.View.Monsters
 
         private void OnBossDied(BossDiedEvent evt)
         {
-            bool isSecondBoss = _spawnedBoss1 && evt.BossName != "Goblin King";
-            _phaseCtrl.OnBossDefeated(isSecondBoss);
+            string name = evt.BossName ?? "";
+            bool isThirdBoss = name.IndexOf("Lich", System.StringComparison.OrdinalIgnoreCase) >= 0 || name == "Arch-Lich Malakar" || _spawnedBoss3;
+            bool isSecondBoss = !isThirdBoss && (name.IndexOf("Dragon", System.StringComparison.OrdinalIgnoreCase) >= 0 || name == "Dragon Fiend" || (_spawnedBoss2 && !_spawnedBoss3));
+
+            if (isThirdBoss)
+            {
+                Debug.Log("[MonsterSpawnerView] Boss 3 (Arch-Lich) Defeated! Invoking Stage Victory sequence!");
+                _phaseCtrl.OnBossDefeated(3);
+                _lichPatternCtrl?.Clear();
+                // Clear all active monsters and trigger Victory popup!
+                _domainSpawner.DespawnAll();
+                _activeViewMap.Clear();
+                for (int v = 0; v < _viewPool.Count; v++) _viewPool[v].gameObject.SetActive(false);
+                _victoryUiView?.ShowVictoryPopup();
+            }
+            else if (isSecondBoss)
+            {
+                _phaseCtrl.OnBossDefeated(2);
+            }
+            else
+            {
+                _phaseCtrl.OnBossDefeated(1);
+            }
+
             _laserManager.ClearBoss();
             _hazardManager.ClearBoss();
             _activeBoss = null;
@@ -178,9 +222,13 @@ namespace HappyShoot.View.Monsters
                 Vector2 moveDir = _playerView != null ? _playerView.CurrentMoveDirection : Vector2.zero;
                 float spawnAngle = GetBiasedSpawnAngle(moveDir);
 
-                MonsterDefinition archetype = _phaseCtrl.Boss1Defeated
-                    ? _phaseCtrl.RollPhase2Archetype(monsterCfg)
-                    : _phaseCtrl.RollPhase1Archetype(_elapsedTime, monsterCfg);
+                MonsterDefinition archetype;
+                if (_phaseCtrl.Boss2Defeated)
+                    archetype = _phaseCtrl.RollPhase3Archetype(monsterCfg);
+                else if (_phaseCtrl.Boss1Defeated)
+                    archetype = _phaseCtrl.RollPhase2Archetype(monsterCfg);
+                else
+                    archetype = _phaseCtrl.RollPhase1Archetype(_elapsedTime, monsterCfg);
 
                 float hpScale = GetExpGrowthHpScale();
                 var monster = _domainSpawner.SpawnDefinitionAroundPlayer(playerPos, _spawnRadius, spawnAngle, archetype, hpMultiplier: hpScale);
@@ -213,6 +261,12 @@ namespace HappyShoot.View.Monsters
                                 new Vector2(m.Position.X, m.Position.Y), dir,
                                 speed: dkProjSpeed, damage: dkProjDmg);
                         }
+                        else if (m.Type == MonsterType.Necromancer)
+                        {
+                            _enemyProjManager.SpawnSoulOrbProjectile(
+                                new Vector2(m.Position.X, m.Position.Y), dir,
+                                speed: 3.2f, damage: 28f);
+                        }
                         else
                         {
                             float skelProjSpeed = monsterCfg != null ? monsterCfg.Skeleton.ProjectileSpeed : 2.75f;
@@ -232,6 +286,16 @@ namespace HappyShoot.View.Monsters
 
         private void CheckBossSpawns(Vector2D playerPos)
         {
+            // Auto-Detection Fallbacks: Ensure phase progression triggers even if event was missed
+            if (_spawnedBoss1 && !_phaseCtrl.Boss1Defeated && (_activeBoss == null || _activeBoss.IsDead || !_activeBoss.IsActive))
+            {
+                _phaseCtrl.OnBossDefeated(1);
+            }
+            if (_spawnedBoss2 && !_phaseCtrl.Boss2Defeated && (_activeBoss == null || _activeBoss.IsDead || !_activeBoss.IsActive))
+            {
+                _phaseCtrl.OnBossDefeated(2);
+            }
+
             var monsterCfg = Config.SkillConfigRepository.Instance.GetConfig()?.Monsters;
             float hpScale = GetExpGrowthHpScale();
 
@@ -262,6 +326,19 @@ namespace HappyShoot.View.Monsters
                 _activeBoss = boss;
                 _laserManager.SetActiveBoss(boss);
                 _hazardManager.SetActiveBoss(boss);
+            }
+            // Phase 3: after wave 4 fully deployed (60s post boss 2 defeat)
+            else if (_phaseCtrl.CurrentPhase == WavePhaseController.Phase.Boss3Spawned && !_spawnedBoss3)
+            {
+                _spawnedBoss3 = true;
+                // Arch-Lich Malakar: Menacing Final Boss! 45,000 HP, 2.8 Speed, 80 Damage!
+                var boss = _domainSpawner.SpawnBoss(playerPos, "Arch-Lich Malakar",
+                    hp: 45000f * hpScale, speed: 2.8f, damage: 80f, exp: 800, gold: 3000, type: MonsterType.Boss3);
+                GetOrCreateView(boss);
+                _activeBoss = boss;
+                _laserManager.SetActiveBoss(boss);
+                _hazardManager.SetActiveBoss(boss);
+                _lichPatternCtrl?.Initialize(boss, _playerView, _enemyProjManager, _domainSpawner, minion => GetOrCreateView(minion));
             }
         }
 

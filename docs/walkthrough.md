@@ -1,31 +1,52 @@
-# 🏛️ 무한 배경 타일링 시스템 및 고대 던전 전장 비주얼 구현 결과
+# 🏆 최종 보스(Boss 3) & 3페이즈 몬스터 4종 & '승리자 전용 영구 성장' 시스템 구현 결과
 
 ## 1. 개요
-플레이어가 광활한 전장을 이동할 때 카메라 영역에 맞춰 배경 타일이 끊김 없이 자연스럽게 순환 이동(Wrap-around)하는 무한 배경 타일링 시스템을 구축하였습니다.
-기존의 밋밋한 단색 카메라 배경에서 벗어나, 고대 석판 바닥 질감, 금 간 석판, 고대 마법 룬 문양, 미세한 이끼 디테일, 그리고 전장에 깊이감을 부여하는 앰비언트 부유 먼지 입자까지 갖춘 **"진짜 서바이버즈 게임다운 고품질 전장"**을 완성하였습니다.
+형님의 지시에 따라 **"최종 보스 3(사령왕 리치)"**, **"3페이즈 신규 몬스터 4종의 스피디한 15초 단위 순차 전개"**, 그리고 **"오직 3보스 격파 승리자에게만 영구 성장(스킬 트리/상점) 개방"**이라는 핵심 룰 개편을 완벽하게 구현하였습니다.
 
 ---
 
-## 2. 신규 모듈 구성 및 라인 수 (500줄 규칙 100% 준수)
-- [BackgroundTileView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Background/BackgroundTileView.cs): 56줄
-- [BackgroundAmbientDustView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Background/BackgroundAmbientDustView.cs): 125줄
-- [BackgroundManager.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Background/BackgroundManager.cs): 156줄
-- [BackgroundSpriteHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Background/BackgroundSpriteHelper.cs): 277줄
-- [GameBootstrap.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Bootstrap/GameBootstrap.cs): 365줄
+## 2. ⏱️ 3페이즈 4종 몬스터 스피디 전개 (총 60초)
+보스 2(Dragon Fiend) 격파 즉시 15초 간격으로 신규 몬스터들이 전장에 긴박감을 불어넣습니다:
+1. **0초 (즉시) - 망령 (Wraith)**: 푸른 안광의 반투명 유령. 3.6m/s의 지그재그 고속 돌격으로 틈을 파고듦.
+2. **15초 - 사령술사 (Necromancer)**: 흑마법 로브 & 해골 지팡이. 플레이어를 조준하여 유도성 보라빛 저주 영혼탄(Soul Orb) 발사.
+3. **30초 - 어보미네이션 (Abomination)**: 썩어가는 녹색/자주색 누더기 거구. 1,500 HP의 압도적인 체력과 넉백 저항.
+4. **45초 - 사신 (Death Reaper)**: 은빛 대낫을 든 흑단 사신. 3.8m/s 고속 쇄도 및 60 대미지의 치명적인 일격.
+5. **60초 (단 1분!)**: 🔥 **최종 보스 3 (사령왕 리치: Arch-Lich Malakar)** 강림!
 
 ---
 
-## 3. 주요 핵심 기능
-1. **3x3 무한 랩어라운드 타일링**:
-   - 24m x 24m 타일 9장(72m x 72m 커버).
-   - 21:9 울트라와이드 모니터 및 메테오/지각변동 쉐이크 시에도 화면 끝이 비지 않는 여유 마진.
-   - 매 프레임 GC Alloc = 0 Bytes, float 오프셋 기반 무할당 순환 이동.
-2. **4종 고대 석판 바리에이션 프로시저럴 픽셀아트**:
-   - Classic(기본), Cracked(균열), Runic(마법룬), Moss(이끼) 4종 타일 자동 스왑 배치.
-3. **28개 앰비언트 부유 먼지 입자 (Ambient Floating Motes)**:
-   - 전장에 공기감과 깊이감을 제공하며 화면 이탈 시 무할당 순환.
-4. **2.5D 캐릭터/몬스터 그림자 시인성 대폭 강화**:
-   - 기존 32x16의 옅은 가우시안 알파(45%)에서 **48x24 고해상도 + 85% 불투명도 코어**의 선명한 카툰 타원 블롭 섀도우로 개편.
-   - 배경 석판 타일의 명암비를 자연스러운 중세 슬레이트 톤(`RGB 0.22~0.25`)으로 조화롭게 밸런싱하여, 어두운 바닥 위에서도 발밑 그림자가 깔끔하고 선명하게 도드라지도록 완성.
-5. **소팅 오더 무결성**:
-   - 배경 타일: `-100`, 앰비언트 입자: `-50`, 그림자: `-10`, 몬스터: `10`, 플레이어: `15`, 투사체: `20~30` 분리로 완벽한 렌더링 순서 보장.
+## 3. 💀 최종 보스 3: 사령왕 리치 (Arch-Lich Malakar) 피날레
+- **스펙**: 기본 체력 20,000 HP × 성장 배율, 이동속도 2.4m/s, 접촉 대미지 65.
+- **공격 패턴**: 회전 레이저 빔 + 플레이어 발밑 사령 해저드 장판 + 사령술사 저주 영혼탄 복합 공격.
+- **격파 피날레**:
+  - 필드의 모든 잔몹 즉시 소멸 (`DespawnAll`)
+  - [🏆 STAGE CLEAR - VICTORY!] 찬란한 승리 팝업 출현!
+
+---
+
+## 4. 🔒 '오직 3보스 격파 시에만 영구 성장' 룰 개편
+- **캐릭터 선택 화면 (시작 전)**:
+  - 스킬 트리 버튼 잠금 (`[🔒 3보스 클리어 시 영구성장 개방]`) 처리.
+- **사망 (Game Over - 패배)**:
+  - 상점 및 스킬트리 진입 버튼 완전 제거!
+  - 획득한 골드 및 보석은 영구 저장소에 저장되지 않음 (유실).
+  - 안내 문구: `"🔒 영구 성장은 오직 3보스 클리어 시에만 개방됩니다!"`
+  - 오직 `[🔄 다시 도전하기]` 버튼만 제공.
+- **승리 (VICTORY - 3보스 격파)**:
+  - `StageVictoryUiView` 승리 팝업에서만 모든 골드와 보석(루비/에메랄드/자수정)을 영구 저장소에 정산!
+  - 황금빛 **[💎 승리자의 특전: 영구 성장 & 스킬 트리 개방]** 버튼을 통해 자유롭게 스킬 트리와 메타 상점을 업그레이드 가능!
+
+---
+
+## 5. 🛡️ 500줄 규칙 준수 모듈화 현황
+모든 소스 코드가 500줄 한도를 완벽히 지키고 있습니다:
+- [Phase3MonsterSpriteHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/Phase3MonsterSpriteHelper.cs): 314줄
+- [StageVictoryUiView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/StageVictoryUiView.cs): 222줄
+- [WavePhaseController.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Monsters/WavePhaseController.cs): 225줄
+- [MonsterSpawnerView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Monsters/MonsterSpawnerView.cs): 442줄
+- [GameOverResultUiView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/GameOverResultUiView.cs): 292줄
+- [CharacterSelectUiView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/CharacterSelectUiView.cs): 415줄
+- [EnemyProjectileManagerView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Projectiles/EnemyProjectileManagerView.cs): 154줄
+- [MonsterType.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.Domain/Entities/MonsterType.cs): 155줄
+- [MonsterSpawner.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.Domain/Entities/MonsterSpawner.cs): 201줄
+- [GameBootstrap.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Bootstrap/GameBootstrap.cs): 386줄

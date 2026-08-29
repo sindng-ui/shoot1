@@ -120,30 +120,12 @@ namespace HappyShoot.View.UI
 
                 if (_goldEarnedText != null)
                 {
-                    _goldEarnedText.text = $"💰 획득한 골드: +{_gameSession.GoldEarned}";
+                    _goldEarnedText.text = $"💰 획득한 골드: {_gameSession.GoldEarned} (패배로 회수 불가)";
                 }
 
-                // Settle gems into permanent SkillTree storage
-                if (_gemCounter != null && _skillTreeManager != null)
+                if (_gemsEarnedText != null)
                 {
-                    int r = _gemCounter.RunRubyCount;
-                    int e = _gemCounter.RunEmeraldCount;
-                    int a = _gemCounter.RunAmethystCount;
-
-                    if (r > 0) _skillTreeManager.AddGems(HappyShoot.Domain.Progression.GemType.Ruby, r);
-                    if (e > 0) _skillTreeManager.AddGems(HappyShoot.Domain.Progression.GemType.Emerald, e);
-                    if (a > 0) _skillTreeManager.AddGems(HappyShoot.Domain.Progression.GemType.Amethyst, a);
-
-                    if (_gemsEarnedText != null)
-                    {
-                        _gemsEarnedText.text = $"💎 획득 보석: 🔴+{r}  🟢+{e}  🟣+{a}";
-                    }
-                }
-
-                // Settle gold into permanent storage
-                if (_shopManager != null && _gameSession.GoldEarned > 0)
-                {
-                    _shopManager.AddGold(_gameSession.GoldEarned);
+                    _gemsEarnedText.text = "🔒 영구 성장은 오직 3보스 클리어 시에만 개방됩니다!";
                 }
             }
 
@@ -258,9 +240,8 @@ namespace HappyShoot.View.UI
             _goldEarnedText = CreateText(dialogGo.transform, "GoldText", "💰 획득한 골드: +0 G", 20, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -24f), new Vector2(340f, 32f), new Color(1f, 0.85f, 0.3f, 1f));
             _gemsEarnedText = CreateText(dialogGo.transform, "GemsText", "💎 획득 보석: 🔴+0  🟢+0  🟣+0", 18, TextAnchor.MiddleLeft, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(340f, 32f), new Color(0.9f, 0.6f, 1f, 1f));
 
-            // Buttons: Power Up Shop & Retry
-            _openShopButton = CreateButton(dialogGo.transform, "ShopBtn", "💎 스킬 트리 (영구 성장)", new Vector2(0f, -125f), new Color(0.85f, 0.35f, 0.55f, 1f), OnOpenShopClicked);
-            _retryButton = CreateButton(dialogGo.transform, "RetryBtn", "🔄 다시 도전하기", new Vector2(0f, -190f), new Color(0.2f, 0.7f, 0.4f, 1f), OnRetryClicked);
+            // Button: Only Retry!
+            _retryButton = CreateButton(dialogGo.transform, "RetryBtn", "🔄 다시 도전하기", new Vector2(0f, -145f), new Color(0.2f, 0.7f, 0.4f, 1f), OnRetryClicked);
         }
 
         private Button CreateButton(Transform parent, string name, string label, Vector2 anchoredPos, Color btnColor, UnityEngine.Events.UnityAction onClick)

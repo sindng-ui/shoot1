@@ -17,7 +17,7 @@ namespace HappyShoot.Domain.Entities
         public float Radius { get; set; } = 0.4f;
 
         public bool IsActive { get; private set; }
-        public bool IsBoss => Type == MonsterType.Boss;
+        public bool IsBoss => Type == MonsterType.Boss || Type == MonsterType.Boss3;
         public float MaxHealth { get; private set; }
         public float CurrentHealth { get; private set; }
         public float MoveSpeed { get; private set; }

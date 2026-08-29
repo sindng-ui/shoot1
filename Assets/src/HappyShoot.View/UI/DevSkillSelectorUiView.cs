@@ -72,7 +72,7 @@ namespace HappyShoot.View.UI
             rootRt.anchorMax = new Vector2(1f, 0.5f);
             rootRt.pivot = new Vector2(1f, 0.5f);
             rootRt.anchoredPosition = new Vector2(-15f, 0f);
-            rootRt.sizeDelta = new Vector2(360f, 780f);
+            rootRt.sizeDelta = new Vector2(360f, 810f);
 
             // 2. Collapse Toggle Tab (Left border tab)
             var tabGo = new GameObject("CollapseTab");
@@ -128,6 +128,12 @@ namespace HappyShoot.View.UI
 
             CreateSmallButton(_contentBox.transform, "BtnSpeed", "⏩ 속도: 1x", new Vector2(-85f, currentY), new Vector2(160f, 26f), new Color(0.3f, 0.3f, 0.6f, 1f), ToggleTimeScale, out _timeScaleBtnText);
             CreateSmallButton(_contentBox.transform, "BtnGold", "💰 골드 +1000", new Vector2(85f, currentY), new Vector2(160f, 26f), new Color(0.75f, 0.65f, 0.1f, 1f), AddGold1000, out _);
+            currentY -= 30f;
+
+            // Phase Jump Buttons
+            CreateSmallButton(_contentBox.transform, "BtnP1", "1️⃣ Phase 1", new Vector2(-112f, currentY), new Vector2(106f, 26f), new Color(0.20f, 0.45f, 0.70f, 1f), () => _spawnerView?.JumpToPhase(1), out _);
+            CreateSmallButton(_contentBox.transform, "BtnP2", "2️⃣ Phase 2", new Vector2(0f, currentY), new Vector2(106f, 26f), new Color(0.65f, 0.35f, 0.15f, 1f), () => _spawnerView?.JumpToPhase(2), out _);
+            CreateSmallButton(_contentBox.transform, "BtnP3", "3️⃣ Phase 3", new Vector2(112f, currentY), new Vector2(106f, 26f), new Color(0.55f, 0.15f, 0.65f, 1f), () => _spawnerView?.JumpToPhase(3), out _);
             currentY -= 32f;
 
             // 1. ACTIVE SKILLS (좌클릭: +1 Lv / 우클릭: Lv.0 해제)

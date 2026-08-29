@@ -14,15 +14,18 @@ namespace HappyShoot.View.UI
     public class CharacterSelectUiView : MonoBehaviour
     {
         private GameObject _panelRoot;
-        private Action<CharacterClassType, bool, bool> _onSelectedCallback;
+        private Action<CharacterClassType, bool, bool, int> _onSelectedCallback;
         private SettingsDialogUiView _settingsDialog;
         private SkillTreeUiView _skillTreeUiView;
         private bool _isDevMode = false;
         private bool _isSkillTestMode = false;
+        private int _startPhase = 1;
         private Text _devModeBtnText;
         private Image _devModeBtnImg;
         private Text _skillTestBtnText;
         private Image _skillTestBtnImg;
+        private GameObject _phaseBtnGo;
+        private Text _phaseBtnText;
 
         public void SetSettingsDialog(SettingsDialogUiView dialog)
         {
@@ -34,16 +37,21 @@ namespace HappyShoot.View.UI
             _skillTreeUiView = treeView;
         }
 
-        public void Initialize(Action<CharacterClassType, bool, bool> onSelectedCallback)
+        public void Initialize(Action<CharacterClassType, bool, bool, int> onSelectedCallback)
         {
             _onSelectedCallback = onSelectedCallback;
             EnsureUiElements();
             ShowSelectScreen();
         }
 
+        public void Initialize(Action<CharacterClassType, bool, bool> onSelectedCallback)
+        {
+            Initialize((classType, isDev, isTest, startPhase) => onSelectedCallback?.Invoke(classType, isDev, isTest));
+        }
+
         public void Initialize(Action<CharacterClassType, bool> onSelectedCallback)
         {
-            Initialize((classType, isDev, isTest) => onSelectedCallback?.Invoke(classType, isDev));
+            Initialize((classType, isDev, isTest, startPhase) => onSelectedCallback?.Invoke(classType, isDev));
         }
 
         public void Initialize(Action<CharacterClassType> onSelectedCallback)
@@ -74,7 +82,7 @@ namespace HappyShoot.View.UI
             PlayerPrefs.SetInt("SelectedHeroClass", (int)classType);
             PlayerPrefs.Save();
             HideSelectScreen();
-            _onSelectedCallback?.Invoke(classType, _isDevMode, _isSkillTestMode);
+            _onSelectedCallback?.Invoke(classType, _isDevMode, _isSkillTestMode, _startPhase);
         }
 
         private void ToggleDevMode()
@@ -87,6 +95,24 @@ namespace HappyShoot.View.UI
             if (_devModeBtnImg != null)
             {
                 _devModeBtnImg.color = _isDevMode ? new Color(0.85f, 0.45f, 0.15f, 1f) : new Color(0.25f, 0.28f, 0.35f, 0.95f);
+            }
+            if (_phaseBtnGo != null)
+            {
+                _phaseBtnGo.SetActive(_isDevMode);
+            }
+        }
+
+        private void ToggleStartPhase()
+        {
+            _startPhase = _startPhase switch { 1 => 2, 2 => 3, _ => 1 };
+            if (_phaseBtnText != null)
+            {
+                _phaseBtnText.text = _startPhase switch
+                {
+                    2 => "🚀 시작: Phase 2 (독거미/흑기사)",
+                    3 => "🚀 시작: Phase 3 (망령/3보스)",
+                    _ => "🚀 시작: Phase 1 (기본 슬라임)"
+                };
             }
         }
 
@@ -139,7 +165,7 @@ namespace HappyShoot.View.UI
             CreateText(_panelRoot.transform, "Title", "⚔️ 출격할 영웅을 선택하세요 ⚔️", 36, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -80f), new Vector2(800f, 60f), new Color(1f, 0.88f, 0.35f, 1f));
             CreateText(_panelRoot.transform, "Subtitle", "각 영웅은 고유한 능력치와 전용 무기를 보유하고 있습니다", 18, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -135f), new Vector2(800f, 30f), new Color(0.75f, 0.82f, 0.90f, 0.8f));
 
-            // Skill Tree Entry Button (Top Right)
+            // Skill Tree Entry Button (Top Right) - Locked until Stage Victory!
             var treeBtnGo = new GameObject("BtnOpenSkillTree");
             treeBtnGo.transform.SetParent(_panelRoot.transform, false);
             var treeRt = treeBtnGo.AddComponent<RectTransform>();
@@ -147,17 +173,17 @@ namespace HappyShoot.View.UI
             treeRt.anchorMax = new Vector2(1f, 1f);
             treeRt.pivot = new Vector2(1f, 1f);
             treeRt.anchoredPosition = new Vector2(-40f, -40f);
-            treeRt.sizeDelta = new Vector2(230f, 54f);
+            treeRt.sizeDelta = new Vector2(260f, 54f);
 
             var treeImg = treeBtnGo.AddComponent<Image>();
             treeImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            treeImg.color = new Color(0.75f, 0.20f, 0.45f, 0.95f);
+            treeImg.color = new Color(0.25f, 0.25f, 0.30f, 0.85f);
 
             var treeBtn = treeBtnGo.AddComponent<Button>();
             treeBtn.targetGraphic = treeImg;
-            treeBtn.onClick.AddListener(() => _skillTreeUiView?.Show());
+            treeBtn.interactable = false; // Locked! Only accessible on Stage Victory
 
-            CreateText(treeBtnGo.transform, "BtnText", "💎 스킬 트리 (영구 성장)", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            CreateText(treeBtnGo.transform, "BtnText", "🔒 3보스 클리어 시 영구성장 개방", 15, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(0.75f, 0.75f, 0.75f, 0.9f));
 
             // Card Container (Expanded to accommodate 3 Heroes)
             var cardsContainer = new GameObject("CardsContainer");
@@ -230,6 +256,27 @@ namespace HappyShoot.View.UI
             devBtn.onClick.AddListener(ToggleDevMode);
 
             _devModeBtnText = CreateText(devBtnGo.transform, "BtnText", "🛠️ 개발자 모드: OFF", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+
+            // Bottom Button 1-2: Start Phase Toggle Button (Visible only in DevMode)
+            _phaseBtnGo = new GameObject("BtnToggleStartPhase");
+            _phaseBtnGo.transform.SetParent(_panelRoot.transform, false);
+            var phaseRt = _phaseBtnGo.AddComponent<RectTransform>();
+            phaseRt.anchorMin = new Vector2(0.5f, 0f);
+            phaseRt.anchorMax = new Vector2(0.5f, 0f);
+            phaseRt.pivot = new Vector2(0.5f, 0f);
+            phaseRt.anchoredPosition = new Vector2(-405f, 95f);
+            phaseRt.sizeDelta = new Vector2(250f, 44f);
+
+            var phaseImg = _phaseBtnGo.AddComponent<Image>();
+            phaseImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            phaseImg.color = new Color(0.35f, 0.18f, 0.52f, 0.95f);
+
+            var phaseBtn = _phaseBtnGo.AddComponent<Button>();
+            phaseBtn.targetGraphic = phaseImg;
+            phaseBtn.onClick.AddListener(ToggleStartPhase);
+
+            _phaseBtnText = CreateText(_phaseBtnGo.transform, "BtnText", "🚀 시작: Phase 1 (기본 슬라임)", 14, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            _phaseBtnGo.SetActive(_isDevMode);
 
             // Bottom Button 2: Skill Test Mode Toggle
             var testBtnGo = new GameObject("BtnToggleSkillTest");

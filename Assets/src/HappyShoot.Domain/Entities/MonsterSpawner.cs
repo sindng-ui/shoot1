@@ -124,9 +124,11 @@ namespace HappyShoot.Domain.Entities
         /// <summary>
         /// Spawns a Boss monster at a specific offset from the player.
         /// </summary>
-        public MonsterEntity SpawnBoss(Vector2D playerPosition, string bossName, float hp, float speed, float damage, int exp = 50, int gold = 100)
+        public MonsterEntity SpawnBoss(Vector2D playerPosition, string bossName, float hp, float speed, float damage, int exp = 50, int gold = 100, MonsterType type = MonsterType.Boss)
         {
-            var def = MonsterDefinition.CreateBoss(bossName, hp, speed, damage, exp, gold);
+            var def = type == MonsterType.Boss3
+                ? MonsterDefinition.CreateBoss3(bossName, hp, speed, damage, exp, gold)
+                : MonsterDefinition.CreateBoss(bossName, hp, speed, damage, exp, gold);
             float posX = playerPosition.X + 8.0f;
             float posY = playerPosition.Y + 8.0f;
             return SpawnByDefinition(def, new Vector2D(posX, posY));

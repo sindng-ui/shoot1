@@ -128,6 +128,51 @@ namespace HappyShoot.View.Monsters
                             _shadowGo.transform.localScale = new Vector3(2.2f, 1.0f, 1f);
                         }
                         break;
+                    case MonsterType.Wraith:
+                        _spriteRenderer.sprite = Phase3MonsterSpriteHelper.GetOrCreateWraithSprite();
+                        _baseScale = 1.4f;
+                        if (_shadowGo != null)
+                        {
+                            _shadowGo.transform.localPosition = new Vector3(0f, -0.35f, 0f);
+                            _shadowGo.transform.localScale = new Vector3(1.1f, 0.5f, 1f);
+                        }
+                        break;
+                    case MonsterType.Necromancer:
+                        _spriteRenderer.sprite = Phase3MonsterSpriteHelper.GetOrCreateNecromancerSprite();
+                        _baseScale = 1.6f;
+                        if (_shadowGo != null)
+                        {
+                            _shadowGo.transform.localPosition = new Vector3(0f, -0.40f, 0f);
+                            _shadowGo.transform.localScale = new Vector3(1.3f, 0.6f, 1f);
+                        }
+                        break;
+                    case MonsterType.Abomination:
+                        _spriteRenderer.sprite = Phase3MonsterSpriteHelper.GetOrCreateAbominationSprite();
+                        _baseScale = 2.3f;
+                        if (_shadowGo != null)
+                        {
+                            _shadowGo.transform.localPosition = new Vector3(0f, -0.60f, 0f);
+                            _shadowGo.transform.localScale = new Vector3(2.2f, 1.0f, 1f);
+                        }
+                        break;
+                    case MonsterType.Reaper:
+                        _spriteRenderer.sprite = Phase3MonsterSpriteHelper.GetOrCreateReaperSprite();
+                        _baseScale = 1.8f;
+                        if (_shadowGo != null)
+                        {
+                            _shadowGo.transform.localPosition = new Vector3(0f, -0.45f, 0f);
+                            _shadowGo.transform.localScale = new Vector3(1.5f, 0.7f, 1f);
+                        }
+                        break;
+                    case MonsterType.Boss3:
+                        _spriteRenderer.sprite = Phase3MonsterSpriteHelper.GetOrCreateLichKingSprite();
+                        _baseScale = 3.6f;
+                        if (_shadowGo != null)
+                        {
+                            _shadowGo.transform.localPosition = new Vector3(0f, -0.90f, 0f);
+                            _shadowGo.transform.localScale = new Vector3(3.6f, 1.5f, 1f);
+                        }
+                        break;
                     case MonsterType.Slime:
                     default:
                         _spriteRenderer.sprite = SpriteHelper.GetOrCreateSlimeSprite();
@@ -213,6 +258,7 @@ namespace HappyShoot.View.Monsters
                         break;
 
                     case MonsterType.Boss:
+                    case MonsterType.Boss3:
                         // Heavy breathing pulsation
                         float pulse = Mathf.Sin(_animTimer * 0.75f);
                         squashY = pulse * 0.09f;

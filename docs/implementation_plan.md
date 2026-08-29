@@ -1,64 +1,96 @@
-# 👾 경험치 증가율 비례 최대 몬스터 수 & 스폰 동적 스케일링 구현 계획서
+# 👑 최종 보스(Boss 3) & 3페이즈 몬스터 4종 & '승리자 전용 영구 성장' 시스템 구현 계획서
 
-형님! 강해진 플레이어의 성장에 맞춰 긴장감 넘치는 전투를 유지하기 위해, **플레이어가 레벨업할 때마다 다음 레벨 필요 경험치 증가 비율(Exp Scale Factor)에 1:1로 비례하여 필드 최대 몬스터 수(Max Monsters)와 스폰 빈도(Spawn Rate)가 함께 증가하는 시스템** 구현 계획을 제출합니다!
-
----
-
-## 🎯 목표 및 핵심 메커니즘
-
-1. **경험치 증가율 비례 몬스터 수 동적 연동**:
-   - 1레벨 기본 필요 경험치: $E_1 = \text{CalculateRequiredExp}(1)$
-   - 현재 L레벨 필요 경험치: $E_L = \text{CalculateRequiredExp}(L)$
-   - **경험치 배율 계수 (Exp Scale)**:
-     $$\text{ExpScale}(L) = \frac{E_L}{E_1}$$
-   - **최대 몬스터 수 공식**:
-     $$\text{CurrentMaxMonsters} = \text{Clamp}\left(\text{RoundToInt}(\text{BaseMaxMonsters}(time) \times \text{ExpScale}(L)), \text{BaseMaxMonsters}, \text{MaxPoolCapacity}\right)$$
-     *(예: 샌드박스에서 성장률 1.5배 설정 시, 다음 레벨 필요 경험치가 1.5배 늘어나는 것과 완벽히 동일하게 몹 수 한도도 1.5배씩 계속 누적 확장!)*
-
-2. **스폰 속도(Spawn Interval) 동시 가속**:
-   - 몹 수 한도만 늘어나고 스폰이 느리면 필드가 차지 않으므로, 몹 수 스케일에 맞춰 스폰 주기 가속:
-     $$\text{CurrentSpawnInterval} = \frac{\text{BaseSpawnInterval}(time)}{\text{Clamp}(\sqrt{\text{ExpScale}(L)}, 1.0f, 3.5f)}$$
-
-3. **대용량 몬스터 풀링 확장 (Zero-Allocation & 60FPS 성능 보장)**:
-   - `MonsterSpawnerView` 및 `MonsterSpawner`의 `MaxPoolCapacity`를 **512 ➔ 1,200**으로 대폭 확장.
-   - 공간 분할 그리드(`SpatialGrid2D`) 셀 쿼리로 1,200마리 대군단도 프레임 드랍 없이 부드럽게 구동.
-
-4. **전투 & 밸런스 샌드박스 연동**:
-   - 샌드박스 [경험치 튜닝 탭]에서 `ExpGrowthFactor` 변경 시 실시간으로 최대 몹 수가 자동 재계산됨.
-   - [몬스터 탭]에 `레벨 비례 몹수 스케일링 활성화(ON/OFF)` 및 `최대 몹수 상한선(500~1200)` 슬라이더 추가.
+형님, 선택해주신 **"방향 1: 최종 보스 3 및 스테이지 클리어 루프"**와 함께, 지시하신 **"3페이즈 4종 신규 몬스터 스피디한 순차 등장"** 및 **"오직 3보스 격파 시에만 영구 성장 해금"** 룰을 완벽하게 녹여낸 기획 및 설계서입니다. 🐧🔥
 
 ---
 
-## 📂 변경 예정 파일 목록
+## 1. ⏱️ 3페이즈 신규 몬스터 4종 스피디 전개 설계 (총 60초)
 
-### 1. 도메인 (Domain Layer)
-- [MODIFY] [MonsterSpawner.cs](file:///c:/AntigravityWorkspace/shoot1/Assets/src/HappyShoot.Domain/Entities/MonsterSpawner.cs)
-  - 풀 기본 용량 확장 (1,200) 및 메모리 버퍼 최적화.
-- [MODIFY] [SkillConfigModels.cs](file:///c:/AntigravityWorkspace/shoot1/Assets/src/HappyShoot.Domain/Skills/SkillConfigModels.cs)
-  - `ExpConfig` 또는 `MonsterConfig`에 `EnableLevelExpScaling` 및 `MaxSpawnCapLimit` 필드 추가.
+형님 말씀대로 **"3페이즈는 너무 오래 끌지 않고"**, 보스 2 격파 직후 15초 간격으로 4종류의 개성 강한 몬스터가 속도감 있게 투입되어 전장의 긴장감을 최고조로 끌어올린 후 **단 1분(60초) 만에 최종 보스 3**이 강림합니다!
 
-### 2. 뷰 & 시스템 연동 (View Layer)
-- [MODIFY] [MonsterSpawnerView.cs](file:///c:/AntigravityWorkspace/shoot1/Assets/src/HappyShoot.View/Monsters/MonsterSpawnerView.cs)
-  - `LevelSystem` 바인딩 추가 및 `GetMaxMonsters`, `GetSpawnInterval`에 `ExpScale` 공식 적용.
-  - `MaxPoolCapacity`를 1,200으로 확장 및 뷰 풀링 프리웜.
-- [MODIFY] [GameBootstrap.cs](file:///c:/AntigravityWorkspace/shoot1/Assets/src/HappyShoot.View/Bootstrap/GameBootstrap.cs)
-  - `spawnerView.Initialize(playerView, levelSystem)`으로 레벨 시스템 참조 전달.
-- [MODIFY] [SkillTuningRowConfigurator.cs](file:///c:/AntigravityWorkspace/shoot1/Assets/src/HappyShoot.View/UI/SkillTuningRowConfigurator.cs)
-  - 샌드박스 경험치/몬스터 탭에 레벨 비례 몹 수 스케일링 튜닝 슬라이더 추가.
+| 시간 경과 | 신규 몬스터 타입 | 특징 및 전투 패턴 | 시각적 컨셉 |
+| :---: | :--- | :--- | :--- |
+| **0초 (즉시)** | **1. 망령 (Wraith)** | 반투명 영체로 지그재그 고속 돌격, 빠른 이동 속도(3.5m/s) | 푸른 영혼 안광의 반투명 유령 도트 |
+| **15초** | **2. 사령술사 (Necromancer)** | 원거리 마법 몬스터, 플레이어를 조준하는 유도성 저주 영혼탄 발사 | 보라색 사령 로브 & 해골 지팡이 |
+| **30초** | **3. 어보미네이션 (Abomination)** | 높은 체력과 강력한 넉백 저항을 가진 육중한 생체 골렘 탱크 | 썩어가는 녹색/자주색 누더기 거구 |
+| **45초** | **4. 사신 (Death Reaper)** | 거대한 낫을 휘두르며 플레이어 방향으로 순간 가속 쇄도하는 엘리트 | 흑단 로브 & 은빛 대낫 |
+| **60초 (1분)** | **🔥 최종 보스 3 강림!** | **사령왕 리치 (Lich King)** | 거대한 해골 황금관 & 사령 오라 |
 
 ---
 
-## 🧪 검증 계획
+## 2. 💀 최종 보스 3: 사령왕 리치 (Lich King) 전투 및 피날레
 
-### 1. 단위 테스트 (Automated Tests)
-- `MonsterSpawnerTests.cs` & `LevelSystemTests.cs`: 레벨업 시 필요 경험치 증가량과 몹 수 배율 계산 공식 검증.
-- `dotnet test shoot1.sln` 실행 및 통과 확인.
-
-### 2. 수동 검증 (Manual Verification)
-- 유니티 실행 후 개발자 모드(`Dev Mode`)에서 [레벨업] 버튼을 눌렀을 때 필드의 최대 몹 수와 스폰 수가 경험치 배율에 맞춰 시원하게 증가하는지 확인.
-- 샌드박스에서 경험치 성장률(`ExpGrowthFactor`)을 변경했을 때 몹 스폰 한도가 실시간 반영되는지 확인.
-- 500줄 규칙 준수 여부 및 FPS 안정성 점검.
+- **보스 스펙**:
+  - 체력: 기본 25,000 HP × 성장 배율 (최종 결전의 묵직함)
+  - 이동: 플레이어와 일정 거리를 유지하며 압박하는 군주형 기동
+- **3대 복합 공격 패턴**:
+  1. **나선 영혼 탄막 (Spiral Soul Barrage)**: 사방 360도로 회전하며 뿜어져 나오는 암흑 마탄
+  2. **플레이어 조준 사령 장판 (Cursed Hazard Zone)**: 플레이어 발밑에 즉사급 장판 생성
+  3. **사령 흑광 레이저 (Death Laser Beam)**: 플레이어를 정밀 추적하며 회전하는 암흑 광선
+- **격파 시 승리 피날레 (VICTORY)**:
+  - 전장의 모든 몬스터 즉시 소멸 (Shatter All)
+  - 화면 2초간 영롱한 슬로우모션 연출
+  - 보스 위치에서 대량의 전리품 폭포(골드 + 루비/에메랄드/자수정) 드랍
+  - **[🏆 STAGE CLEAR - VICTORY!]** 찬란한 승리 팝업 등장
 
 ---
 
-형님! 계획서를 확인하시고 **Proceed** 버튼을 눌러주시면 즉시 구현에 착수하겠습니다!
+## 3. 🔒 '승리자 전용 영구 성장' 시스템 룰 개편
+
+> [!IMPORTANT]
+> **형님의 절대 원칙 반영**:
+> *"3보스를 잡았을 때에만!! only 이때에만 영구 성장을 할 수 있게 하자. 기존에 아무 때나 하거나 죽었을 때 하는 것은 없애자."*
+
+1. **게임 시작 전 (캐릭터 선택 화면)**:
+   - `CharacterSelectUiView`의 스킬 트리/상점 버튼 비활성화 (또는 `[🔒 잠김: 3보스 클리어 시 해금]` 표시).
+2. **패배 (게임 오버 / 플레이어 사망)**:
+   - `GameOverResultUiView`에서 `_openShopButton` ("영구 강화 상점") **완전 제거**!
+   - 획득한 골드/보석은 전리품으로 영구 저장되지 않고 유실(또는 승리 전까지 누적 불가)되며, **오직 [재도전(Retry)] 버튼만 제공**.
+   - 안내 문구: *"💀 패배: 3보스를 쓰러뜨리지 못해 영구 성장을 할 수 없습니다. 다시 도전하십시오!"*
+3. **승리 (최종 보스 3 격파 시 - VICTORY)**:
+   - 신규 `StageVictoryUiView` 승리 팝업 출현!
+   - 생존 시간, 처치 수, 획득 보석/골드 정산과 함께 **[💎 승리자의 보상: 영구 성장 & 스킬 트리 개방]** 황금 버튼 활성화!
+   - 이 버튼을 통해서만 스킬 트리와 메타 상점에 입장하여 강력한 영구 업그레이드를 누릴 수 있습니다!
+
+---
+
+## 4. 🛡️ 아키텍처 및 500줄 규칙 준수 방안
+
+기존 핵심 파일들이 비대해지지 않도록 책임을 명확히 분리합니다:
+
+1. **[NEW] `Phase3MonsterSpriteHelper.cs` (약 220줄)**
+   - `SpriteHelper.cs`가 현재 446줄로 500줄에 임박해 있으므로, 신규 몬스터 4종(망령, 사령술사, 어보미네이션, 사신)과 Boss 3(사령왕 리치)의 도트 스프라이트는 전담 신규 헬퍼로 완전 분리.
+2. **[NEW] `StageVictoryUiView.cs` (약 180줄)**
+   - 최종 승리 팝업 연출 및 '승리자 전용 영구 성장/스킬 트리' 진입을 전담하는 UI 컴포넌트.
+3. **[MODIFY] `WavePhaseController.cs` (현재 125줄 -> 약 220줄)**
+   - Phase 3의 15초 단위 몬스터 스폰 롤링 및 Boss 3 스폰 트리거 상태 관리.
+4. **[MODIFY] `MonsterSpawnerView.cs` (현재 403줄 -> 약 440줄)**
+   - Boss 3 스폰 및 Boss 3 사망 이벤트 수신 시 `StageVictoryUiView` 트리거 (500줄 한계 철저 준수).
+5. **[MODIFY] `GameOverResultUiView.cs`**
+   - 상점/스킬트리 진입 버튼 완전 제거 및 패배 결과창 다이어트.
+6. **[MODIFY] `CharacterSelectUiView.cs`**
+   - 캐릭터 선택창 스킬트리 버튼 잠금 처리.
+7. **[MODIFY] `APP_MAP.md`**
+   - 신규 몬스터 4종, Boss 3, 승리 UI 및 영구 성장 루프 전면 업데이트.
+
+---
+
+## 5. Verification Plan
+
+### Automated Tests
+1. **유니티 배치모드 스크립트 컴파일 무결성 확인**:
+   ```bash
+   /mnt/s/Unity/hub/6000.3.22f1/Editor/Unity.exe -batchmode -nographics -quit -projectPath "K:\unityprojects\shoot1\shoot1" -logfile "docs/unity_compile_check.log"
+   ```
+2. **단위 테스트 검증**:
+   - `WavePhaseControllerTests`: Phase 3 몬스터 4종 전환(15s, 30s, 45s, 60s) 및 Boss 3 트리거 검증
+
+### Manual Verification
+- 게임 플레이 중 Boss 2 처치 후:
+  - 0초: 망령 출현 확인
+  - 15초: 사령술사 원거리 마탄 공격 확인
+  - 30초: 어보미네이션 탱커 출현 확인
+  - 45초: 사신 고속 돌진 출현 확인
+  - 60초: 사령왕 리치(Boss 3) 강림 및 복합 탄막/장판/레이저 패턴 확인
+- 사망(Game Over) 시: 영구 성장 버튼이 사라지고 오직 재도전만 가능한지 확인
+- 승리(Victory) 시: 화면 슬로우모션, 전리품 폭포, 황금빛 영구 성장 해금 버튼 작동 확인

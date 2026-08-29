@@ -64,12 +64,18 @@ namespace HappyShoot.View.Projectiles
 
         public void SpawnBoneProjectile(Vector2 spawnPos, Vector2 direction, float speed = 2.75f, float damage = 10f)
         {
-            SpawnGeneric(spawnPos, direction, speed, damage, 4.0f, 0.25f, ProjectileType.Bone, _boneSprite, Vector3.one * 0.75f);
+            SpawnGeneric(spawnPos, direction, speed, damage, 4.0f, 0.18f, ProjectileType.Bone, _boneSprite, Vector3.one * 0.75f);
         }
 
         public void SpawnDarkSlashProjectile(Vector2 spawnPos, Vector2 direction, float speed = 3.5f, float damage = 20f)
         {
-            SpawnGeneric(spawnPos, direction, speed, damage, 4.5f, 0.40f, ProjectileType.DarkSlash, _darkSlashSprite, Vector3.one * 1.35f);
+            SpawnGeneric(spawnPos, direction, speed, damage, 4.5f, 0.32f, ProjectileType.DarkSlash, _darkSlashSprite, Vector3.one * 1.35f);
+        }
+
+        public void SpawnSoulOrbProjectile(Vector2 spawnPos, Vector2 direction, float speed = 3.2f, float damage = 28f)
+        {
+            var sprite = Utils.Phase3MonsterSpriteHelper.GetOrCreateSoulOrbSprite();
+            SpawnGeneric(spawnPos, direction, speed, damage, 4.0f, 0.22f, ProjectileType.Bone, sprite, Vector3.one * 1.15f);
         }
 
         private void SpawnGeneric(Vector2 spawnPos, Vector2 direction, float speed, float damage, float lifetime, float hitRadiusSqr, ProjectileType type, Sprite sprite, Vector3 scale)

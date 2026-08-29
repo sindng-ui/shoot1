@@ -9,7 +9,12 @@ namespace HappyShoot.Domain.Entities
         Boss = 4,        // Epic Boss (massive HP, rush patterns, barrage)
         FireImp = 5,     // Phase 2 wave 1: fast flame imp (medium HP, fast, aggressive)
         ToxicSpider = 6, // Phase 2 wave 2: toxic spider (high HP, pack tactics)
-        DarkKnight = 7   // Phase 2 wave 3: armored dark knight (very high HP, slow, lethal)
+        DarkKnight = 7,  // Phase 2 wave 3: armored dark knight (very high HP, slow, lethal)
+        Wraith = 8,      // Phase 3 wave 1: ethereal ghost (fast speed, stealth zigzag)
+        Necromancer = 9, // Phase 3 wave 2: death mage (shoots cursed soul orbs)
+        Abomination = 10,// Phase 3 wave 3: flesh colossus (colossal HP & high damage)
+        Reaper = 11,     // Phase 3 wave 4: scythe reaper (high speed dash & lethal damage)
+        Boss3 = 12       // Final Boss: Arch-Lich King
     }
 
     /// <summary>
@@ -79,9 +84,30 @@ namespace HappyShoot.Domain.Entities
         public static MonsterDefinition DarkKnight => new MonsterDefinition(
             MonsterType.DarkKnight, "Dark Knight", baseMaxHealth: 600f, baseMoveSpeed: 1.5f, baseDamage: 35f, radius: 0.75f, expValue: 14, goldValue: 18, isRanged: true, preferredDistance: 4.8f, attackInterval: 2.5f);
 
+        // Phase 3 Wave 1: Wraith - ethereal ghost, fast speed, stealth zigzag
+        public static MonsterDefinition Wraith => new MonsterDefinition(
+            MonsterType.Wraith, "Wraith", baseMaxHealth: 450f, baseMoveSpeed: 3.6f, baseDamage: 25f, radius: 0.42f, expValue: 18, goldValue: 20);
+
+        // Phase 3 Wave 2: Necromancer - death mage, shoots cursed soul orbs
+        public static MonsterDefinition Necromancer => new MonsterDefinition(
+            MonsterType.Necromancer, "Necromancer", baseMaxHealth: 700f, baseMoveSpeed: 1.8f, baseDamage: 30f, radius: 0.50f, expValue: 25, goldValue: 30, isRanged: true, preferredDistance: 5.0f, attackInterval: 2.2f);
+
+        // Phase 3 Wave 3: Abomination - flesh colossus, colossal HP & high damage
+        public static MonsterDefinition Abomination => new MonsterDefinition(
+            MonsterType.Abomination, "Abomination", baseMaxHealth: 1500f, baseMoveSpeed: 1.3f, baseDamage: 55f, radius: 0.85f, expValue: 40, goldValue: 50);
+
+        // Phase 3 Wave 4: Reaper - scythe reaper, high speed dash & lethal damage
+        public static MonsterDefinition Reaper => new MonsterDefinition(
+            MonsterType.Reaper, "Reaper", baseMaxHealth: 950f, baseMoveSpeed: 3.8f, baseDamage: 60f, radius: 0.55f, expValue: 45, goldValue: 55);
+
         public static MonsterDefinition CreateBoss(string name, float hp, float speed, float damage, int exp, int gold)
         {
             return new MonsterDefinition(MonsterType.Boss, name, hp, speed, damage, radius: 1.0f, exp, gold, isRanged: false, preferredDistance: 0f, attackInterval: 1.2f);
+        }
+
+        public static MonsterDefinition CreateBoss3(string name, float hp, float speed, float damage, int exp, int gold)
+        {
+            return new MonsterDefinition(MonsterType.Boss3, name, hp, speed, damage, radius: 1.2f, exp, gold, isRanged: true, preferredDistance: 4.5f, attackInterval: 1.0f);
         }
 
         public static MonsterDefinition FromConfig(MonsterType type, MonsterTuningConfigData cfg)
@@ -96,6 +122,10 @@ namespace HappyShoot.Domain.Entities
                     case MonsterType.FireImp: return FireImp;
                     case MonsterType.ToxicSpider: return ToxicSpider;
                     case MonsterType.DarkKnight: return DarkKnight;
+                    case MonsterType.Wraith: return Wraith;
+                    case MonsterType.Necromancer: return Necromancer;
+                    case MonsterType.Abomination: return Abomination;
+                    case MonsterType.Reaper: return Reaper;
                     default: return Slime;
                 }
             }

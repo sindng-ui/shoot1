@@ -316,6 +316,12 @@ namespace HappyShoot.View.Bootstrap
             var gameOverView = gameOverGo.AddComponent<GameOverResultUiView>();
             gameOverView.Initialize(_gameSession, playerView.EventBus, null, null, skillTreeManager, skillTreeUiView, gemCounterView);
 
+            // 6.5. Exclusive Stage Victory UI (Unlocks Skill Tree & Meta Growth ONLY on Boss 3 defeat)
+            var victoryGo = new GameObject("StageVictoryUI");
+            var victoryView = victoryGo.AddComponent<UI.StageVictoryUiView>();
+            victoryView.Initialize(_gameSession, null, skillTreeManager, skillTreeUiView, gemCounterView, hudGo.transform);
+            spawnerView.SetVictoryUiView(victoryView);
+
             // 7. Developer Skill Selector & Cheat Console UI
             var devConsoleGo = new GameObject("DevSkillSelectorUI");
             var devConsoleView = devConsoleGo.AddComponent<DevSkillSelectorUiView>();
@@ -333,7 +339,7 @@ namespace HappyShoot.View.Bootstrap
             var charSelectView = charSelectGo.AddComponent<CharacterSelectUiView>();
             charSelectView.SetSettingsDialog(settingsDialogView);
             charSelectView.SetSkillTreeUiView(skillTreeUiView);
-            charSelectView.Initialize((selectedClass, isDevMode, isSkillTestMode) =>
+            charSelectView.Initialize((selectedClass, isDevMode, isSkillTestMode, startPhase) =>
             {
                 _selectedClass = selectedClass;
                 playerView.SetClassType(selectedClass);
@@ -345,11 +351,17 @@ namespace HappyShoot.View.Bootstrap
                 {
                     SkillConfigRepository.Instance.ApplyConfigToSkillLevel(s, s.Level);
                 }
-                Debug.Log($"[GameBootstrap] Hero Selected & Ready: {selectedClass} (DevMode: {isDevMode}, SkillTest: {isSkillTestMode})");
+                Debug.Log($"[GameBootstrap] Hero Selected & Ready: {selectedClass} (DevMode: {isDevMode}, SkillTest: {isSkillTestMode}, StartPhase: {startPhase})");
 
                 if (isDevMode)
                 {
                     devConsoleView.Show();
+                }
+
+                if (startPhase > 1)
+                {
+                    Debug.Log($"[GameBootstrap] Starting directly in Phase {startPhase} via Dev Mode!");
+                    spawnerView.JumpToPhase(startPhase);
                 }
 
                 if (isSkillTestMode)

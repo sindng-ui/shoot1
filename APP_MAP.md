@@ -11,6 +11,7 @@ graph TD
     subgraph Unity Presentation [HappyShoot.View]
         GB[GameBootstrap] --> BGM[BackgroundManager & 3x3 Infinite Grid]
         GB --> HUD[InGameHudView]
+        HUD --> PDV[PlayerDamageVignetteView]
         GB --> BB[BossHealthBarView]
         GB --> TCM[TreasureChestManagerView]
         GB --> TCP[TreasureChestPopupView]
@@ -19,10 +20,13 @@ graph TD
         GB --> PHB[PlayerHealthBarView]
         GB --> PM[PauseMenuUiView]
         GB --> GOR[GameOverResultUiView]
+        GB --> SVU[StageVictoryUiView]
         GB --> SV[SoundManagerView & 16-Ch Pool]
         GB --> PAH[ProceduralAudioHelper]
         GB --> PV[PlayerView]
+        PV --> PHF[PlayerHitFeedbackView]
         GB --> MV[MonsterSpawnerView]
+        MV --> SVU
         GB --> PJV[ProjectileManagerView]
         GB --> MSMV[MagicSkillManagerView]
         GB --> MSV[MeteorStrikeManagerView]
@@ -78,7 +82,9 @@ graph TD
 | 카테고리 | 파일명 | 주요 클래스/인터페이스 | 설명 |
 | :--- | :--- | :--- | :--- |
 | **Config** | `.gitignore [UPDATED]` | - | Unity 표준 제외 규칙, Standalone 빌드 출력 폴더(`/Zxe/`, `/build/`), .NET 빌드 아티팩트(`**/bin/`, `**/obj/`), IDE/OS 캐시 파일 포괄적 무시 설정 |
-| **Entities** | `PlayerEntity.cs [UPDATED]` | `PlayerEntity` | 플레이어 순수 C# 엔티티 (스탯, 패시브, **`AttackPowerMultiplier` 공격력 배율 `SkillContext.BaseDamage` 실시간 완벽 동기화**, 스킬 틱/실행 관리) |
+| **Entities** | `PlayerEntity.cs [UPDATED]` | `PlayerEntity` | 플레이어 순수 C# 엔티티 (스탯, 패시브, **`AttackPowerMultiplier` 공격력 배율 `SkillContext.BaseDamage` 실시간 완벽 동기화**, 스킬 틱/실행 관리, **피격 히트박스 반경 Radius = 0.38f 미세 축소로 외곽 스치기 회피 쾌감 극대화**) |
+| | `MonsterType.cs [UPDATED]` | `MonsterType`, `MonsterDefinition` | **Phase 3 신규 몬스터 4종(망령 Wraith, 사령술사 Necromancer, 어보미네이션 Abomination, 사신 Reaper) 및 최종 보스 3(사령왕 리치 Boss3) 추가** |
+| | `MonsterSpawner.cs [UPDATED]` | `MonsterSpawner` | `SpawnBoss`에 `MonsterType type = MonsterType.Boss` 지원 (Boss 3 생성 연동) |
 | **Events** | `GemStoneEvents.cs [NEW]` | `GemStoneDroppedEvent`, `GemStoneCollectedEvent` | 보석(루비/에메랄드/아메시스트) 필드 드랍 및 자석 수집 알림 도메인 이벤트 |
 | | `AudioEvents.cs` | `SoundEffectType`, `PlaySoundEvent`, `PlayBgmEvent`, `StopBgmEvent` | 14종 SFX 및 BGM 재생 요청 도메인 이벤트 집합 |
 | | `MagicEvents.cs [UPDATED]` | `FrostNovaExecutedEvent`, `ChainLightningExecutedEvent`, `FireballExplodedEvent`, `MeteorStrikeExecutedEvent`, `MonsterShatteredEvent` | 마법사 서리 폭발, 연쇄 번개, 화염구 폭발, 메테오 낙하, 빙결 파괴 도메인 이벤트 집합 |
@@ -157,9 +163,16 @@ graph TD
 | **Effects** | `SlashHitVfxManagerView.cs [NEW]` | `SlashHitVfxManagerView` | **⚔️ 슬래시 타격 이펙트 매니저: 대검 베기 및 스킬로 적 피격 시 몬스터 위치에 날카로운 대각선 슬래시 컷 스파크(Diagonal Slash Spark & Glint, sortingOrder = 32)를 0.10초 동안 재생하여 극상의 베는 손맛/타격감(Juice) 제공 (32개 무할당 풀링)** |
 | | `CriticalHitVfxManagerView.cs [UPDATED]` | `CriticalHitVfxManagerView` | **황금빛 십자 섬광 + 8방향 스타버스트 크리티컬 스파크 VFX(sortingOrder = 35) 및 샌드박스 설정 연동 크리티컬 역경직(Hit-Stop) 트리거** |
 | | `HitStopManager.cs [UPDATED]` | `HitStopManager` | **GC Zero-Allocation Update 루프 타이머 기반 초경량 타격 역경직 매니저 (코루틴/가비지 압박 제거, 찰진 20% 슬로우모션 최적화)** |
-| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | 클래스별 외형 3단 분기, **플레이어 몸체(sortingOrder = 15) 및 무기(평상시 16, 스윙 시 30 동적 승격)**, **대검 베기 & 블러드 이터 부채꼴 각도(`ArcAngleDegrees`)에 연동된 동적 스윙 궤적(-halfArc ~ +halfArc) 및 100% 선명 회전(sortingOrder = 30)** |
-| | `MonsterSpawnerView.cs [UPDATED]` | `MonsterSpawnerView` | `MonsterDamagedEvent.IsCritical`을 `MonsterView.OnHitFeedback(evt.IsCritical)`로 전달, **보스 1/2 처치 후 페이즈별 웨이브 진행(`_phaseCtrl.Update`) 및 원거리 몬스터(흑기사/스켈레톤) 투사체 발사 제어 (402줄)** |
-| | `WavePhaseController.cs [UPDATED]` | `WavePhaseController` | **보스 1 처치 후 시간 경과(30s, 70s, 110s)에 따른 Phase 2 다채로운 몬스터 생태계(화염임프/독거미/흑기사/골렘/스켈레톤 조합) 순차 전개 및 Boss 2 스폰 제어 (124줄)** |
+| **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | 클래스별 외형 3단 분기, **플레이어 몸체(sortingOrder = 15) 및 무기(평상시 16, 스윙 시 30 동적 승격)**, **대검 베기 & 블러드 이터 부채꼴 각도(`ArcAngleDegrees`)에 연동된 동적 스윙 궤적(-halfArc ~ +halfArc) 및 100% 선명 회전(sortingOrder = 30)**, 피격 연출을 `PlayerHitFeedbackView`로 위임 분리 (480줄) |
+| | `PlayerHitFeedbackView.cs [NEW]` | `PlayerHitFeedbackView` | **💥 플레이어 피격 피드백(Hit Juice) 전담 컴포넌트: 화이트->크림슨 레드 2단계 듀얼 플래시(0.14초), 스쿼시&바운스 찌그러짐 탄성 애니메이션, 펀치 미세 카메라 셰이크(0.12초), 0-GC 2.5D 도트 피격 스파크 팝 (266줄)** |
+| | `PlayerDamageVignetteView.cs [NEW]` | `PlayerDamageVignetteView` | **🩸 화면 외곽 피격 비네트 UI: 피격 시 화면 모서리 붉은 펄스 페이드아웃(0.25초), HP 30% 이하 시 심장 박동(두근... 두근...) 위기 경고 고동, Blur 쉐이더 배제 0-GC 절차적 Radial Gradient 텍스처 1 DrawCall 모바일 60fps 무부하 보장 (148줄)** |
+| | `MonsterSpawnerView.cs [UPDATED]` | `MonsterSpawnerView` | `MonsterDamagedEvent.IsCritical`을 `MonsterView.OnHitFeedback(evt.IsCritical)`로 전달, **Phase 3 신규 몬스터 4종 및 최종 보스 3(사령왕 리치) 스폰, 사령술사 영혼탄 발사, 보스 3 처치 시 잔몹 전원 소멸 및 StageVictoryUiView 승리 트리거, 2중 사망감지 Fallback, JumpToPhase 즉시 웨이브/전장 점프 (479줄)** |
+| | `ArchLichPatternController.cs [NEW]` | `ArchLichPatternController` | **💀 최종 보스 3(사령왕 리치) 전용 3대 맹공 패턴 컨트롤러: 8방향 나선 회전 영혼 탄막 난사(2.2s), 3연속 쾌속 쐐기 암흑 참격파(4.2s), 망령2+사령술사1 언데드 군단 소환(9.0s), 45,000 HP & 80 위협적 접촉 대미지 (136줄)** |
+| | `WavePhaseController.cs [UPDATED]` | `WavePhaseController` | **보스 2 강림 시간 대폭 단축(45초) 및 3페이즈 15초 단위 신속 전개(총 60초) 스피디 페이즈 제어, JumpToPhase 페이즈 타이머 및 보스 격파 상태머신 즉시 동기화 (251줄)** |
+| | `Phase3MonsterSpriteHelper.cs [NEW]` | `Phase3MonsterSpriteHelper` | **2.5D 레트로 픽셀아트 생성기: 망령, 사령술사, 어보미네이션, 사신, 사령왕 리치, 저주 영혼탄 프로시저럴 스프라이트 생성기 (314줄)** |
+| **UI** | `StageVictoryUiView.cs [NEW]` | `StageVictoryUiView` | **🏆 최종 스테이지 승리 전용 UI: 독립 ScreenSpaceOverlay Canvas(sortingOrder = 120) 탑재로 100% 최상단 표시 보장, 오직 3보스 격파 승리자에게만 영구 성장 & 스킬 트리 독점 개방 (238줄)** |
+| | `GameOverResultUiView.cs [UPDATED]` | `GameOverResultUiView` | **사망(Game Over) 시 영구 성장 상점/스킬트리 접근 완전 차단, 오직 재도전만 가능하며 3보스 클리어 룰 안내 표시 (292줄)** |
+| | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **개발자 모드 토글 시 시작 페이즈(Phase 1, Phase 2, Phase 3) 원클릭 선택 버튼 제공 및 곧바로 해당 Phase로 출격 지원, 시작 전 스킬트리 버튼 잠금 처리 (462줄)** |
 | **Projectiles** | `ProjectileView.cs [UPDATED]` | `ProjectileManagerView`, `ProjectileView` | 관통 화살(Piercing Arrow, sortingOrder = 24), 황금빛 앰버 골드 일관 유지 (128개 사전 생성 Prewarm 및 0-Allocation 풀링) |
 | | `OrbitingBladeView.cs [UPDATED]` | `OrbitingBladeView` | 공통 수호의 검(sortingOrder = 22)으로 몬스터(10) 및 플레이어(15) 상단에서 선명하게 회전 |
 | | `WhirlwindManagerView.cs [UPDATED]` | `WhirlwindManagerView` | 전사 휠윈드 회전 검날(sortingOrder = 28) 및 바람 스파크(sortingOrder = 29)로 몬스터 상단에서 사이클론 폭풍 선명 연출 |
@@ -201,8 +214,8 @@ graph TD
 | | `TreasureChestManagerView.cs`| `TreasureChestManagerView` | 도메인 보물상자 매니저 업데이트 및 뷰 풀링 (상자 오픈/이벤트 종료 시 즉시 필드 디스폰) |
 | | `TreasureChestPopupView.cs [UPDATED]` | `TreasureChestPopupView` | 상자 획득 시 1~3개 스킬 보상 및 골드 획득 연출 팝업 (Space/Enter/1/2/3 키보드 즉시 확인) |
 | **UI** | `SettingsDialogUiView.cs` | `SettingsDialogUiView` | 3개 탭 종합 환경 설정 모달 다이얼로그 (자동/수동조준, 볼륨, UI스케일) |
-| | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **첫 시작 영웅 선택 화면**: 전사/궁수/마법사 3영웅 카드, 영웅 아바타 아이콘 비율 보존(`preserveAspect = true`) 적용으로 UI 찌그러짐 및 외곽선 왜곡 완전 방지, 🛠️ 개발자모드, 🧪 샌드박스, ⚙️ 환경설정, **🚪 게임 종료 버튼** (415줄) |
-| | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | [개발자 모드] 인게임 실시간 스킬(10종)/진화/패시브 원클릭 장착 및 **우클릭 즉시 Lv.0 해제/제거**, 치트(무적, 레벨업, 전멸, 배속 등) UI |
+| | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **첫 시작 영웅 선택 화면**: 전사/궁수/마법사 3영웅 카드, 영웅 아바타 아이콘 비율 보존(`preserveAspect = true`) 적용, 🛠️ 개발자모드 ON 시 **시작 페이즈(Phase 1/2/3) 선택 토글 버튼**, 🧪 샌드박스, ⚙️ 환경설정, **🚪 게임 종료 버튼** (462줄) |
+| | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | [개발자 모드] 인게임 실시간 스킬(10종)/진화/패시브 원클릭 장착 및 우클릭 해제, 치트(무적, 레벨업, 전멸, 배속 등), **1️⃣/2️⃣/3️⃣ Phase 1, 2, 3 즉시 점프 버튼 (468줄)** |
 | | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 (Combat Sandbox)** - 실시간 10종 스킬 + 9종 진화 스킬 + **🧬 9종 패시브 스킬 튜닝**, **💎 경험치 & 레벨업 시스템 튜닝**, **👾 7종 몬스터 + 보스 스탯**, **🎯 치명타 확률/배율 및 플레이어 코어 스탯 실시간 조절 및 프로젝트 내부 JSON 파일(`Assets/Config/skill_configs.json`) 영구 저장/GitHub 동기화 지원** |
 | | `SkillTuningUiBuilder.cs [UPDATED]` | `SkillTuningUiBuilder` | 샌드박스 모드 UI 요소 생성 전담 헬퍼 (**6대 대분류 카테고리 탭: 전사/궁수/마법사/패시브/공통/시스템**, 500줄 규칙 준수 모듈화) |
 | | `SkillTuningPassiveConfigurator.cs [NEW]` | `SkillTuningPassiveConfigurator` | **🧬 9종 패시브 스킬 샌드박스 슬라이더 행 생성 및 실시간 핫리로드 연동 전담 헬퍼 (흡혈귀의 이빨, 바람의 깃털, 마나 룬, 강철 갑옷, 황금 반지, 생명의 펜던트, 발화의 불꽃, 과전류의 핵, 치명타의 눈)** |
