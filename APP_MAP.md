@@ -42,6 +42,13 @@ graph TD
         GB --> SLA[SkillLiveApplier]
         GB --> STM[SkillTuningMemoryCache]
         GB --> DSU[DevSkillSelectorUiView]
+        GB --> CSU[CharacterSelectUiView]
+        CSU --> SSS[StartSkillSelectorView]
+        CSU --> CSP[CompanionSelectPreviewHelper]
+        GB --> CM[CompanionManagerView]
+        CM --> CV[CompanionView (Warrior & Ranger)]
+        GB --> STV[SkillTreeUiView (360° Arcane Dial)]
+        GB --> IGC[InGameGemCounterHudView (Gold & 3-Gems)]
     end
 
     subgraph Event & Decoupling
@@ -51,6 +58,7 @@ graph TD
     subgraph Pure C# Domain [HappyShoot.Domain]
         GSE[GameSessionEntity]
         PE[PlayerEntity & Passives]
+        CE[CompanionEntity (1/3 Scaling)]
         ME[MonsterEntity & Status Effects]
         MS[MonsterSpawner]
         TCE[TreasureChestEntity]
@@ -58,6 +66,8 @@ graph TD
         MSM[MetaShopManager]
         MSD[MetaUpgradeSaveData]
         MUA[MetaUpgradeApplier]
+        STMgr[SkillTreeManager]
+        STD[SkillTreeSaveData & ClearCount]
         SG[SpatialGrid2D]
         CS[CompositeSkill]
         LS[LevelSystem]
@@ -96,14 +106,15 @@ graph TD
 | | `LevelEvents.cs` | `PlayerLevelUpEvent`, `ExpGainedEvent` | 경험치 및 레벨업 이벤트 |
 | | `SessionEvents.cs` | `GameStateChangedEvent`, `SurvivalTimeUpdatedEvent`, `KillCountUpdatedEvent`, `GoldGainedEvent` | 세션 및 상태 전이 관련 도메인 이벤트 집합 |
 | | `EventBus.cs` | `EventBus` | 제네릭 타입 기반의 고성능 도메인 이벤트 버스 |
+| **Entities** | `CompanionEntity.cs [NEW]` | `CompanionEntity`, `CompanionType` | **AI 동료 순수 도메인 엔티티: 전사/궁수 타입, 마법사 본체 스탯 실시간 연동, 기본 데미지 1/3 (0.333x) 스케일링, 쿨타임 관리 (68줄)** |
 | **Gems** | `GemStoneEntity.cs [NEW]` | `GemStoneEntity` | 보석 3종(루비/에메랄드/아메시스트) 필드 드랍 엔티티 (0-GC 풀링, 자석 흡수) |
 | | `GemManager.cs [UPDATED]` | `GemManager` | 경험치 보석 + 영구 성장 보석 통합 풀링 관리자 (일반몹 1% 드랍, 보스 확정 5개 드랍) |
 | **Progression** | `GemType.cs [NEW]` | `GemType`, `BranchType`, `GemTypeExtensions` | 보석 3종 및 속성 분기 3종(화염/빙결/전기) 정의 및 유틸리티 |
-| | `SkillTreeNodeDef.cs [NEW]` | `SkillTreeNodeDef`, `NodeEffectType` | 54개 노드 정의 및 불변 데이터 모델 |
-| | `SkillTreeSaveData.cs [NEW]` | `SkillTreeSaveData`, `SerializableDict` | 보석 지갑, 노드 레벨, 각성 분기 직렬화 세이브 데이터 |
+| | `SkillTreeNodeDef.cs [UPDATED]` | `SkillTreeNodeDef`, `NodeEffectType` | **GoldCost 필드 추가 (150G~1,500G) 및 18개 마법사 노드 불변 데이터 모델 (111줄)** |
+| | `SkillTreeSaveData.cs [UPDATED]` | `SkillTreeSaveData`, `SerializableDict` | **영구 성장용 GoldCount 지갑 및 TrySpendGold, AddGold 헬퍼 추가 (158줄)** |
 | | `PlayerProgressionFlags.cs [NEW]` | `PlayerProgressionFlags` | 0-GC 전투 시스템 참조용 속성 특화 효과 플래그 구조체 |
-| | `SkillTreeManager.cs [NEW]` | `SkillTreeManager`, `ISkillTreeStorage` | 보석 스킬 트리 핵심 매니저 (해금, 2:1 교환, 배타적 각성, 50% 환불 리셋) |
-| | `SkillTreeRegistry.cs [NEW]` | `SkillTreeRegistry` | 3대 클래스 × 18노드 (총 54노드) 정적 팩토리 레지스트리 |
+| | `SkillTreeManager.cs [UPDATED]` | `SkillTreeManager`, `ISkillTreeStorage` | **골드(Gold) 기반 노드 해금 및 50% 골드 환불 각성 리셋 매니저 (275줄)** |
+| | `SkillTreeRegistry.cs [UPDATED]` | `SkillTreeRegistry` | **마법사 Only 전용 18개 노드 단독 등록 및 골드 비용(코어 150~500G, 원소 분기 300~1500G) 밸런싱 (133줄)** |
 | | `SkillTreeApplier.cs [NEW]` | `SkillTreeApplier` | 해금 노드들을 CharacterStats 및 PlayerProgressionFlags로 변환 |
 | **Meta** | `MetaShopManager.cs` | `MetaShopManager` | (구 시스템 호환 유지) 영구 강화 구매/100% 무료 환불 관리자 |
 | | `MetaUpgradeDefinition.cs` | `MetaUpgradeDefinition`, `MetaUpgradeSaveData` | 8종 영구 강화 항목 정의 및 세이브 데이터 구조체 |
@@ -134,7 +145,7 @@ graph TD
 | | `SkillEvolutionRecipe.cs` | `SkillEvolutionRecipe` | 9대 스킬 진화 레시피 정의 |
 | **Entities** | `PlayerEntity.cs [UPDATED]` | `PlayerEntity`, `ISpatialEntity` | 플레이어 도메인 로직, `RollDamage(float rawDamage)` 크리티컬 롤러 제공 |
 | | `CharacterStats.cs [UPDATED]` | `CharacterStats` | **기본 크리티컬 확률 10% (0.10f)**, 치명타 피해량(1.5x), 이동속도, 공격력, 방어력, 쿨감 등 종합 스탯 |
-| | `PlayerClassFactory.cs [UPDATED]` | `PlayerClassFactory`, `CharacterClassType` | 전사/마법사 기본 크리 10%, 궁수 기본 크리 20% 및 전용 크리 배율(1.75x) 팩토리 |
+| | `PlayerClassFactory.cs [UPDATED]` | `PlayerClassFactory`, `CharacterClassType` | 전사/마법사 기본 크리 10%, 궁수 기본 크리 20% 및 **마법사 생성 시 startSkillId(fireball, frost_nova, chain_lightning)에 따른 시작 스킬 분기 지원 (140줄)** |
 | | `MonsterEntity.cs [UPDATED]` | `MonsterEntity` | 몬스터 도메인 로직, `TakeDamage(float damage, bool isCritical = false)` 및 원거리 AI 타이머 지원 |
 | | `MonsterType.cs [UPDATED]`| `MonsterType`, `MonsterDefinition` | **흑기사(DarkKnight) 원거리 암흑 검기 공격 속성(`isRanged: true, preferredDistance: 4.8f, attackInterval: 2.5f`)** 및 7종 일반 몬스터/보스 아키타입 정의 |
 | **Editor / CI/CD** | `BuildScript.cs [NEW]` | `BuildScript` | **GitHub Actions CI/CD 배치모드 헤드리스 빌드 자동화 스크립트** (`BuildWindows()`, SampleScene 자동 수집, BuildReport 검증 및 종료코드 반환) (90줄) |
@@ -172,7 +183,8 @@ graph TD
 | | `Phase3MonsterSpriteHelper.cs [NEW]` | `Phase3MonsterSpriteHelper` | **2.5D 레트로 픽셀아트 생성기: 망령, 사령술사, 어보미네이션, 사신, 사령왕 리치, 저주 영혼탄 프로시저럴 스프라이트 생성기 (314줄)** |
 | **UI** | `StageVictoryUiView.cs [NEW]` | `StageVictoryUiView` | **🏆 최종 스테이지 승리 전용 UI: 독립 ScreenSpaceOverlay Canvas(sortingOrder = 120) 탑재로 100% 최상단 표시 보장, 오직 3보스 격파 승리자에게만 영구 성장 & 스킬 트리 독점 개방 (238줄)** |
 | | `GameOverResultUiView.cs [UPDATED]` | `GameOverResultUiView` | **사망(Game Over) 시 영구 성장 상점/스킬트리 접근 완전 차단, 오직 재도전만 가능하며 3보스 클리어 룰 안내 표시 (292줄)** |
-| | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **개발자 모드 토글 시 시작 페이즈(Phase 1, Phase 2, Phase 3) 원클릭 선택 버튼 제공 및 곧바로 해당 Phase로 출격 지원, 시작 전 스킬트리 버튼 잠금 처리 (462줄)** |
+| | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **🧙‍♂️ 마법사 Only 메인 메뉴: 대형 마법사 아바타 프리뷰 + 시작 기본 마법 3종 선택기(StartSkillSelectorView) 연동 + '🔥 게임 시작' 단일 대형 버튼 + '⚒️ 마법 대장간' 진입 버튼, 5인자 콜백(startSkillId 전달) 지원 (446줄)** |
+| | `StartSkillSelectorView.cs [NEW]` | `StartSkillSelectorView` | **🔮 마법사 시작 기본 마법 선택 UI: 🔥 화염구 / ❄️ 서리 폭발 / ⚡ 연쇄 번개 3종 실시간 원클릭 선택, 선택 테두리/배경 하이라이트, 실시간 스킬/스탯 상세 설명, PlayerPrefs 기억, 500줄 규칙 준수 분리 모듈 (249줄)** |
 | **Projectiles** | `ProjectileView.cs [UPDATED]` | `ProjectileManagerView`, `ProjectileView` | 관통 화살(Piercing Arrow, sortingOrder = 24), 황금빛 앰버 골드 일관 유지 (128개 사전 생성 Prewarm 및 0-Allocation 풀링) |
 | | `OrbitingBladeView.cs [UPDATED]` | `OrbitingBladeView` | 공통 수호의 검(sortingOrder = 22)으로 몬스터(10) 및 플레이어(15) 상단에서 선명하게 회전 |
 | | `WhirlwindManagerView.cs [UPDATED]` | `WhirlwindManagerView` | 전사 휠윈드 회전 검날(sortingOrder = 28) 및 바람 스파크(sortingOrder = 29)로 몬스터 상단에서 사이클론 폭풍 선명 연출 |
@@ -194,18 +206,21 @@ graph TD
 | | `BackgroundTileView.cs [NEW]` | `BackgroundTileView` | 개별 배경 타일 렌더러 (SpriteRenderer sortingOrder = -100) |
 | | `BackgroundAmbientDustView.cs [NEW]` | `BackgroundAmbientDustView` | 던전 바닥 은은한 공기 먼지/부유 입자 파티클 시각화 |
 | **Projectiles & Spells** | `MeteorStrikeManagerView.cs [UPDATED]` | `MeteorStrikeManagerView` | **메테오 스트라이크 비주얼 대격변: 주변 붉은 번짐 절반 이하(`radius * 0.85f`) 축소, 황금빛 광선 림, 착탄 노바 섬광(Nova Flash), 지면 마그마 크레이터 룬, 중력 가속 혜성 꼬리 연출** |
-| **Bootstrap** | `GameBootstrap.cs [UPDATED]` | `GameBootstrap` | 마스터 부트스트랩 (카메라, 3영웅, 사운드 매니저, 마법 스킬 매니저, 메테오 매니저, **보석 스킬 트리 매니저 & UI, GemStoneManagerView, HUD 보석 카운터**, 세션, UI 일괄 생성 및 연동) |
+| **Bootstrap** | `GameBootstrap.cs [UPDATED]` | `GameBootstrap` | 마스터 부트스트랩 (**마법사 Only 모드: `_selectedClass = Wizard` 고정**, 카메라, 사운드, 메테오, 보석 스킬트리, **AI 동료 매니저(CompanionManagerView)**, 세션, UI 일괄 생성 및 연동, 399줄) |
+| **Companions** | `CompanionView.cs [UPDATED]` | `CompanionView` | **AI 동료 시각화 및 전투 AI 뷰: 완전 독립 AI 캐릭터(마법사에 딸려가지 않음, 근처 몹을 스스로 찾아가 공격), 마법사가 6m 이상 멀어졌을 때만 마법사 걷는 속도(wizardMoveSpeed) 1:1 일치로 정속 재합류, 이동 방향 5방향 스프라이트 즉시 전환 + 무기 연동 젤리 보빙(hop 0.14f, squashY 0.10f)으로 미끄러짐 완전 박멸, 플레이어 동일 대검 스윙 (449줄)** |
+| | `CompanionManagerView.cs [NEW]` | `CompanionManagerView` | **AI 동료 생명주기 관리자: 스테이지 클리어 회차(1회차 전사, 2회차 궁수) 기반 자동 스폰 및 개발자 모드 실시간 토글 API 제공 (122줄)** |
+| | `CompanionSelectPreviewHelper.cs [NEW]` | `CompanionSelectPreviewHelper` | **메인 메뉴 3인 원정대 프리뷰 렌더러: 마법사 좌우 호위 전사/궁수 카드 렌더링, 미해금 시 실루엣 + 락 뱃지 연출 (121줄)** |
 | **Gems** | `GemStoneView.cs [NEW]` | `GemStoneView`, `GemStoneManagerView` | 필드에 스폰된 보석 3종(루비/에메랄드/아메시스트) 렌더링, 펄스 애니메이션, 0-GC 풀링 |
-| **Skill Tree** | `SkillTreeUiView.cs [UPDATED]` | `SkillTreeUiView` | **🌌 360도 방사형 원형 성좌(Radial Constellation) 스킬 트리 메인 화면** (중앙 기원 허브, 3대 클래스 120° 섹터 동시 렌더링, 54개 노드 인터랙션, 우측 상세 인스펙터 패널, ESC/뒤로가기 지원) |
+| **Skill Tree** | `SkillTreeUiView.cs [UPDATED]` | `SkillTreeUiView` | **🌌 대마법사 비전 성좌 메인 화면: 마법사 Only 단일 360° 대형 원형 성좌(18노드), 💰 골드 재화 UI, 우측 상세 인스펙터 패널, 50% 골드 환불 리셋 (465줄)** |
 | | `SkillTreeExchangePopupView.cs [NEW]` | `SkillTreeExchangePopupView` | **💎 2:1 보석 교환소 모달 팝업** (루비/에메랄드/아메시스트 상호 6방향 변환 다이얼로그) |
 | | `SkillTreeBackgroundHelper.cs [NEW]` | `SkillTreeBackgroundHelper` | **🌌 512x512 고대 천구 석판 다이얼 및 4중 동심원 룬 궤도 홈 프로시저럴 텍스처 생성기** |
-| | `SkillTreeNodeView.cs [NEW]` | `SkillTreeNodeView` | 개별 스킬 트리 노드 UI 버튼 및 상태 뷰어 (원형 룬 뱃지, 속성 아이콘, 비용/레벨, 해금 콜백) |
-| | `SkillTreeLayoutHelper.cs [UPDATED]` | `SkillTreeLayoutHelper` | **중앙 엠블럼 기준 120도(Warrior 90°, Ranger 330°, Wizard 210°) 극좌표(r, theta) 방사형 배치 및 120° 섹터 구분선(Ray) 렌더링** |
+| | `SkillTreeNodeView.cs [UPDATED]` | `SkillTreeNodeView` | **개별 스킬 트리 노드 UI 버튼: 원형 룬 뱃지, 속성 아이콘, 하단 필요 골드(GoldCost G) 표기, 상태 뷰어 (105줄)** |
+| | `SkillTreeLayoutHelper.cs [UPDATED]` | `SkillTreeLayoutHelper` | **마법사 360° 대칭 비전 성좌(화염 90°, 빙결 210°, 전격 330°) 극좌표계 배치 및 120° 디바이더 레이저 렌더링 (150줄)** |
 | | `SkillTreeSpriteHelper.cs [UPDATED]` | `SkillTreeSpriteHelper` | **원형 룬 젬 뱃지 4종(해금/가능/잠김/차단)**, 중앙 황금 룬 허브 텍스처, 보석 3종, 속성 아이콘(🔥❄️⚡) 프로시저럴 픽셀아트 생성기 |
 | | `JsonSkillTreeStorage.cs [NEW]` | `JsonSkillTreeStorage` | Unity PlayerPrefs JSON 기반 스킬 트리 세이브 데이터 영구 저장소 |
 | **Shop** | `MetaShopUiView.cs` | `MetaShopUiView`, `JsonPlayerPrefsStorage` | (구 시스템) 8종 영구 강화 카드 목록 상점 UI |
 | | `GameOverResultUiView.cs [UPDATED]` | `GameOverResultUiView` | 플레이어 사망 시 골드 + **💎 3종 보석 영구 저장소 자동 적립**, 런 통계창, **[💎 스킬 트리 (영구 성장)]** 및 [PLAY AGAIN] 연동 |
-| **UI** | `InGameGemCounterHudView.cs [NEW]` | `InGameGemCounterHudView` | 인게임 상단에 실시간으로 이번 런에서 획득한 보석 3종(🔴 루비, 🟢 에메랄드, 🟣 아메시스트) 수집 카운터 표시 |
+| **UI** | `InGameGemCounterHudView.cs [UPDATED]` | `InGameGemCounterHudView` | **인게임 상단 일체형 전리품 HUD: 💰 획득 금화(Gold) 및 3종 보석(🔴 루비, 🟢 에메랄드, 🟣 아메시스트) 실시간 수집 현황 캡슐 바 표시, 캔버스 자동 부착 및 런 통계 추적 (130줄)** |
 | **Skills & Evolutions** | `OrbitingBladeView.cs` | `OrbitingBladeView` | 플레이어 주위를 원형 회전하는 공통 오비탈 칼날 시각화 (실시간 생성 및 칼날 수/반경 동기화) |
 | | `EvolutionPopupView.cs` | `EvolutionPopupView` | 스킬 진화 성공 시 상단에 등장하는 축하 배너 팝업 및 자동 생성 |
 | | `LevelUpUiView.cs [UPDATED]` | `LevelUpUiView` | **레벨업 시 320x460 대형 카드 및 80x80 픽셀아트 아이콘 3지선다 보상 선택 UI (Unity New Input System 연동: Q/W/E 위 1, 2, 3 숫자키 및 마우스 클릭 즉시 선택 지원)** |
@@ -214,8 +229,9 @@ graph TD
 | | `TreasureChestManagerView.cs`| `TreasureChestManagerView` | 도메인 보물상자 매니저 업데이트 및 뷰 풀링 (상자 오픈/이벤트 종료 시 즉시 필드 디스폰) |
 | | `TreasureChestPopupView.cs [UPDATED]` | `TreasureChestPopupView` | 상자 획득 시 1~3개 스킬 보상 및 골드 획득 연출 팝업 (Space/Enter/1/2/3 키보드 즉시 확인) |
 | **UI** | `SettingsDialogUiView.cs` | `SettingsDialogUiView` | 3개 탭 종합 환경 설정 모달 다이얼로그 (자동/수동조준, 볼륨, UI스케일) |
-| | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **첫 시작 영웅 선택 화면**: 전사/궁수/마법사 3영웅 카드, 영웅 아바타 아이콘 비율 보존(`preserveAspect = true`) 적용, 🛠️ 개발자모드 ON 시 **시작 페이즈(Phase 1/2/3) 선택 토글 버튼**, 🧪 샌드박스, ⚙️ 환경설정, **🚪 게임 종료 버튼** (462줄) |
-| | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | [개발자 모드] 인게임 실시간 스킬(10종)/진화/패시브 원클릭 장착 및 우클릭 해제, 치트(무적, 레벨업, 전멸, 배속 등), **1️⃣/2️⃣/3️⃣ Phase 1, 2, 3 즉시 점프 버튼 (468줄)** |
+| | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **🧙‍♂️ 마법사 메인 메뉴**: 대형 마법사 단독 프리뷰 + **3인 원정대 좌우 동료/실루엣 프리뷰(CompanionSelectPreviewHelper)**, 시작 마법 선택기 탑재, '🔥 게임 시작' 버튼, 🛠️ 개발자모드/샌드박스/설정 (449줄) |
+| | `StartSkillSelectorView.cs [NEW]` | `StartSkillSelectorView` | **🔮 마법사 시작 기본 마법 선택 UI**: 🔥 화염구, ❄️ 서리 폭발, ⚡ 연쇄 번개 3종 버튼 및 아이콘 렌더링, 선택 상태 시각적 하이라이트(골드 림/퍼플 글로우), 선택된 스킬 상세/스탯 설명 실시간 갱신, 이전 선택 PlayerPrefs 자동 복원 (249줄) |
+| | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | [개발자 모드] 실시간 스킬(10종)/진화/패시브 원클릭 장착 및 해제, 치트(무적, 레벨업, 전멸, 배속 등), Phase 점프, **🛡️ 전사 동료 / 🏹 궁수 동료 실시간 소환/해제 치트 버튼 탑재 (489줄)** |
 | | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 (Combat Sandbox)** - 실시간 10종 스킬 + 9종 진화 스킬 + **🧬 9종 패시브 스킬 튜닝**, **💎 경험치 & 레벨업 시스템 튜닝**, **👾 7종 몬스터 + 보스 스탯**, **🎯 치명타 확률/배율 및 플레이어 코어 스탯 실시간 조절 및 프로젝트 내부 JSON 파일(`Assets/Config/skill_configs.json`) 영구 저장/GitHub 동기화 지원** |
 | | `SkillTuningUiBuilder.cs [UPDATED]` | `SkillTuningUiBuilder` | 샌드박스 모드 UI 요소 생성 전담 헬퍼 (**6대 대분류 카테고리 탭: 전사/궁수/마법사/패시브/공통/시스템**, 500줄 규칙 준수 모듈화) |
 | | `SkillTuningPassiveConfigurator.cs [NEW]` | `SkillTuningPassiveConfigurator` | **🧬 9종 패시브 스킬 샌드박스 슬라이더 행 생성 및 실시간 핫리로드 연동 전담 헬퍼 (흡혈귀의 이빨, 바람의 깃털, 마나 룬, 강철 갑옷, 황금 반지, 생명의 펜던트, 발화의 불꽃, 과전류의 핵, 치명타의 눈)** |

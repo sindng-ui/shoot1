@@ -120,12 +120,18 @@ namespace HappyShoot.View.UI
 
                 if (_goldEarnedText != null)
                 {
-                    _goldEarnedText.text = $"💰 획득한 골드: {_gameSession.GoldEarned} (패배로 회수 불가)";
+                    _goldEarnedText.text = $"💰 획득한 전리품 골드: +{_gameSession.GoldEarned} G (저장 완료)";
+                }
+
+                // Settle gold into permanent SkillTree storage even on game over
+                if (_skillTreeManager != null && _gameSession.GoldEarned > 0)
+                {
+                    _skillTreeManager.AddGold(_gameSession.GoldEarned);
                 }
 
                 if (_gemsEarnedText != null)
                 {
-                    _gemsEarnedText.text = "🔒 영구 성장은 오직 3보스 클리어 시에만 개방됩니다!";
+                    _gemsEarnedText.text = "🔒 영구 성장(스킬트리)은 3보스 클리어 시 개방됩니다!";
                 }
             }
 

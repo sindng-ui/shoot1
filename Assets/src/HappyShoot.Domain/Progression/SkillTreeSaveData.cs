@@ -16,6 +16,20 @@ namespace HappyShoot.Domain.Progression
         public int EmeraldCount;
         public int AmethystCount;
 
+        /// <summary>Permanent gold currency for skill tree progression.</summary>
+        public int GoldCount;
+
+        /// <summary>Total stage/boss victory clear count.</summary>
+        public int ClearCount;
+
+        public bool IsWarriorUnlocked => ClearCount >= 1;
+        public bool IsRangerUnlocked => ClearCount >= 2;
+
+        public void IncrementClearCount()
+        {
+            ClearCount++;
+        }
+
         /// <summary>Node ID → unlocked level (0 = locked).</summary>
         public SerializableDict NodeLevels = new SerializableDict();
 
@@ -23,6 +37,23 @@ namespace HappyShoot.Domain.Progression
         public int WarriorBranch;
         public int RangerBranch;
         public int WizardBranch;
+
+        // ── Gold wallet helpers ──
+
+        public int GetGold() => GoldCount;
+
+        public void AddGold(int amount)
+        {
+            GoldCount = Math.Max(0, GoldCount + amount);
+        }
+
+        public bool TrySpendGold(int amount)
+        {
+            if (amount <= 0) return true;
+            if (GoldCount < amount) return false;
+            GoldCount -= amount;
+            return true;
+        }
 
         // ── Gem wallet helpers (zero-allocation) ──
 

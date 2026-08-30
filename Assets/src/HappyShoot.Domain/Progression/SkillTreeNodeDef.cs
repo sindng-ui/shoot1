@@ -73,6 +73,7 @@ namespace HappyShoot.Domain.Progression
         public readonly string Description;
         public readonly GemType GemType;
         public readonly int GemCost;
+        public readonly int GoldCost;
         public readonly int MaxLevel;
         public readonly BranchType Branch;
         public readonly NodeEffectType EffectType;
@@ -90,13 +91,15 @@ namespace HappyShoot.Domain.Progression
             BranchType branch,
             NodeEffectType effectType,
             float effectValue,
-            string[] prerequisiteIds = null)
+            string[] prerequisiteIds = null,
+            int goldCost = 0)
         {
             Id = id;
             Title = title;
             Description = description;
             GemType = gemType;
             GemCost = gemCost;
+            GoldCost = goldCost > 0 ? goldCost : (gemCost > 0 ? gemCost * 50 : 100);
             MaxLevel = maxLevel;
             Branch = branch;
             EffectType = effectType;

@@ -145,11 +145,11 @@ namespace HappyShoot.View.Player
             _lastPos = transform.position;
         }
 
-        public void SetClassType(CharacterClassType classType)
+        public void SetClassType(CharacterClassType classType, string startSkillId = null)
         {
             _classType = classType;
             Vector2D currentPos = _entity != null ? _entity.Position : new Vector2D(transform.position.x, transform.position.y);
-            _entity = PlayerClassFactory.CreatePlayer(1, _classType, currentPos, _eventBus);
+            _entity = PlayerClassFactory.CreatePlayer(1, _classType, currentPos, _eventBus, startSkillId);
 
             _slashVisualTimer = 0f;
             _rangerRecoilTimer = 0f;

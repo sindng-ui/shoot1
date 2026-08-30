@@ -9,21 +9,19 @@ using HappyShoot.View.Utils;
 namespace HappyShoot.View.SkillTree
 {
     /// <summary>
-    /// Master 360° Radial Constellation Skill Tree progression screen.
-    /// Features 3 heroes sharing a single unified circular celestial map (120° sector each),
-    /// central origin hub, live 2:1 gem exchange, and elemental branch awakening/reset.
+    /// Master Arcane Constellation Skill Tree Progression Screen (Wizard-Only).
+    /// Features an expansive 360° celestial map with 18 Wizard nodes (6 Core + 3 Elemental Branches),
+    /// persistent Gold currency wallet, and elemental branch awakening/50% refund reset.
     /// Strictly modular and under 500 lines.
     /// </summary>
     public class SkillTreeUiView : MonoBehaviour
     {
         private SkillTreeManager _manager;
-        private CharacterClassType _selectedClass = CharacterClassType.Warrior;
+        private CharacterClassType _selectedClass = CharacterClassType.Wizard;
 
         private GameObject _panelRoot;
         private Transform _treeContainer;
-        private Text _rubyText;
-        private Text _emeraldText;
-        private Text _amethystText;
+        private Text _goldText;
         private Text _awakeningStatusText;
         private Button _resetAwakeningBtn;
 
@@ -35,11 +33,8 @@ namespace HappyShoot.View.SkillTree
         private Button _unlockBtn;
         private SkillTreeNodeDef _selectedNode;
 
-        // Exchange popup component
-        private SkillTreeExchangePopupView _exchangePopup;
-
-        private readonly List<SkillTreeNodeView> _activeNodeViews = new List<SkillTreeNodeView>(64);
-        private readonly List<GameObject> _activeLines = new List<GameObject>(64);
+        private readonly List<SkillTreeNodeView> _activeNodeViews = new List<SkillTreeNodeView>(32);
+        private readonly List<GameObject> _activeLines = new List<GameObject>(32);
 
         public SkillTreeManager Manager => _manager;
         public event Action OnSkillTreeClosed;
@@ -83,20 +78,13 @@ namespace HappyShoot.View.SkillTree
 
             if (escPressed)
             {
-                if (_exchangePopup != null && _exchangePopup.gameObject.activeSelf)
-                {
-                    _exchangePopup.gameObject.SetActive(false);
-                }
-                else
-                {
-                    Hide();
-                }
+                Hide();
             }
         }
 
-        public void Show(CharacterClassType defaultClass = CharacterClassType.Warrior)
+        public void Show(CharacterClassType defaultClass = CharacterClassType.Wizard)
         {
-            _selectedClass = defaultClass;
+            _selectedClass = CharacterClassType.Wizard;
             EnsureUiElements();
             _panelRoot.SetActive(true);
             RefreshAll();
@@ -108,10 +96,6 @@ namespace HappyShoot.View.SkillTree
             {
                 _panelRoot.SetActive(false);
             }
-            if (_exchangePopup != null)
-            {
-                _exchangePopup.gameObject.SetActive(false);
-            }
             OnSkillTreeClosed?.Invoke();
         }
 
@@ -119,15 +103,16 @@ namespace HappyShoot.View.SkillTree
         {
             if (_panelRoot == null || !_panelRoot.activeSelf) return;
 
-            // 1. Update Gem Wallets
-            if (_rubyText != null) _rubyText.text = $"🔴 {_manager.GetGemCount(GemType.Ruby)}";
-            if (_emeraldText != null) _emeraldText.text = $"🟢 {_manager.GetGemCount(GemType.Emerald)}";
-            if (_amethystText != null) _amethystText.text = $"🟣 {_manager.GetGemCount(GemType.Amethyst)}";
+            // 1. Update Gold Wallet
+            if (_goldText != null && _manager != null)
+            {
+                _goldText.text = $"💰 보유 금화: {_manager.GetGoldCount():N0} G";
+            }
 
             // 2. Update Awakening Status
             UpdateAwakeningStatus();
 
-            // 3. Rebuild 360° Radial Constellation
+            // 3. Rebuild 360° Master Arcane Constellation
             RebuildTreeView();
 
             // 4. Update Detail Panel
@@ -136,21 +121,19 @@ namespace HappyShoot.View.SkillTree
 
         private void UpdateAwakeningStatus()
         {
-            if (_awakeningStatusText == null) return;
+            if (_awakeningStatusText == null || _manager == null) return;
 
             var awakened = _manager.GetAwakenedBranch(_selectedClass);
-            string className = _selectedClass == CharacterClassType.Warrior ? "전사" :
-                               _selectedClass == CharacterClassType.Ranger ? "궁수" : "마법사";
 
             if (awakened == BranchType.None)
             {
-                _awakeningStatusText.text = $"[{className}] 속성 각성: [미각성] (분기 첫 노드 해금 시 선택)";
+                _awakeningStatusText.text = "속성 각성: [미각성] (분기 첫 노드 해금 시 선택)";
                 _awakeningStatusText.color = new Color(0.8f, 0.8f, 0.8f);
                 if (_resetAwakeningBtn != null) _resetAwakeningBtn.gameObject.SetActive(false);
             }
             else
             {
-                _awakeningStatusText.text = $"[{className}] 속성 각성: [{awakened.GetBranchDisplayName()} 각성 중]";
+                _awakeningStatusText.text = $"속성 각성: [{awakened.GetBranchDisplayName()} 각성 중]";
                 _awakeningStatusText.color = new Color(1.0f, 0.85f, 0.2f);
                 if (_resetAwakeningBtn != null) _resetAwakeningBtn.gameObject.SetActive(true);
             }
@@ -163,19 +146,23 @@ namespace HappyShoot.View.SkillTree
             for (int i = 0; i < _activeNodeViews.Count; i++) Destroy(_activeNodeViews[i].gameObject);
             _activeNodeViews.Clear();
 
-            // 1. Sector Divider Rays (at 30°, 150°, 270°)
+            if (_manager == null) return;
+
+            // 1. Sector Divider Rays (120° intervals)
             SkillTreeLayoutHelper.CreateSectorDividers(_treeContainer);
 
-            // 2. Central Golden Core Emblem (Origin)
+            // 2. Central Arcane Core Emblem (Origin)
             CreateCentralHub();
 
-            // 3. Spawn Sector Titles
+            // 3. Spawn 3 Elemental Spire Labels
             CreateSectorLabels();
 
-            // 4. Spawn all 54 Nodes across the 360° tree
+            // 4. Spawn all Wizard Nodes across the 360° tree
             foreach (var kvp in _manager.NodeDefs)
             {
                 var def = kvp.Value;
+                if (def.ClassType != CharacterClassType.Wizard) continue;
+
                 var nodeGo = new GameObject($"Node_{def.Id}");
                 nodeGo.transform.SetParent(_treeContainer, false);
                 var view = nodeGo.AddComponent<SkillTreeNodeView>();
@@ -234,33 +221,33 @@ namespace HappyShoot.View.SkillTree
             var hubGo = new GameObject("CentralHub");
             hubGo.transform.SetParent(_treeContainer, false);
             var rt = hubGo.AddComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(74, 74);
+            rt.sizeDelta = new Vector2(76, 76);
             rt.anchoredPosition = Vector2.zero;
 
             var img = hubGo.AddComponent<Image>();
-            img.sprite = SkillTreeSpriteHelper.GetOrCreateCentralHubSprite(74);
+            img.sprite = SkillTreeSpriteHelper.GetOrCreateCentralHubSprite(76);
 
-            var txt = CreateText(hubGo.transform, "👑\n기원", Vector2.zero, 13, new Color(0.20f, 0.15f, 0.05f));
+            var txt = CreateText(hubGo.transform, "🔮\n마력 코어", Vector2.zero, 12, new Color(0.20f, 0.15f, 0.05f));
             txt.fontStyle = FontStyle.Bold;
         }
 
         private void CreateSectorLabels()
         {
-            // Warrior (Top: 90°)
-            CreateSectorLabel("🗡️ 전사 (루비)", new Vector2(0, 485), new Color(1.0f, 0.50f, 0.50f));
-            // Ranger (Bottom-Right: 330°)
-            CreateSectorLabel("🏹 궁수 (에메랄드)", new Vector2(420, -250), new Color(0.45f, 1.0f, 0.55f));
-            // Wizard (Bottom-Left: 210°)
-            CreateSectorLabel("🔮 마법사 (아메시스트)", new Vector2(-420, -250), new Color(0.92f, 0.55f, 1.0f));
+            // Fire Spire (Top: 90°)
+            CreateSectorLabel("🔥 인페르노 화염 대마법사", new Vector2(0, 485), new Color(1.0f, 0.50f, 0.40f));
+            // Ice Spire (Bottom-Left: 210°)
+            CreateSectorLabel("❄️ 절대영도 빙결 비전", new Vector2(-420, -250), new Color(0.50f, 0.85f, 1.0f));
+            // Lightning Spire (Bottom-Right: 330°)
+            CreateSectorLabel("⚡ 폭풍현자 전격 비전", new Vector2(420, -250), new Color(0.92f, 0.65f, 1.0f));
         }
 
         private void CreateSectorLabel(string title, Vector2 pos, Color color)
         {
-            var go = CreateUiObject("SectorLabel", _treeContainer, pos, new Vector2(240, 36));
+            var go = CreateUiObject("SectorLabel", _treeContainer, pos, new Vector2(280, 36));
             var txt = go.AddComponent<Text>();
             txt.font = FontHelper.GetKoreanFont();
             txt.text = title;
-            txt.fontSize = 18;
+            txt.fontSize = 17;
             txt.fontStyle = FontStyle.Bold;
             txt.color = color;
             txt.alignment = TextAnchor.MiddleCenter;
@@ -270,7 +257,6 @@ namespace HappyShoot.View.SkillTree
         private void OnNodeClicked(SkillTreeNodeDef def)
         {
             _selectedNode = def;
-            _selectedClass = def.ClassType;
             RefreshDetailPanel();
             UpdateAwakeningStatus();
         }
@@ -282,7 +268,7 @@ namespace HappyShoot.View.SkillTree
             if (_selectedNode == null)
             {
                 _detailTitleText.text = "💡 노드를 선택하세요";
-                _detailDescText.text = "원형 성좌의 노드를 클릭하면\n상세 효과와 해금 버튼이 표시됩니다.\n\n중앙 6개는 기본 스탯 노드이며,\n바깥 3개 분기(화염/빙결/전기)는\n첫 해금 시 해당 속성으로 각성됩니다.";
+                _detailDescText.text = "360° 비전 성좌의 노드를 클릭하면\n상세 효과와 해금 버튼이 표시됩니다.\n\n중앙 6개는 영구 기본 스탯 노드이며,\n바깥 3대 원소 분기(화염/빙결/전기)는\n첫 해금 시 해당 속성으로 각성됩니다.";
                 _detailCostText.text = "선택된 노드 없음";
                 _detailCostText.color = Color.gray;
                 _unlockBtn.interactable = false;
@@ -311,7 +297,7 @@ namespace HappyShoot.View.SkillTree
             }
             else
             {
-                _detailCostText.text = $"필요: {_selectedNode.GemType.GetDisplayName()} {_selectedNode.GemCost}개";
+                _detailCostText.text = $"필요 금화: {_selectedNode.GoldCost:N0} G";
                 _detailCostText.color = canUnlock ? new Color(1.0f, 0.9f, 0.3f) : new Color(0.7f, 0.7f, 0.7f);
                 _unlockBtn.interactable = canUnlock;
             }
@@ -329,7 +315,8 @@ namespace HappyShoot.View.SkillTree
         {
             if (_manager != null)
             {
-                _manager.ResetAwakening(_selectedClass);
+                int refunded = _manager.ResetAwakening(_selectedClass);
+                Debug.Log($"[SkillTreeUiView] ResetAwakening refunded {refunded} Gold!");
                 RefreshAll();
             }
         }
@@ -343,7 +330,7 @@ namespace HappyShoot.View.SkillTree
             var canvasGo = new GameObject("SkillTreeCanvas");
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 200; // Far above CharacterSelectCanvas (85)
+            canvas.sortingOrder = 200; // Above all normal HUDs
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
@@ -358,44 +345,45 @@ namespace HappyShoot.View.SkillTree
             panelRt.offsetMin = Vector2.zero;
             panelRt.offsetMax = Vector2.zero;
 
-            // 100% Solid Pure Opaque Slate Background
+            // 100% Solid Dark Nebula Background
             var bgImg = _panelRoot.AddComponent<Image>();
             bgImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            bgImg.color = new Color(0.05f, 0.06f, 0.08f, 1.0f);
+            bgImg.color = new Color(0.04f, 0.05f, 0.09f, 1.0f);
 
             BuildHeader();
             BuildTreeArea();
             BuildDetailPanel();
-
-            // Modal Exchange Popup
-            var popupGo = new GameObject("ExchangePopup");
-            _exchangePopup = popupGo.AddComponent<SkillTreeExchangePopupView>();
-            _exchangePopup.Initialize(_manager, _panelRoot.transform, RefreshAll);
         }
 
         private void BuildHeader()
         {
             // Back Button (Top-Left)
             var backBtn = CreateButton(_panelRoot.transform, "◀ 뒤로 가기 (ESC)", new Vector2(-780, 470), new Vector2(210, 48), Hide);
-            backBtn.GetComponent<Image>().color = new Color(0.22f, 0.28f, 0.40f, 1.0f);
+            backBtn.image.color = new Color(0.22f, 0.28f, 0.40f, 1.0f);
 
-            // Gem Wallet Bar (Top-Center y: 470)
-            var walletGo = CreateUiObject("WalletBar", _panelRoot.transform, new Vector2(-60, 470), new Vector2(580, 48));
+            // Title Bar (Top-Center y: 470)
+            var titleGo = CreateUiObject("TitleBar", _panelRoot.transform, new Vector2(-200, 470), new Vector2(400, 48));
+            var titleTxt = titleGo.AddComponent<Text>();
+            titleTxt.font = FontHelper.GetKoreanFont();
+            titleTxt.text = "🌌 대마법사 비전 성좌 (영구 성장)";
+            titleTxt.fontSize = 24;
+            titleTxt.fontStyle = FontStyle.Bold;
+            titleTxt.color = new Color(0.85f, 0.75f, 1.0f);
+            titleTxt.alignment = TextAnchor.MiddleCenter;
+            titleTxt.raycastTarget = false;
+
+            // Gold Wallet Bar (Top-Right-Center y: 470)
+            var walletGo = CreateUiObject("GoldBar", _panelRoot.transform, new Vector2(300, 470), new Vector2(380, 48));
             var walletBg = walletGo.AddComponent<Image>();
             walletBg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            walletBg.color = new Color(0.10f, 0.12f, 0.18f, 0.95f);
+            walletBg.color = new Color(0.12f, 0.14f, 0.22f, 0.95f);
 
-            _rubyText = CreateText(walletGo.transform, "🔴 0", new Vector2(-180, 0), 22, new Color(1.0f, 0.45f, 0.45f));
-            _emeraldText = CreateText(walletGo.transform, "🟢 0", new Vector2(0, 0), 22, new Color(0.45f, 1.0f, 0.55f));
-            _amethystText = CreateText(walletGo.transform, "🟣 0", new Vector2(180, 0), 22, new Color(0.92f, 0.55f, 1.0f));
-
-            // Gem Exchange Button
-            CreateButton(_panelRoot.transform, "🔄 보석 2:1 교환", new Vector2(330, 470), new Vector2(170, 44),
-                () => _exchangePopup.gameObject.SetActive(!_exchangePopup.gameObject.activeSelf));
+            _goldText = CreateText(walletGo.transform, "💰 보유 금화: 0 G", Vector2.zero, 20, new Color(1.0f, 0.88f, 0.35f));
+            _goldText.alignment = TextAnchor.MiddleCenter;
 
             // Close Button (Top-Right)
             var closeBtn = CreateButton(_panelRoot.transform, "✕ 닫기 (ESC)", new Vector2(780, 470), new Vector2(160, 48), Hide);
-            closeBtn.GetComponent<Image>().color = new Color(0.70f, 0.20f, 0.25f, 1.0f);
+            closeBtn.image.color = new Color(0.70f, 0.20f, 0.25f, 1.0f);
         }
 
         private void BuildTreeArea()
@@ -415,7 +403,7 @@ namespace HappyShoot.View.SkillTree
             _detailPanel = CreateUiObject("DetailPanel", _panelRoot.transform, new Vector2(670, -20), new Vector2(400, 720));
             var bg = _detailPanel.AddComponent<Image>();
             bg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            bg.color = new Color(0.09f, 0.11f, 0.17f, 1.0f); // 100% Solid
+            bg.color = new Color(0.09f, 0.11f, 0.17f, 1.0f);
 
             _detailTitleText = CreateText(_detailPanel.transform, "💡 노드를 선택하세요", new Vector2(0, 310), 22, new Color(1.0f, 0.9f, 0.35f));
             _detailDescText = CreateText(_detailPanel.transform, "원형 성좌 노드를 클릭하면\n상세 효과와 해금 버튼이 표시됩니다.", new Vector2(0, 140), 16, new Color(0.85f, 0.90f, 0.95f));
@@ -424,10 +412,10 @@ namespace HappyShoot.View.SkillTree
             // Awakening status & Reset button inside Detail Panel
             _awakeningStatusText = CreateText(_detailPanel.transform, "속성 상태: [미각성]", new Vector2(0, -60), 15, Color.yellow);
             _awakeningStatusText.rectTransform.sizeDelta = new Vector2(360, 40);
-            _resetAwakeningBtn = CreateButton(_detailPanel.transform, "⚡ 각성 리셋 (50% 환불)", new Vector2(0, -115), new Vector2(240, 36), OnResetAwakeningClicked);
+            _resetAwakeningBtn = CreateButton(_detailPanel.transform, "⚡ 각성 리셋 (50% 골드 환불)", new Vector2(0, -115), new Vector2(260, 40), OnResetAwakeningClicked);
 
             _detailCostText = CreateText(_detailPanel.transform, "선택된 노드 없음", new Vector2(0, -180), 18, Color.gray);
-            _unlockBtn = CreateButton(_detailPanel.transform, "💎 노드 해금", new Vector2(0, -260), new Vector2(320, 56), OnUnlockClicked);
+            _unlockBtn = CreateButton(_detailPanel.transform, "💰 노드 해금", new Vector2(0, -260), new Vector2(320, 56), OnUnlockClicked);
         }
 
         private GameObject CreateUiObject(string name, Transform parent, Vector2 pos, Vector2 size)
@@ -451,27 +439,25 @@ namespace HappyShoot.View.SkillTree
             txt.font = FontHelper.GetKoreanFont();
             txt.text = text;
             txt.fontSize = fontSize;
+            txt.fontStyle = FontStyle.Bold;
             txt.color = color;
             txt.alignment = TextAnchor.MiddleCenter;
             txt.raycastTarget = false;
             return txt;
         }
 
-        private Button CreateButton(Transform parent, string text, Vector2 pos, Vector2 size, Action onClick)
+        private Button CreateButton(Transform parent, string label, Vector2 pos, Vector2 size, Action onClick)
         {
-            var go = new GameObject("Btn");
-            go.transform.SetParent(parent, false);
-            var rt = go.AddComponent<RectTransform>();
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
+            var go = CreateUiObject("Btn_" + label, parent, pos, size);
             var img = go.AddComponent<Image>();
             img.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            img.color = new Color(0.20f, 0.26f, 0.38f, 1.0f);
+            img.color = new Color(0.20f, 0.45f, 0.85f, 1.0f);
+
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
-            btn.onClick.AddListener(() => onClick?.Invoke());
+            if (onClick != null) btn.onClick.AddListener(() => onClick());
 
-            var txt = CreateText(go.transform, text, Vector2.zero, 15, Color.white);
+            var txt = CreateText(go.transform, label, Vector2.zero, 15, Color.white);
             txt.rectTransform.sizeDelta = size;
             return btn;
         }

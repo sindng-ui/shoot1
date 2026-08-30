@@ -21,85 +21,45 @@ namespace HappyShoot.View.SkillTree
         public const float WizardBaseAngle = 210f;   // Bottom-Left (150° ~ 270°)
 
         /// <summary>
-        /// Maps each node to its organic constellation position on circular orbital rings.
+        /// Maps each Wizard node to its organic constellation position on circular orbital rings.
+        /// Core nodes form a central orbital web (r = 110, 180), and 3 elemental branches radiate outward at 90°, 210°, 330°.
         /// </summary>
         public static Vector2 GetNodePosition(SkillTreeNodeDef def)
         {
-            float baseAngle = GetClassBaseAngle(def.ClassType);
-
-            // 1. Core Stat Nodes (Inner Rings: r = 95, 160, 225)
+            // 1. Core Stat Nodes (Central Mana Ring: r = 110, 180)
             if (def.Branch == BranchType.None)
             {
-                return GetCoreRadialPosition(def.Id, baseAngle);
+                return GetWizardCorePosition(def.Id);
             }
 
-            // 2. Elemental Branches (Outer Rings: r = 290, 350, 410, 470)
-            float branchAngleOffset = 0f;
+            // 2. Elemental Branches (Radiating outward at 120° intervals)
+            float baseAngle = 90f; // Default Fire: Top
             switch (def.Branch)
             {
-                case BranchType.Fire:      branchAngleOffset = -26f; break; // Left wing of sector
-                case BranchType.Ice:       branchAngleOffset = 0f;   break; // Center spire
-                case BranchType.Lightning: branchAngleOffset = 26f;  break; // Right wing of sector
+                case BranchType.Fire:      baseAngle = 90f;  break; // Top (🔥 Fire)
+                case BranchType.Ice:       baseAngle = 210f; break; // Bottom-Left (❄️ Ice)
+                case BranchType.Lightning: baseAngle = 330f; break; // Bottom-Right (⚡ Lightning)
             }
 
-            float finalAngle = baseAngle + branchAngleOffset;
             int step = GetBranchStep(def.Id); // 0, 1, 2, 3
-            float radius = 290f + (step * 60f);
+            float radius = 250f + (step * 70f); // r = 250, 320, 390, 460
 
-            return PolarToCartesian(radius, finalAngle);
+            return PolarToCartesian(radius, baseAngle);
         }
 
-        public static float GetClassBaseAngle(CharacterClassType classType)
+        private static Vector2 GetWizardCorePosition(string id)
         {
-            switch (classType)
-            {
-                case CharacterClassType.Warrior: return WarriorBaseAngle;
-                case CharacterClassType.Ranger:  return RangerBaseAngle;
-                case CharacterClassType.Wizard:  return WizardBaseAngle;
-                default: return WarriorBaseAngle;
-            }
-        }
+            // Tier 1 inner ring (r = 110)
+            if (id == "m_cdr1") return PolarToCartesian(110f, 90f);
+            if (id == "m_area1") return PolarToCartesian(110f, 210f);
+            if (id == "m_ap1") return PolarToCartesian(110f, 330f);
 
-        private static Vector2 GetCoreRadialPosition(string id, float baseAngle)
-        {
-            float angleOffset = 0f;
-            float radius = 95f;
+            // Tier 2 outer core ring (r = 180)
+            if (id == "m_cdr2") return PolarToCartesian(180f, 90f);
+            if (id == "m_area2") return PolarToCartesian(180f, 210f);
+            if (id == "m_mana") return PolarToCartesian(180f, 330f);
 
-            // Tier 1 (r = 95) - Dual Star Gates
-            if (id == "w_hp1" || id == "r_spd1" || id == "m_cdr1")
-            {
-                angleOffset = -11f;
-                radius = 95f;
-            }
-            else if (id == "w_armor1" || id == "r_crit1" || id == "m_area1")
-            {
-                angleOffset = 11f;
-                radius = 95f;
-            }
-            // Tier 2 (r = 160) - Expanded Web
-            else if (id == "w_hp2" || id == "r_spd2" || id == "m_cdr2")
-            {
-                angleOffset = -16f;
-                radius = 160f;
-            }
-            else if (id == "w_armor2" || id == "r_crit2" || id == "m_area2")
-            {
-                angleOffset = 16f;
-                radius = 160f;
-            }
-            // Tier 3 (r = 225) - Pre-Awakening Trident Base
-            else if (id == "w_hp3" || id == "r_projspd" || id == "m_mana")
-            {
-                angleOffset = -18f;
-                radius = 225f;
-            }
-            else if (id == "w_atkspd" || id == "r_dodge" || id == "m_ap1")
-            {
-                angleOffset = 18f;
-                radius = 225f;
-            }
-
-            return PolarToCartesian(radius, baseAngle + angleOffset);
+            return Vector2.zero;
         }
 
         private static int GetBranchStep(string id)

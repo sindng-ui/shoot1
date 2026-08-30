@@ -33,6 +33,9 @@ namespace HappyShoot.View.UI
         private Text _godModeBtnText;
         private Text _timeScaleBtnText;
         private float _currentTimeScale = 1.0f;
+        private Text _warriorCompBtnText;
+        private Text _rangerCompBtnText;
+        private Companion.CompanionManagerView _companionManager;
 
         private readonly Dictionary<string, (Button btn, Text text, Image bg)> _skillButtons
             = new Dictionary<string, (Button, Text, Image)>();
@@ -44,16 +47,24 @@ namespace HappyShoot.View.UI
             SkillRewardManager rewardManager,
             LevelSystem levelSystem,
             GameSessionEntity gameSession,
-            MonsterSpawnerView spawnerView)
+            MonsterSpawnerView spawnerView,
+            Companion.CompanionManagerView companionManager = null)
         {
             _playerView = playerView;
             _rewardManager = rewardManager;
             _levelSystem = levelSystem;
             _gameSession = gameSession;
             _spawnerView = spawnerView;
+            _companionManager = companionManager;
 
             BuildUi();
             RefreshAllButtons();
+        }
+
+        public void SetCompanionManager(Companion.CompanionManagerView companionManager)
+        {
+            _companionManager = companionManager;
+            UpdateCompanionButtons();
         }
 
         public void Show() => _panelRoot?.SetActive(true);
@@ -134,6 +145,11 @@ namespace HappyShoot.View.UI
             CreateSmallButton(_contentBox.transform, "BtnP1", "1️⃣ Phase 1", new Vector2(-112f, currentY), new Vector2(106f, 26f), new Color(0.20f, 0.45f, 0.70f, 1f), () => _spawnerView?.JumpToPhase(1), out _);
             CreateSmallButton(_contentBox.transform, "BtnP2", "2️⃣ Phase 2", new Vector2(0f, currentY), new Vector2(106f, 26f), new Color(0.65f, 0.35f, 0.15f, 1f), () => _spawnerView?.JumpToPhase(2), out _);
             CreateSmallButton(_contentBox.transform, "BtnP3", "3️⃣ Phase 3", new Vector2(112f, currentY), new Vector2(106f, 26f), new Color(0.55f, 0.15f, 0.65f, 1f), () => _spawnerView?.JumpToPhase(3), out _);
+            currentY -= 30f;
+
+            // Companion Cheat Toggle Buttons
+            CreateSmallButton(_contentBox.transform, "BtnWarComp", "🛡️ 전사 동료: OFF", new Vector2(-85f, currentY), new Vector2(160f, 26f), new Color(0.7f, 0.3f, 0.2f, 1f), ToggleWarriorComp, out _warriorCompBtnText);
+            CreateSmallButton(_contentBox.transform, "BtnRngComp", "🏹 궁수 동료: OFF", new Vector2(85f, currentY), new Vector2(160f, 26f), new Color(0.2f, 0.6f, 0.4f, 1f), ToggleRangerComp, out _rangerCompBtnText);
             currentY -= 32f;
 
             // 1. ACTIVE SKILLS (좌클릭: +1 Lv / 우클릭: Lv.0 해제)
@@ -335,42 +351,38 @@ namespace HappyShoot.View.UI
                     txt.text = $"➕ [Lv.1] {GetPassiveNameById(id)}";
                 }
             }
+
+            UpdateCompanionButtons();
         }
 
-        private string GetSkillNameById(string id)
+        private string GetSkillNameById(string id) => id switch
         {
-            switch (id)
-            {
-                case "slash": return "대검 베기 [전사]";
-                case "ground_stomp": return "지면 강타 [전사]";
-                case "whirlwind": return "휠윈드 [전사]";
-                case "bow": return "관통 화살 [궁수]";
-                case "glaive": return "칼바람 글레이브 [궁수]";
-                case "arrow_rain": return "화살 비 [궁수]";
-                case "fireball": return "화염구 [마법사]";
-                case "frost_nova": return "프로스트 노바 [마법사]";
-                case "chain_lightning": return "체인 라이트닝 [마법사]";
-                case "orbital": return "오비탈 블레이드 [공용]";
-                case "blood_eater": return "✨ 블러드 이터";
-                case "storm_bow": return "✨ 폭풍의 활";
-                case "meteor_strike": return "☄️ 인페르노 화염구";
-                default: return id;
-            }
-        }
+            "slash" => "대검 베기 [전사]",
+            "ground_stomp" => "지면 강타 [전사]",
+            "whirlwind" => "휠윈드 [전사]",
+            "bow" => "관통 화살 [궁수]",
+            "glaive" => "칼바람 글레이브 [궁수]",
+            "arrow_rain" => "화살 비 [궁수]",
+            "fireball" => "화염구 [마법사]",
+            "frost_nova" => "프로스트 노바 [마법사]",
+            "chain_lightning" => "체인 라이트닝 [마법사]",
+            "orbital" => "오비탈 블레이드 [공용]",
+            "blood_eater" => "✨ 블러드 이터",
+            "storm_bow" => "✨ 폭풍의 활",
+            "meteor_strike" => "☄️ 인페르노 화염구",
+            _ => id
+        };
 
-        private string GetPassiveNameById(string id)
+        private string GetPassiveNameById(string id) => id switch
         {
-            switch (id)
-            {
-                case "passive_fang": return "흡혈귀의 이빨";
-                case "passive_feather": return "바람의 깃털";
-                case "passive_rune": return "마나 룬";
-                case "passive_armor": return "강철 갑옷";
-                case "passive_ring": return "황금 반지";
-                case "passive_heart": return "생명의 펜던트";
-                default: return id;
-            }
-        }
+            "passive_fang" => "흡혈귀의 이빨",
+            "passive_feather" => "바람의 깃털",
+            "passive_rune" => "마나 룬",
+            "passive_armor" => "강철 갑옷",
+            "passive_ring" => "황금 반지",
+            "passive_heart" => "생명의 펜던트",
+            _ => id
+        };
 
         private void ToggleGodMode()
         {
@@ -386,11 +398,8 @@ namespace HappyShoot.View.UI
             _playerView.Entity.Heal(999999f);
         }
 
-        private void GiveLevelUp()
-        {
-            if (_levelSystem == null) return;
-            _levelSystem.AddExp(_levelSystem.RequiredExp);
-        }
+        private void GiveLevelUp() => _levelSystem?.AddExp(_levelSystem.RequiredExp);
+        private void AddGold1000() => _gameSession?.AddGold(1000);
 
         private void KillAllMonsters()
         {
@@ -399,10 +408,7 @@ namespace HappyShoot.View.UI
             if (activeList == null) return;
             for (int i = activeList.Count - 1; i >= 0; i--)
             {
-                if (activeList[i].IsActive && !activeList[i].IsDead)
-                {
-                    activeList[i].TakeDamage(999999f);
-                }
+                if (activeList[i].IsActive && !activeList[i].IsDead) activeList[i].TakeDamage(999999f);
             }
         }
 
@@ -417,9 +423,24 @@ namespace HappyShoot.View.UI
             if (_timeScaleBtnText != null) _timeScaleBtnText.text = $"⏩ 속도: {_currentTimeScale}x";
         }
 
-        private void AddGold1000()
+        private void ToggleWarriorComp()
         {
-            _gameSession?.AddGold(1000);
+            _companionManager?.ToggleWarrior();
+            UpdateCompanionButtons();
+        }
+
+        private void ToggleRangerComp()
+        {
+            _companionManager?.ToggleRanger();
+            UpdateCompanionButtons();
+        }
+
+        private void UpdateCompanionButtons()
+        {
+            if (_warriorCompBtnText != null && _companionManager != null)
+                _warriorCompBtnText.text = _companionManager.IsWarriorActive ? "🛡️ 전사 동료: ON" : "🛡️ 전사 동료: OFF";
+            if (_rangerCompBtnText != null && _companionManager != null)
+                _rangerCompBtnText.text = _companionManager.IsRangerActive ? "🏹 궁수 동료: ON" : "🏹 궁수 동료: OFF";
         }
 
         private void CreateSmallButton(Transform parent, string name, string label, Vector2 pos, Vector2 size, Color color, Action onClick, out Text outText)

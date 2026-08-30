@@ -24,6 +24,7 @@ namespace HappyShoot.View.UI
         private Text _killCountText;
         private Text _goldEarnedText;
         private Text _gemsEarnedText;
+        private Text _companionRewardText;
         private Button _openSkillTreeButton;
         private Button _retryButton;
 
@@ -77,10 +78,11 @@ namespace HappyShoot.View.UI
                 if (_goldEarnedText != null)
                     _goldEarnedText.text = $"💰 획득한 전리품 골드: +{_gameSession.GoldEarned} G";
 
-                // Settle gold into permanent shop storage
-                if (_shopManager != null && _gameSession.GoldEarned > 0)
+                // Settle gold into permanent shop and SkillTree storage
+                if (_gameSession.GoldEarned > 0)
                 {
-                    _shopManager.AddGold(_gameSession.GoldEarned);
+                    if (_shopManager != null) _shopManager.AddGold(_gameSession.GoldEarned);
+                    if (_skillTreeManager != null) _skillTreeManager.AddGold(_gameSession.GoldEarned);
                 }
 
                 // Settle gems into permanent SkillTree storage
@@ -97,6 +99,22 @@ namespace HappyShoot.View.UI
                     if (_gemsEarnedText != null)
                     {
                         _gemsEarnedText.text = $"💎 획득한 영구 보석: 🔴+{r}  🟢+{e}  🟣+{a}";
+                    }
+                }
+
+                // Increment clear count and show companion unlock reward!
+                if (_skillTreeManager != null)
+                {
+                    _skillTreeManager.IncrementClearCount();
+                    int clears = _skillTreeManager.ClearCount;
+                    if (_companionRewardText != null)
+                    {
+                        if (clears == 1)
+                            _companionRewardText.text = "🎉 1회차 클리어 특전: [전사 동료 (Warrior)] 영구 해금!";
+                        else if (clears == 2)
+                            _companionRewardText.text = "🎉 2회차 클리어 특전: [궁수 동료 (Ranger)] 영구 해금!";
+                        else
+                            _companionRewardText.text = $"🏆 {clears}회차 정복 완료! (3인 마법 원정대 출격)";
                     }
                 }
             }
@@ -134,7 +152,7 @@ namespace HappyShoot.View.UI
             var dialogGo = new GameObject("DialogFrame");
             dialogGo.transform.SetParent(_panelRoot.transform, false);
             var dialogRt = dialogGo.AddComponent<RectTransform>();
-            dialogRt.sizeDelta = new Vector2(560f, 440f);
+            dialogRt.sizeDelta = new Vector2(580f, 490f);
             var dialogImg = dialogGo.AddComponent<Image>();
             dialogImg.color = new Color(0.10f, 0.14f, 0.22f, 0.98f);
 
@@ -144,8 +162,8 @@ namespace HappyShoot.View.UI
             var titleGo = new GameObject("TitleText");
             titleGo.transform.SetParent(dialogGo.transform, false);
             var titleRt = titleGo.AddComponent<RectTransform>();
-            titleRt.anchoredPosition = new Vector2(0f, 160f);
-            titleRt.sizeDelta = new Vector2(500f, 60f);
+            titleRt.anchoredPosition = new Vector2(0f, 175f);
+            titleRt.sizeDelta = new Vector2(520f, 60f);
             _titleText = titleGo.AddComponent<Text>();
             _titleText.font = font;
             _titleText.text = "🏆 STAGE CLEAR - VICTORY!";
@@ -155,16 +173,17 @@ namespace HappyShoot.View.UI
             _titleText.color = new Color(1.0f, 0.85f, 0.25f, 1.0f); // Bright Gold
 
             // Stats lines
-            _survivalTimeText = CreateStatText(dialogGo.transform, new Vector2(0f, 95f), font);
-            _killCountText = CreateStatText(dialogGo.transform, new Vector2(0f, 60f), font);
-            _goldEarnedText = CreateStatText(dialogGo.transform, new Vector2(0f, 25f), font, new Color(1.0f, 0.85f, 0.2f));
-            _gemsEarnedText = CreateStatText(dialogGo.transform, new Vector2(0f, -10f), font, new Color(0.3f, 0.95f, 1.0f));
+            _survivalTimeText = CreateStatText(dialogGo.transform, new Vector2(0f, 110f), font);
+            _killCountText = CreateStatText(dialogGo.transform, new Vector2(0f, 77f), font);
+            _goldEarnedText = CreateStatText(dialogGo.transform, new Vector2(0f, 44f), font, new Color(1.0f, 0.85f, 0.2f));
+            _gemsEarnedText = CreateStatText(dialogGo.transform, new Vector2(0f, 11f), font, new Color(0.3f, 0.95f, 1.0f));
+            _companionRewardText = CreateStatText(dialogGo.transform, new Vector2(0f, -24f), font, new Color(0.4f, 1.0f, 0.6f));
 
             // Exclusive Unlocked Button: Skill Tree
             var skillTreeBtnGo = new GameObject("BtnOpenSkillTree");
             skillTreeBtnGo.transform.SetParent(dialogGo.transform, false);
             var stRt = skillTreeBtnGo.AddComponent<RectTransform>();
-            stRt.anchoredPosition = new Vector2(0f, -80f);
+            stRt.anchoredPosition = new Vector2(0f, -95f);
             stRt.sizeDelta = new Vector2(460f, 56f);
             var stImg = skillTreeBtnGo.AddComponent<Image>();
             stImg.color = new Color(0.85f, 0.65f, 0.10f, 1.0f); // Gold highlight
@@ -187,7 +206,7 @@ namespace HappyShoot.View.UI
             var retryBtnGo = new GameObject("BtnRetry");
             retryBtnGo.transform.SetParent(dialogGo.transform, false);
             var reRt = retryBtnGo.AddComponent<RectTransform>();
-            reRt.anchoredPosition = new Vector2(0f, -150f);
+            reRt.anchoredPosition = new Vector2(0f, -170f);
             reRt.sizeDelta = new Vector2(300f, 44f);
             var reImg = retryBtnGo.AddComponent<Image>();
             reImg.color = new Color(0.25f, 0.35f, 0.45f, 1.0f);

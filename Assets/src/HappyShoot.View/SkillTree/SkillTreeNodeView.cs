@@ -90,13 +90,13 @@ namespace HappyShoot.View.SkillTree
             }
             else if (canUnlock)
             {
-                _levelText.text = $"{Def.GemCost}개";
+                _levelText.text = $"{Def.GoldCost}G";
                 _levelText.color = new Color(1.0f, 0.9f, 0.3f);
                 _btn.interactable = true;
             }
             else
             {
-                _levelText.text = $"{Def.GemCost}개";
+                _levelText.text = $"{Def.GoldCost}G";
                 _levelText.color = new Color(0.6f, 0.6f, 0.65f);
                 _btn.interactable = true;
             }

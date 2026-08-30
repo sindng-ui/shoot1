@@ -22,7 +22,8 @@ namespace HappyShoot.Domain.Entities
             int id,
             CharacterClassType classType,
             Vector2D startPosition,
-            EventBus eventBus = null)
+            EventBus eventBus = null,
+            string startSkillId = null)
         {
             CharacterStats stats;
             ISkill startingSkill;
@@ -81,7 +82,7 @@ namespace HappyShoot.Domain.Entities
 
                 case CharacterClassType.Wizard:
                 default:
-                    // Wizard: -15% Cooldown (CDR 0.15), +20% Area (1.2), +25% AP (1.25), Fireball Blast
+                    // Wizard: -15% Cooldown (CDR 0.15), +20% Area (1.2), +25% AP (1.25)
                     stats = new CharacterStats(
                         maxHealth: 85f,
                         healthRegen: 0f,
@@ -96,13 +97,37 @@ namespace HappyShoot.Domain.Entities
                         extraProjectiles: 0,
                         pickupRadius: 3.0f
                     );
-                    startingSkill = new CompositeSkill(
-                        "fireball", "화염구",
-                        new CooldownTrigger(1.2f),
-                        new ClosestEnemyTargeter(),
-                        new Skills.Effects.FireballEffect(baseDamage: 35f, radius: 1.6f, speed: 14f),
-                        range: 9.0f
-                    );
+
+                    if (startSkillId == "frost_nova")
+                    {
+                        startingSkill = new CompositeSkill(
+                            "frost_nova", "서리 폭발",
+                            new CooldownTrigger(2.5f),
+                            new ClosestEnemyTargeter(),
+                            new Skills.Effects.FrostNovaEffect(baseDamage: 25f, radius: 4.0f, chillDuration: 3.0f),
+                            range: 4.0f
+                        );
+                    }
+                    else if (startSkillId == "chain_lightning")
+                    {
+                        startingSkill = new CompositeSkill(
+                            "chain_lightning", "연쇄 번개",
+                            new CooldownTrigger(1.5f),
+                            new ClosestEnemyTargeter(),
+                            new Skills.Effects.ChainLightningEffect(baseDamage: 28f, chainCount: 4, jumpRadius: 5.0f),
+                            range: 8.0f
+                        );
+                    }
+                    else // default: "fireball"
+                    {
+                        startingSkill = new CompositeSkill(
+                            "fireball", "화염구",
+                            new CooldownTrigger(1.2f),
+                            new ClosestEnemyTargeter(),
+                            new Skills.Effects.FireballEffect(baseDamage: 35f, radius: 1.6f, speed: 14f),
+                            range: 9.0f
+                        );
+                    }
                     break;
             }
 

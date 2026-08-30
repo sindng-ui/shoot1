@@ -9,8 +9,7 @@ namespace HappyShoot.Domain.Progression
     {
         public static void RegisterAll(SkillTreeManager mgr)
         {
-            RegisterWarriorTree(mgr);
-            RegisterRangerTree(mgr);
+            // Wizard-Only Mode: Only register the Wizard's 18-node master skill tree
             RegisterWizardTree(mgr);
         }
 
@@ -102,33 +101,33 @@ namespace HappyShoot.Domain.Progression
             var n = BranchType.None;
 
             // ── Core Stat Nodes (6) ──
-            mgr.RegisterNode(new SkillTreeNodeDef("m_cdr1", "마력 순환 I", "쿨다운 감소 +5%", g, 3, 1, n, NodeEffectType.CooldownReduction, 0.05f));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_cdr2", "마력 순환 II", "쿨다운 감소 +10%", g, 3, 1, n, NodeEffectType.CooldownReduction, 0.10f, new[] { "m_cdr1" }));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_area1", "마력 확산 I", "스킬 범위 +10%", g, 3, 1, n, NodeEffectType.AreaMultiplier, 0.10f));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_area2", "마력 확산 II", "스킬 범위 +20%", g, 3, 1, n, NodeEffectType.AreaMultiplier, 0.20f, new[] { "m_area1" }));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_ap1", "주술 강화", "공격력 +12%", g, 3, 1, n, NodeEffectType.AttackPower, 0.12f));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_mana", "마나 흐름", "대미지 +8% & 쿨다운 -3%", g, 3, 1, n, NodeEffectType.ComboStatCdrArea, 0.08f));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_cdr1", "마력 순환 I", "쿨다운 감소 +5%", g, 3, 1, n, NodeEffectType.CooldownReduction, 0.05f, null, 150));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_cdr2", "마력 순환 II", "쿨다운 감소 +10%", g, 3, 1, n, NodeEffectType.CooldownReduction, 0.10f, new[] { "m_cdr1" }, 300));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_area1", "마력 확산 I", "스킬 범위 +10%", g, 3, 1, n, NodeEffectType.AreaMultiplier, 0.10f, null, 150));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_area2", "마력 확산 II", "스킬 범위 +20%", g, 3, 1, n, NodeEffectType.AreaMultiplier, 0.20f, new[] { "m_area1" }, 300));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_ap1", "주술 강화", "공격력 +12%", g, 3, 1, n, NodeEffectType.AttackPower, 0.12f, null, 350));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_mana", "마나 흐름", "대미지 +8% & 쿨다운 -3%", g, 3, 1, n, NodeEffectType.ComboStatCdrArea, 0.08f, null, 500));
 
             // ── 🔥 Fire Branch: Inferno Archmage (4) ──
             var f = BranchType.Fire;
-            mgr.RegisterNode(new SkillTreeNodeDef("m_fire1", "업화의 촉매", "화염구 화상 DoT +50% 강화", g, 5, 1, f, NodeEffectType.FireballDotBoost, 0.50f));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_fire2", "폭렬 화염구", "화염구 폭발 범위 +30%", g, 8, 1, f, NodeEffectType.FireballAreaBoost, 0.30f, new[] { "m_fire1" }));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_fire3", "소형 유성 낙하", "10초마다 소형 유성 자동 낙하", g, 12, 1, f, NodeEffectType.FireAutoMeteor, 10f, new[] { "m_fire2" }));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_fire4", "연쇄 폭발", "화상 적 3체 이상 시 자발적 연쇄 폭발", g, 20, 1, f, NodeEffectType.FireChainExplosion, 3f, new[] { "m_fire3" }));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_fire1", "업화의 촉매", "화염구 화상 DoT +50% 강화", g, 5, 1, f, NodeEffectType.FireballDotBoost, 0.50f, null, 300));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_fire2", "폭렬 화염구", "화염구 폭발 범위 +30%", g, 8, 1, f, NodeEffectType.FireballAreaBoost, 0.30f, new[] { "m_fire1" }, 600));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_fire3", "소형 유성 낙하", "10초마다 소형 유성 자동 낙하", g, 12, 1, f, NodeEffectType.FireAutoMeteor, 10f, new[] { "m_fire2" }, 1000));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_fire4", "연쇄 폭발", "화상 적 3체 이상 시 자발적 연쇄 폭발", g, 20, 1, f, NodeEffectType.FireChainExplosion, 3f, new[] { "m_fire3" }, 1500));
 
             // ── ❄️ Ice Branch: Absolute Zero (4) ──
             var i = BranchType.Ice;
-            mgr.RegisterNode(new SkillTreeNodeDef("m_ice1", "극한의 한기", "서리 폭발 감속 60%로 강화", g, 5, 1, i, NodeEffectType.IceNovaSlowBoost, 0.60f));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_ice2", "빙하 파편", "동결 해제 시 빙하 파편 4방향 발사", g, 8, 1, i, NodeEffectType.IceShardOnThaw, 4f, new[] { "m_ice1" }));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_ice3", "만상의 마법", "모든 마법에 10% 확률 즉시 동결", g, 12, 1, i, NodeEffectType.IceChanceFreeze, 0.10f, new[] { "m_ice2" }));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_ice4", "빙결 오라", "주변 5m 적 자동 감속 오라", g, 20, 1, i, NodeEffectType.IceFrostAura, 5f, new[] { "m_ice3" }));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_ice1", "극한의 한기", "서리 폭발 감속 60%로 강화", g, 5, 1, i, NodeEffectType.IceNovaSlowBoost, 0.60f, null, 300));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_ice2", "빙하 파편", "동결 해제 시 빙하 파편 4방향 발사", g, 8, 1, i, NodeEffectType.IceShardOnThaw, 4f, new[] { "m_ice1" }, 600));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_ice3", "만상의 마법", "모든 마법에 10% 확률 즉시 동결", g, 12, 1, i, NodeEffectType.IceChanceFreeze, 0.10f, new[] { "m_ice2" }, 1000));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_ice4", "빙결 오라", "주변 5m 적 자동 감속 오라", g, 20, 1, i, NodeEffectType.IceFrostAura, 5f, new[] { "m_ice3" }, 1500));
 
             // ── ⚡ Lightning Branch: Storm Sage (4) ──
             var l = BranchType.Lightning;
-            mgr.RegisterNode(new SkillTreeNodeDef("m_elec1", "전류 증폭", "연쇄 번개 전이 횟수 +3", g, 5, 1, l, NodeEffectType.LightningChainCountBoost, 3f));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_elec2", "연쇄 재발동", "감전 적 처치 시 연쇄 번개 즉시 재발동", g, 8, 1, l, NodeEffectType.LightningChainOnKill, 1f, new[] { "m_elec1" }));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_elec3", "전기 공명", "모든 마법 10% 확률 연쇄 번개 자동 발사", g, 12, 1, l, NodeEffectType.LightningChainOnHit, 0.10f, new[] { "m_elec2" }));
-            mgr.RegisterNode(new SkillTreeNodeDef("m_elec4", "전격 보호막", "피격 시 30% 확률 감전 반격", g, 20, 1, l, NodeEffectType.LightningShockShield, 0.30f, new[] { "m_elec3" }));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_elec1", "전류 증폭", "연쇄 번개 전이 횟수 +3", g, 5, 1, l, NodeEffectType.LightningChainCountBoost, 3f, null, 300));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_elec2", "연쇄 재발동", "감전 적 처치 시 연쇄 번개 즉시 재발동", g, 8, 1, l, NodeEffectType.LightningChainOnKill, 1f, new[] { "m_elec1" }, 600));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_elec3", "전기 공명", "모든 마법 10% 확률 연쇄 번개 자동 발사", g, 12, 1, l, NodeEffectType.LightningChainOnHit, 0.10f, new[] { "m_elec2" }, 1000));
+            mgr.RegisterNode(new SkillTreeNodeDef("m_elec4", "전격 보호막", "피격 시 30% 확률 감전 반격", g, 20, 1, l, NodeEffectType.LightningShockShield, 0.30f, new[] { "m_elec3" }, 1500));
         }
     }
 }

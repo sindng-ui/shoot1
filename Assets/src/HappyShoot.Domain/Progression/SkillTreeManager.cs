@@ -33,7 +33,30 @@ namespace HappyShoot.Domain.Progression
             _nodeDefs[nodeDef.Id] = nodeDef;
         }
 
-        // ── Gem Wallet ──
+        // ── Gold Wallet ──
+
+        public int GetGoldCount() => _saveData.GetGold();
+
+        public void AddGold(int amount)
+        {
+            if (amount <= 0) return;
+            _saveData.AddGold(amount);
+            Save();
+        }
+
+        // ── Clear Count & Companions ──
+
+        public int ClearCount => _saveData.ClearCount;
+        public bool IsWarriorUnlocked => _saveData.IsWarriorUnlocked;
+        public bool IsRangerUnlocked => _saveData.IsRangerUnlocked;
+
+        public void IncrementClearCount()
+        {
+            _saveData.IncrementClearCount();
+            Save();
+        }
+
+        // ── Gem Wallet (Legacy / Exchange) ──
 
         public int GetGemCount(GemType type) => _saveData.GetGemCount(type);
 
@@ -58,11 +81,11 @@ namespace HappyShoot.Domain.Progression
             return true;
         }
 
-        // ── Node Unlocking ──
+        // ── Node Unlocking (Gold-Based) ──
 
         /// <summary>
-        /// Attempts to unlock or level up a skill tree node.
-        /// Validates gem cost, prerequisites, max level, and branch exclusivity.
+        /// Attempts to unlock or level up a skill tree node using Gold.
+        /// Validates gold cost, prerequisites, max level, and branch exclusivity.
         /// </summary>
         public bool TryUnlockNode(string nodeId)
         {
@@ -73,8 +96,8 @@ namespace HappyShoot.Domain.Progression
             if (currentLevel >= def.MaxLevel)
                 return false;
 
-            // Check gem cost
-            if (_saveData.GetGemCount(def.GemType) < def.GemCost)
+            // Check gold cost
+            if (_saveData.GetGold() < def.GoldCost)
                 return false;
 
             // Check prerequisites
@@ -95,8 +118,8 @@ namespace HappyShoot.Domain.Progression
                 }
             }
 
-            // Deduct gems and increase level
-            _saveData.AddGems(def.GemType, -def.GemCost);
+            // Deduct gold and increase level
+            _saveData.TrySpendGold(def.GoldCost);
             _saveData.SetNodeLevel(nodeId, currentLevel + 1);
             Save();
             return true;
@@ -130,7 +153,7 @@ namespace HappyShoot.Domain.Progression
             if (currentLevel >= def.MaxLevel)
                 return false;
 
-            if (_saveData.GetGemCount(def.GemType) < def.GemCost)
+            if (_saveData.GetGold() < def.GoldCost)
                 return false;
 
             if (!ArePrerequisitesMet(def))
@@ -161,11 +184,11 @@ namespace HappyShoot.Domain.Progression
             return currentAwakened != BranchType.None && currentAwakened != def.Branch;
         }
 
-        // ── Awakening Reset ──
+        // ── Awakening Reset (50% Gold Refund) ──
 
         /// <summary>
-        /// Resets the awakened branch for a class, refunding 50% of invested gems.
-        /// Returns the number of gems refunded.
+        /// Resets the awakened branch for a class, refunding 50% of invested gold.
+        /// Returns the amount of gold refunded.
         /// </summary>
         public int ResetAwakening(CharacterClassType classType)
         {
@@ -174,7 +197,6 @@ namespace HappyShoot.Domain.Progression
                 return 0;
 
             int totalRefunded = 0;
-            GemType gemType = GemTypeExtensions.FromClassType(classType);
 
             // Find all branch nodes for this class+branch and reset them
             foreach (var kvp in _nodeDefs)
@@ -186,27 +208,26 @@ namespace HappyShoot.Domain.Progression
                 int level = _saveData.GetNodeLevel(def.Id);
                 if (level > 0)
                 {
-                    // Refund 50% of total invested
-                    int invested = level * def.GemCost;
+                    // Refund 50% of total gold invested
+                    int invested = level * def.GoldCost;
                     int refund = invested / 2; // Integer division → floor
                     totalRefunded += refund;
                     _saveData.SetNodeLevel(def.Id, 0);
                 }
             }
 
-            _saveData.AddGems(gemType, totalRefunded);
+            _saveData.AddGold(totalRefunded);
             _saveData.SetAwakenedBranch(classType, BranchType.None);
             Save();
             return totalRefunded;
         }
 
         /// <summary>
-        /// Full reset: refund ALL nodes (core + branch) at 50% rate, clear all awakenings.
+        /// Full reset: refund ALL nodes (core + branch) at 50% gold rate, clear all awakenings.
         /// </summary>
         public int ResetAll(CharacterClassType classType)
         {
             int totalRefunded = 0;
-            GemType gemType = GemTypeExtensions.FromClassType(classType);
 
             foreach (var kvp in _nodeDefs)
             {
@@ -217,14 +238,14 @@ namespace HappyShoot.Domain.Progression
                 int level = _saveData.GetNodeLevel(def.Id);
                 if (level > 0)
                 {
-                    int invested = level * def.GemCost;
+                    int invested = level * def.GoldCost;
                     int refund = invested / 2;
                     totalRefunded += refund;
                     _saveData.SetNodeLevel(def.Id, 0);
                 }
             }
 
-            _saveData.AddGems(gemType, totalRefunded);
+            _saveData.AddGold(totalRefunded);
             _saveData.SetAwakenedBranch(classType, BranchType.None);
             Save();
             return totalRefunded;

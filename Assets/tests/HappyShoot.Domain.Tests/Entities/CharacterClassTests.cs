@@ -41,5 +41,25 @@ namespace HappyShoot.Domain.Tests.Entities
             Assert.That(wizard.Skills.Count, Is.EqualTo(1));
             Assert.That(wizard.Skills[0].Id, Is.EqualTo("fireball"));
         }
+
+        [Test]
+        public void CreateWizard_WithFrostNova_HasFrostNovaSkill()
+        {
+            var wizard = PlayerClassFactory.CreatePlayer(3, CharacterClassType.Wizard, Vector2D.Zero, startSkillId: "frost_nova");
+
+            Assert.That(wizard.Skills.Count, Is.EqualTo(1));
+            Assert.That(wizard.Skills[0].Id, Is.EqualTo("frost_nova"));
+            Assert.That(wizard.Skills[0].Name, Is.EqualTo("서리 폭발"));
+        }
+
+        [Test]
+        public void CreateWizard_WithChainLightning_HasChainLightningSkill()
+        {
+            var wizard = PlayerClassFactory.CreatePlayer(3, CharacterClassType.Wizard, Vector2D.Zero, startSkillId: "chain_lightning");
+
+            Assert.That(wizard.Skills.Count, Is.EqualTo(1));
+            Assert.That(wizard.Skills[0].Id, Is.EqualTo("chain_lightning"));
+            Assert.That(wizard.Skills[0].Name, Is.EqualTo("연쇄 번개"));
+        }
     }
 }

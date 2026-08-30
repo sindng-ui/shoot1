@@ -13,6 +13,7 @@ using HappyShoot.Domain.Skills.Targeters;
 using HappyShoot.Domain.Skills.Triggers;
 using HappyShoot.View.Background;
 using HappyShoot.View.Cameras;
+using HappyShoot.View.Companion;
 using HappyShoot.View.Config;
 using HappyShoot.View.Effects;
 using HappyShoot.View.Gems;
@@ -33,7 +34,7 @@ namespace HappyShoot.View.Bootstrap
     public class GameBootstrap : MonoBehaviour
     {
         [Header("Starting Class")]
-        [SerializeField] private CharacterClassType _selectedClass = CharacterClassType.Warrior;
+        [SerializeField] private CharacterClassType _selectedClass = CharacterClassType.Wizard;
 
         private GameSessionEntity _gameSession;
 
@@ -322,10 +323,15 @@ namespace HappyShoot.View.Bootstrap
             victoryView.Initialize(_gameSession, null, skillTreeManager, skillTreeUiView, gemCounterView, hudGo.transform);
             spawnerView.SetVictoryUiView(victoryView);
 
+            // 6.8. AI Companion Manager (Escort & Combat Support)
+            var companionGo = new GameObject("CompanionManager");
+            var companionManager = companionGo.AddComponent<CompanionManagerView>();
+            companionManager.Initialize(playerView, spawnerView, projManagerView, playerView.EventBus, skillTreeManager);
+
             // 7. Developer Skill Selector & Cheat Console UI
             var devConsoleGo = new GameObject("DevSkillSelectorUI");
             var devConsoleView = devConsoleGo.AddComponent<DevSkillSelectorUiView>();
-            devConsoleView.Initialize(playerView, rewardManager, levelSystem, _gameSession, spawnerView);
+            devConsoleView.Initialize(playerView, rewardManager, levelSystem, _gameSession, spawnerView, companionManager);
             devConsoleView.Hide(); // Hidden until Dev Mode is enabled
 
             // 7-2. Skill Tuning Sandbox UI
@@ -334,24 +340,26 @@ namespace HappyShoot.View.Bootstrap
             skillTuningView.Initialize(playerView, rewardManager, spawnerView, levelSystem, gemManagerView.DomainManager);
             skillTuningView.Hide();
 
-            // 8. Character Select Screen (Warrior vs Ranger vs Wizard & Dev Mode & Skill Test Mode)
+            // 8. Wizard-Only Main Menu (Game Start & Magic Forge entry)
             var charSelectGo = new GameObject("CharacterSelectUI");
             var charSelectView = charSelectGo.AddComponent<CharacterSelectUiView>();
             charSelectView.SetSettingsDialog(settingsDialogView);
             charSelectView.SetSkillTreeUiView(skillTreeUiView);
-            charSelectView.Initialize((selectedClass, isDevMode, isSkillTestMode, startPhase) =>
+            charSelectView.SetSkillTreeManager(skillTreeManager);
+            charSelectView.Initialize((selectedClass, isDevMode, isSkillTestMode, startPhase, startSkillId) =>
             {
-                _selectedClass = selectedClass;
-                playerView.SetClassType(selectedClass);
+                // Always force Wizard class (Wizard-Only mode) with selected starting magic skill
+                _selectedClass = CharacterClassType.Wizard;
+                playerView.SetClassType(CharacterClassType.Wizard, startSkillId);
 
-                // Re-apply class-specific skill tree progression stats and elemental flags
-                playerView.Entity.Stats = HappyShoot.Domain.Progression.SkillTreeApplier.ApplyStats(playerView.Entity.Stats, skillTreeManager, selectedClass);
-                playerView.Entity.ProgressionFlags = HappyShoot.Domain.Progression.SkillTreeApplier.BuildFlags(skillTreeManager, selectedClass);
+                // Re-apply wizard skill tree progression stats and elemental flags
+                playerView.Entity.Stats = HappyShoot.Domain.Progression.SkillTreeApplier.ApplyStats(playerView.Entity.Stats, skillTreeManager, CharacterClassType.Wizard);
+                playerView.Entity.ProgressionFlags = HappyShoot.Domain.Progression.SkillTreeApplier.BuildFlags(skillTreeManager, CharacterClassType.Wizard);
                 foreach (var s in playerView.Entity.Skills)
                 {
                     SkillConfigRepository.Instance.ApplyConfigToSkillLevel(s, s.Level);
                 }
-                Debug.Log($"[GameBootstrap] Hero Selected & Ready: {selectedClass} (DevMode: {isDevMode}, SkillTest: {isSkillTestMode}, StartPhase: {startPhase})");
+                Debug.Log($"[GameBootstrap] Wizard Ready with Starting Skill '{startSkillId}'! (DevMode: {isDevMode}, SkillTest: {isSkillTestMode}, StartPhase: {startPhase})");
 
                 if (isDevMode)
                 {
