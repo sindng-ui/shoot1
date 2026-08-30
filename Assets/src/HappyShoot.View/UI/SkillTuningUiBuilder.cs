@@ -101,7 +101,8 @@ namespace HappyShoot.View.UI
 
             // 6. System
             ("exp_tuning", "💎 경험치/레벨 튜닝", "system", false),
-            ("monster_tuning", "👾 몬스터 스탯 튜닝", "system", true)
+            ("monster_tuning", "👾 몬스터 스탯 튜닝", "system", false),
+            ("companion_tuning", "👥 AI 동료 튜닝", "system", true)
         };
 
         public static (string catId, string catName)[] Categories = new (string, string)[]

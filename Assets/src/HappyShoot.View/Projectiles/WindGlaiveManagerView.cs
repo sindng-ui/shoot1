@@ -31,9 +31,12 @@ namespace HappyShoot.View.Projectiles
             public float BladeScale = 1.0f;
             public bool IsReturning;
             public float RotationAngle;
+            public Transform ReturnTarget; // Optional return target (e.g. Companion Archer)
             public readonly HashSet<int> HitMonstersOutward = new HashSet<int>();
             public readonly HashSet<int> HitMonstersReturn = new HashSet<int>();
         }
+
+        public static WindGlaiveManagerView Instance { get; private set; }
 
         private PlayerView _playerView;
         private MonsterSpawnerView _spawnerView;
@@ -41,6 +44,11 @@ namespace HappyShoot.View.Projectiles
         private readonly List<ActiveGlaive> _activeGlaives = new List<ActiveGlaive>(32);
         private readonly Queue<ActiveGlaive> _pool = new Queue<ActiveGlaive>(32);
         private readonly List<MonsterEntity> _hitBuffer = new List<MonsterEntity>(16);
+
+        private void Awake()
+        {
+            Instance = this;
+        }
 
         public void Initialize(PlayerView playerView, EventBus eventBus, MonsterSpawnerView spawnerView = null)
         {
@@ -54,6 +62,7 @@ namespace HappyShoot.View.Projectiles
 
         private void OnDestroy()
         {
+            if (Instance == this) Instance = null;
             _eventBus?.Unsubscribe<WindGlaiveExecutedEvent>(OnWindGlaiveExecuted);
             _eventBus?.Unsubscribe<PhantomGlaiveExecutedEvent>(OnPhantomGlaiveExecuted);
         }
@@ -93,16 +102,17 @@ namespace HappyShoot.View.Projectiles
                 else
                 {
                     // Return Flight Phase (Double-hit guaranteed!)
+                    Vector2 returnTargetPos = (g.ReturnTarget != null) ? (Vector2)g.ReturnTarget.position : playerPos;
                     float t = Mathf.Clamp01(g.ElapsedTime / g.ReturnDuration);
                     float smoothT = t * t; // Accelerating return curve
-                    Vector2 currentPos = Vector2.Lerp(g.StartPos, playerPos, smoothT);
+                    Vector2 currentPos = Vector2.Lerp(g.StartPos, returnTargetPos, smoothT);
                     g.GameObject.transform.position = new Vector3(currentPos.x, currentPos.y, -0.2f);
                     g.GameObject.transform.rotation = Quaternion.Euler(0f, 0f, g.RotationAngle);
 
                     // 2nd Hit Check (Return path)
                     CheckHitMonsters(g.Damage, currentPos, g.HitMonstersReturn, g.BladeScale);
 
-                    if (t >= 1.0f || Vector2.Distance(currentPos, playerPos) < 0.5f)
+                    if (t >= 1.0f || Vector2.Distance(currentPos, returnTargetPos) < 0.5f)
                     {
                         RecycleGlaive(g);
                         _activeGlaives.RemoveAt(i);
@@ -141,16 +151,22 @@ namespace HappyShoot.View.Projectiles
             }
         }
 
-        private void OnWindGlaiveExecuted(WindGlaiveExecutedEvent evt)
+        public void LaunchGlaive(
+            Vector2 origin,
+            Vector2 baseDir,
+            float damage,
+            float maxDistance,
+            float speed,
+            int count,
+            Transform returnTarget = null)
         {
-            Vector2 origin = new Vector2((float)evt.Origin.X, (float)evt.Origin.Y);
-            Vector2 baseDir = new Vector2((float)evt.TargetDirection.X, (float)evt.TargetDirection.Y).normalized;
             if (baseDir.sqrMagnitude < 0.01f) baseDir = Vector2.right;
+            baseDir.Normalize();
 
             float baseAngle = Mathf.Atan2(baseDir.y, baseDir.x) * Mathf.Rad2Deg;
-            int count = Mathf.Max(1, evt.GlaiveCount);
+            count = Mathf.Max(1, count);
 
-            float outwardTime = Mathf.Max(0.25f, evt.MaxDistance / Mathf.Max(1f, evt.Speed));
+            float outwardTime = Mathf.Max(0.25f, maxDistance / Mathf.Max(1f, speed));
             float returnTime = outwardTime * 0.85f;
 
             for (int i = 0; i < count; i++)
@@ -158,7 +174,7 @@ namespace HappyShoot.View.Projectiles
                 float offsetAngle = count > 1 ? (-15f + (30f / (count - 1)) * i) : 0f;
                 float finalAngle = (baseAngle + offsetAngle) * Mathf.Deg2Rad;
                 Vector2 dir = new Vector2(Mathf.Cos(finalAngle), Mathf.Sin(finalAngle));
-                Vector2 peakPos = origin + dir * evt.MaxDistance;
+                Vector2 peakPos = origin + dir * maxDistance;
 
                 var glaive = GetOrCreateGlaive();
                 glaive.StartPos = origin;
@@ -166,10 +182,11 @@ namespace HappyShoot.View.Projectiles
                 glaive.OutwardDuration = outwardTime;
                 glaive.ReturnDuration = returnTime;
                 glaive.ElapsedTime = 0f;
-                glaive.Damage = evt.Damage;
+                glaive.Damage = damage;
                 glaive.BladeScale = 1.0f;
                 glaive.IsReturning = false;
                 glaive.RotationAngle = Random.Range(0f, 360f);
+                glaive.ReturnTarget = returnTarget;
                 glaive.HitMonstersOutward.Clear();
                 glaive.HitMonstersReturn.Clear();
 
@@ -182,6 +199,13 @@ namespace HappyShoot.View.Projectiles
             }
 
             CameraFollowView.Instance?.TriggerShake("glaive", duration: 0.10f, intensity: 0.14f);
+        }
+
+        private void OnWindGlaiveExecuted(WindGlaiveExecutedEvent evt)
+        {
+            Vector2 origin = new Vector2((float)evt.Origin.X, (float)evt.Origin.Y);
+            Vector2 baseDir = new Vector2((float)evt.TargetDirection.X, (float)evt.TargetDirection.Y);
+            LaunchGlaive(origin, baseDir, evt.Damage, evt.MaxDistance, evt.Speed, evt.GlaiveCount, returnTarget: null);
         }
 
         private void OnPhantomGlaiveExecuted(PhantomGlaiveExecutedEvent evt)

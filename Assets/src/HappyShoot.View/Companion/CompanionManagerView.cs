@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Events;
+using HappyShoot.Domain.Leveling;
 using HappyShoot.Domain.Progression;
 using HappyShoot.Domain.Spatial;
 using HappyShoot.View.Monsters;
@@ -11,7 +12,7 @@ using HappyShoot.View.Projectiles;
 namespace HappyShoot.View.Companion
 {
     /// <summary>
-    /// Manages the spawning, lifecycle, and runtime toggling (via cheats or progress) of AI companions.
+    /// Manages the spawning, lifecycle, runtime toggling, and growth synchronization of AI companions.
     /// Strictly modular and under 500 lines.
     /// </summary>
     public class CompanionManagerView : MonoBehaviour
@@ -43,6 +44,9 @@ namespace HappyShoot.View.Companion
             _eventBus = eventBus;
             _skillTreeManager = skillTreeManager;
 
+            // Subscribe to wizard reward synchronization event
+            _eventBus?.Subscribe<CompanionRewardSyncEvent>(OnWizardRewardSelected);
+
             // Spawn companions based on permanent progression clear count
             if (_skillTreeManager != null)
             {
@@ -54,6 +58,52 @@ namespace HappyShoot.View.Companion
                 {
                     SetRangerActive(true);
                 }
+            }
+        }
+
+        private void OnDestroy()
+        {
+            _eventBus?.Unsubscribe<CompanionRewardSyncEvent>(OnWizardRewardSelected);
+        }
+
+        private void OnWizardRewardSelected(CompanionRewardSyncEvent evt)
+        {
+            switch (evt.Category)
+            {
+                case RewardCategory.NewActiveSkill:
+                case RewardCategory.EvolveSkill:
+                    // Companions learn a new random skill from their class pool
+                    if (IsWarriorActive && _warriorView?.Entity != null)
+                    {
+                        _warriorView.Entity.LearnNewSkillRandomly();
+                        Debug.Log($"[CompanionManager] Warrior learned new skill! Total: {_warriorView.Entity.Skills.Count}");
+                    }
+                    if (IsRangerActive && _rangerView?.Entity != null)
+                    {
+                        _rangerView.Entity.LearnNewSkillRandomly();
+                        Debug.Log($"[CompanionManager] Ranger learned new skill! Total: {_rangerView.Entity.Skills.Count}");
+                    }
+                    break;
+
+                case RewardCategory.UpgradeActiveSkill:
+                    // Companions upgrade one of their active skills
+                    if (IsWarriorActive && _warriorView?.Entity != null)
+                    {
+                        _warriorView.Entity.LevelUpRandomSkill();
+                        Debug.Log("[CompanionManager] Warrior upgraded an active skill!");
+                    }
+                    if (IsRangerActive && _rangerView?.Entity != null)
+                    {
+                        _rangerView.Entity.LevelUpRandomSkill();
+                        Debug.Log("[CompanionManager] Ranger upgraded an active skill!");
+                    }
+                    break;
+
+                case RewardCategory.NewPassive:
+                case RewardCategory.UpgradePassive:
+                    // Passive bonuses apply automatically via 1/3 scaler in CompanionEntity
+                    Debug.Log($"[CompanionManager] Companions synchronized passive: {evt.RewardId} (1/3 scaling applied)");
+                    break;
             }
         }
 

@@ -283,9 +283,17 @@ namespace HappyShoot.View.UI
             var player = _playerView.Entity;
             var existing = player.GetSkill(skillId);
 
-            if (existing == null) _rewardManager.GrantOrLevelUpSkillDirectly(player, skillId);
-            else if (!existing.IsMaxLevel) existing.LevelUp();
-            else player.RemoveSkill(skillId);
+            if (existing == null)
+            {
+                _rewardManager.GrantOrLevelUpSkillDirectly(player, skillId);
+                _playerView?.EventBus?.Publish(new HappyShoot.Domain.Events.CompanionRewardSyncEvent(HappyShoot.Domain.Leveling.RewardCategory.NewActiveSkill, skillId));
+            }
+            else if (!existing.IsMaxLevel)
+            {
+                existing.LevelUp();
+                _playerView?.EventBus?.Publish(new HappyShoot.Domain.Events.CompanionRewardSyncEvent(HappyShoot.Domain.Leveling.RewardCategory.UpgradeActiveSkill, skillId));
+            }
+            else { player.RemoveSkill(skillId); }
 
             RefreshAllButtons();
         }

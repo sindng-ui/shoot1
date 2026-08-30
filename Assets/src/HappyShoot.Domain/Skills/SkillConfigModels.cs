@@ -65,6 +65,22 @@ namespace HappyShoot.Domain.Skills
 
         // 10. Explicit Level-by-Level Tunings (L1~L5)
         public List<SkillLevelCustomData> LevelTunings = new List<SkillLevelCustomData>();
+
+        // 11. Companion AI & Balance Tuning
+        public CompanionTuningConfig Companion = new CompanionTuningConfig();
+    }
+
+    [Serializable]
+    public class CompanionTuningConfig
+    {
+        public float FinalDamageScale = 0.3333333f;
+        public float PassiveScale = 0.3333333f;
+        public float RegroupRadius = 5.0f;
+        public float RegroupArrivalDistance = 2.6f;
+        public float MoveSpeedMultiplier = 1.0f;
+        public float WarriorEngageRange = 3.8f;
+        public float RangerSnipingRange = 12.0f;
+        public bool PrioritizeProtectWizard = false;
     }
 
     [Serializable]

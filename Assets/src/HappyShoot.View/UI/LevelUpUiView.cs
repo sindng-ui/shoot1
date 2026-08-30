@@ -371,6 +371,9 @@ namespace HappyShoot.View.UI
             var selected = _currentOptions[optionIndex];
             _rewardManager.ApplyReward(_playerView.Entity, selected);
 
+            // Synchronize growth with companions
+            _playerView?.EventBus?.Publish(new HappyShoot.Domain.Events.CompanionRewardSyncEvent(selected.Category, selected.Id));
+
             Debug.Log($"[LevelUpUiView] Selected reward: {selected.Title}");
 
             // Close UI and resume game

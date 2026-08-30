@@ -105,8 +105,9 @@ graph TD
 | | `MonsterEvents.cs [UPDATED]` | `MonsterDamagedEvent (IsCritical 포함)`, `MonsterSpawnedEvent`, `MonsterDiedEvent` 등 | 몬스터 관련 이벤트 집합 (크리티컬 적중 여부 플래그 지원) |
 | | `LevelEvents.cs` | `PlayerLevelUpEvent`, `ExpGainedEvent` | 경험치 및 레벨업 이벤트 |
 | | `SessionEvents.cs` | `GameStateChangedEvent`, `SurvivalTimeUpdatedEvent`, `KillCountUpdatedEvent`, `GoldGainedEvent` | 세션 및 상태 전이 관련 도메인 이벤트 집합 |
-| | `EventBus.cs` | `EventBus` | 제네릭 타입 기반의 고성능 도메인 이벤트 버스 |
-| **Entities** | `CompanionEntity.cs [NEW]` | `CompanionEntity`, `CompanionType` | **AI 동료 순수 도메인 엔티티: 전사/궁수 타입, 마법사 본체 스탯 실시간 연동, 기본 데미지 1/3 (0.333x) 스케일링, 쿨타임 관리 (68줄)** |
+| | `CompanionEvents.cs [NEW]` | `CompanionRewardSyncEvent` | **마법사 보상(신규 액티브, 액티브 레벨업, 패시브) 선택 시 동료 성장 동기화 이벤트 (22줄)** |
+| **Entities** | `CompanionEntity.cs [UPDATED]` | `CompanionEntity`, `CompanionType` | **AI 동료 도메인 엔티티: 마법사 성장 동기화, 클래스 고유 스킬 풀(전사 3종, 궁수 3종), 패시브 1/3 효과 반영, 샌드박스 연동 최종 1/3 데미지 산출 (164줄)** |
+| | `CompanionSkillInstance.cs [NEW]` | `CompanionSkillInstance` | **컴패니언 개별 스킬 인스턴스: 레벨(Lv.1~5) 및 독립 쿨다운 타이머 관리 순수 도메인 모델 (45줄)** |
 | **Gems** | `GemStoneEntity.cs [NEW]` | `GemStoneEntity` | 보석 3종(루비/에메랄드/아메시스트) 필드 드랍 엔티티 (0-GC 풀링, 자석 흡수) |
 | | `GemManager.cs [UPDATED]` | `GemManager` | 경험치 보석 + 영구 성장 보석 통합 풀링 관리자 (일반몹 1% 드랍, 보스 확정 5개 드랍) |
 | **Progression** | `GemType.cs [NEW]` | `GemType`, `BranchType`, `GemTypeExtensions` | 보석 3종 및 속성 분기 3종(화염/빙결/전기) 정의 및 유틸리티 |
@@ -207,8 +208,9 @@ graph TD
 | | `BackgroundAmbientDustView.cs [NEW]` | `BackgroundAmbientDustView` | 던전 바닥 은은한 공기 먼지/부유 입자 파티클 시각화 |
 | **Projectiles & Spells** | `MeteorStrikeManagerView.cs [UPDATED]` | `MeteorStrikeManagerView` | **메테오 스트라이크 비주얼 대격변: 주변 붉은 번짐 절반 이하(`radius * 0.85f`) 축소, 황금빛 광선 림, 착탄 노바 섬광(Nova Flash), 지면 마그마 크레이터 룬, 중력 가속 혜성 꼬리 연출** |
 | **Bootstrap** | `GameBootstrap.cs [UPDATED]` | `GameBootstrap` | 마스터 부트스트랩 (**마법사 Only 모드: `_selectedClass = Wizard` 고정**, 카메라, 사운드, 메테오, 보석 스킬트리, **AI 동료 매니저(CompanionManagerView)**, 세션, UI 일괄 생성 및 연동, 399줄) |
-| **Companions** | `CompanionView.cs [UPDATED]` | `CompanionView` | **AI 동료 시각화 및 전투 AI 뷰: 완전 독립 AI 캐릭터(마법사에 딸려가지 않음, 근처 몹을 스스로 찾아가 공격), 마법사가 6m 이상 멀어졌을 때만 마법사 걷는 속도(wizardMoveSpeed) 1:1 일치로 정속 재합류, 이동 방향 5방향 스프라이트 즉시 전환 + 무기 연동 젤리 보빙(hop 0.14f, squashY 0.10f)으로 미끄러짐 완전 박멸, 플레이어 동일 대검 스윙 (449줄)** |
-| | `CompanionManagerView.cs [NEW]` | `CompanionManagerView` | **AI 동료 생명주기 관리자: 스테이지 클리어 회차(1회차 전사, 2회차 궁수) 기반 자동 스폰 및 개발자 모드 실시간 토글 API 제공 (122줄)** |
+| **Companions** | `CompanionView.cs [UPDATED]` | `CompanionView` | **AI 동료 시각화 및 전투 AI 뷰: 완전 독립 AI 캐릭터, 샌드박스 쿨다운/데미지 실시간 연동, 다중 스킬(전사/궁수) 순차 발동, 6m 정속 재합류, 이동 방향 5방향 스프라이트 + 무기 연동 젤리 보빙, 대검 스윙 모션 (454줄)** |
+| | `CompanionSkillExecutor.cs [NEW]` | `CompanionSkillExecutor` | **동료 스킬 실행 및 VFX 전담 헬퍼: 글레이브(회전 부메랑 풍인) 및 화살비(낙하 폭격), 지면강타(지진 파쇄), 휠윈드(회전 검기) 전용 비주얼 완벽 분리 연동 (225줄)** |
+| | `CompanionManagerView.cs [UPDATED]` | `CompanionManagerView` | **AI 동료 생명주기 및 성장 관리자: CompanionRewardSyncEvent 구독, 마법사 레벨업 시 동료 스킬 해금/레벨업/패시브 자동 동기화, 클리어 회차 기반 스폰 (172줄)** |
 | | `CompanionSelectPreviewHelper.cs [NEW]` | `CompanionSelectPreviewHelper` | **메인 메뉴 3인 원정대 프리뷰 렌더러: 마법사 좌우 호위 전사/궁수 카드 렌더링, 미해금 시 실루엣 + 락 뱃지 연출 (121줄)** |
 | **Gems** | `GemStoneView.cs [NEW]` | `GemStoneView`, `GemStoneManagerView` | 필드에 스폰된 보석 3종(루비/에메랄드/아메시스트) 렌더링, 펄스 애니메이션, 0-GC 풀링 |
 | **Skill Tree** | `SkillTreeUiView.cs [UPDATED]` | `SkillTreeUiView` | **🌌 대마법사 비전 성좌 메인 화면: 마법사 Only 단일 360° 대형 원형 성좌(18노드), 💰 골드 재화 UI, 우측 상세 인스펙터 패널, 50% 골드 환불 리셋 (465줄)** |
@@ -232,8 +234,9 @@ graph TD
 | | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **🧙‍♂️ 마법사 메인 메뉴**: 대형 마법사 단독 프리뷰 + **3인 원정대 좌우 동료/실루엣 프리뷰(CompanionSelectPreviewHelper)**, 시작 마법 선택기 탑재, '🔥 게임 시작' 버튼, 🛠️ 개발자모드/샌드박스/설정 (449줄) |
 | | `StartSkillSelectorView.cs [NEW]` | `StartSkillSelectorView` | **🔮 마법사 시작 기본 마법 선택 UI**: 🔥 화염구, ❄️ 서리 폭발, ⚡ 연쇄 번개 3종 버튼 및 아이콘 렌더링, 선택 상태 시각적 하이라이트(골드 림/퍼플 글로우), 선택된 스킬 상세/스탯 설명 실시간 갱신, 이전 선택 PlayerPrefs 자동 복원 (249줄) |
 | | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | [개발자 모드] 실시간 스킬(10종)/진화/패시브 원클릭 장착 및 해제, 치트(무적, 레벨업, 전멸, 배속 등), Phase 점프, **🛡️ 전사 동료 / 🏹 궁수 동료 실시간 소환/해제 치트 버튼 탑재 (489줄)** |
-| | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 (Combat Sandbox)** - 실시간 10종 스킬 + 9종 진화 스킬 + **🧬 9종 패시브 스킬 튜닝**, **💎 경험치 & 레벨업 시스템 튜닝**, **👾 7종 몬스터 + 보스 스탯**, **🎯 치명타 확률/배율 및 플레이어 코어 스탯 실시간 조절 및 프로젝트 내부 JSON 파일(`Assets/Config/skill_configs.json`) 영구 저장/GitHub 동기화 지원** |
-| | `SkillTuningUiBuilder.cs [UPDATED]` | `SkillTuningUiBuilder` | 샌드박스 모드 UI 요소 생성 전담 헬퍼 (**6대 대분류 카테고리 탭: 전사/궁수/마법사/패시브/공통/시스템**, 500줄 규칙 준수 모듈화) |
+| | `SkillTuningUiView.cs [UPDATED]` | `SkillTuningUiView` | **🧪 전투 & 밸런스 샌드박스 (Combat Sandbox)** - 실시간 10종 스킬 + 9종 진화 스킬 + **🧬 9종 패시브 스킬 튜닝**, **💎 경험치 & 레벨업**, **👾 몬스터 스탯**, **🎯 치명타/코어스탯**, **👥 AI 동료 8종 파라미터 튜닝** 실시간 조절 및 JSON 영구 저장 지원 |
+| | `SkillTuningUiBuilder.cs [UPDATED]` | `SkillTuningUiBuilder` | 샌드박스 모드 UI 요소 생성 전담 헬퍼 (**6대 대분류 카테고리 탭: 전사/궁수/마법사/패시브/공통/시스템**, "companion_tuning" 동료 튜닝 항목 연동, 445줄) |
+| | `SkillTuningCompanionConfigurator.cs [NEW]` | `SkillTuningCompanionConfigurator` | **👥 AI 동료 8종 슬라이더(최종 공격력 보정, 패시브 보정, 주변 반경, 안착거리, 이속배율, 전사 사거리, 궁수 사거리, 마법사 경호 타겟팅) 샌드박스 행 생성 및 실시간 바인딩 전담 헬퍼 (47줄)** |
 | | `SkillTuningPassiveConfigurator.cs [NEW]` | `SkillTuningPassiveConfigurator` | **🧬 9종 패시브 스킬 샌드박스 슬라이더 행 생성 및 실시간 핫리로드 연동 전담 헬퍼 (흡혈귀의 이빨, 바람의 깃털, 마나 룬, 강철 갑옷, 황금 반지, 생명의 펜던트, 발화의 불꽃, 과전류의 핵, 치명타의 눈)** |
 | | `SkillLiveApplier.cs [UPDATED]` | `SkillLiveApplier` | 스킬 수치 실시간 핫리로드 및 **`ApplyPassivesLive` 플레이어 보유 패시브 레벨 비례 `PlayerEntity.Stats` 실시간 재계산/동기화** |
 | | `SkillConfigRepository.cs [UPDATED]` | `SkillConfigRepository` | **📁 샌드박스 설정 파일 멀티 PC/Git 동기화 저장소** - `Assets/Resources/Config/skill_configs.json` 및 `Assets/Config/skill_configs.json` 이중 저장 & `Resources.Load<TextAsset>` 1순위 로드로 GitHub pull 시 다른 PC 및 빌드에서도 100% 최신 설정 공유 보장 (에디터 자동 AssetDatabase.Refresh 및 Fallback 지원) |
@@ -284,7 +287,7 @@ graph TD
 | | `LevelUpUiView.cs [UPDATED]` | `LevelUpUiView` | **레벨업 3지선다 키보드 숫자키 1, 2, 3(키패드 1,2,3 포함) 즉시 선택 단축키 지원 & 버튼 뱃지 표시** |
 | | `TreasureChestPopupView.cs [UPDATED]` | `TreasureChestPopupView` | **보물 상자 개봉 시 640x580 대형 다이얼로그, 80x80 스킬 아이콘 + 골드 타이틀 + 대형 한글 설명 카드 패널 렌더링, [스페이스/엔터/클릭] 수령 지원** |
 | **Projectiles** | `MeteorStrikeManagerView.cs [UPDATED]` | `MeteorStrikeManagerView` | **[마법사 궁극기 메테오 스트라이크 개편] 눈 아픈 붉은 화면 제거, 은은한 룬 마법진, 운석 화염 꼬리(Flame Trail), 황금-주황빛 충격파 링 및 12개 마그마 파편 비산 연출** |
-| | `WindGlaiveManagerView.cs [UPDATED]` | `WindGlaiveManagerView` | **[궁수 기본/진화 글레이브] 윈드 글레이브 & 팬텀 글레이브 뷰 매니저 (0.5~3.0배 칼날 스케일링, 1~7개 대칭 부채꼴 환영 비산, 왕복 2타 판정 동기화)** |
+| | `WindGlaiveManagerView.cs [UPDATED]` | `WindGlaiveManagerView` | **[궁수 기본/진화 글레이브] 윈드 글레이브 & 팬텀 글레이브 뷰 매니저 (0.5~3.0배 칼날 스케일링, 1~7개 대칭 부채꼴 환영 비산, 왕복 2타 판정, ReturnTarget 동적 바인딩으로 컴패니언 궁수 투척 시 궁수에게 정확 복귀 지원, 301줄)** |
 | | `FireballSkillManagerView.cs [UPDATED]` | `FireballSkillManagerView` | 화염구 발사 및 폭발 뷰 매니저 (정확한 `fireball` 카메라 셰이크 연동) |
 | | `MagicSkillManagerView.cs [UPDATED]` | `MagicSkillManagerView` | 서리폭발/빙하샤드/기가스톰/체인라이트닝 뷰 매니저 (스킬별 정확한 고유 카메라 셰이크 연동) |
 | **Camera** | `CameraFollowView.cs [UPDATED]` | `CameraFollowView` | **스킬별(0~100%) 및 마스터(0~100%) 카메라 셰이크 강도 배율 지원, 다중 스킬 셰이크 중첩 시 최대값 우선(Max Clamping) 및 절대 한계선(0.38m) 캡핑으로 눈 피로/어지러움 완벽 차단** |

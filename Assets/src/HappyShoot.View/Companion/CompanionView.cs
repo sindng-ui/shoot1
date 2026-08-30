@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Events;
+using HappyShoot.Domain.Skills;
 using HappyShoot.Domain.Spatial;
 using HappyShoot.View.Audio;
+using HappyShoot.View.Config;
 using HappyShoot.View.Monsters;
 using HappyShoot.View.Projectiles;
 using HappyShoot.View.Utils;
@@ -128,14 +130,22 @@ namespace HappyShoot.View.Companion
             if (Entity == null || _playerView == null) return;
 
             float dt = Time.deltaTime;
+            var cfg = SkillConfigRepository.Instance.GetConfig();
+            var compCfg = cfg?.Companion;
+            if (compCfg != null)
+            {
+                Entity.FinalDamageScale = compCfg.FinalDamageScale;
+                Entity.PassiveScale = compCfg.PassiveScale;
+            }
+
             Entity.Update(dt);
 
-            UpdateCombat(dt);
-            UpdatePositionAndAnimation(dt);
+            UpdateCombat(dt, compCfg);
+            UpdatePositionAndAnimation(dt, compCfg);
             UpdateSlashVisuals(dt);
         }
 
-        private void UpdatePositionAndAnimation(float dt)
+        private void UpdatePositionAndAnimation(float dt, CompanionTuningConfig compCfg)
         {
             Vector3 playerPos = _playerView.transform.position;
             float distToPlayer = Vector3.Distance(playerPos, transform.position);
@@ -149,18 +159,19 @@ namespace HappyShoot.View.Companion
                 return;
             }
 
-            // 마법사의 기본 이동 속도 (완전히 동일한 속도로 이동)
-            float moveSpeed = (_playerView.Entity != null) ? _playerView.Entity.Stats.MoveSpeed : 5.0f;
+            // 샌드박스 튜닝 파라미터 적용 (이속 배율, 재합류 반경, 안착 거리)
+            float speedMult = compCfg != null ? compCfg.MoveSpeedMultiplier : 1.0f;
+            float moveSpeed = ((_playerView.Entity != null) ? _playerView.Entity.Stats.MoveSpeed : 5.0f) * speedMult;
+            float regroupRadius = compCfg != null ? compCfg.RegroupRadius : 5.0f;
+            float arrivalDist = compCfg != null ? compCfg.RegroupArrivalDistance : 2.6f;
 
             // 2. 마법사 재합류(Regroup) 상태 판정
-            // - 마법사가 6.0m 이상 멀리 가버렸을 때만 재합류 시작!
-            // - 마법사 근처 2.6m 이내로 도달하면 즉시 멈추고 독립 전투 모드로 복귀!
-            if (!_isRegrouping && distToPlayer > 6.0f)
+            if (!_isRegrouping && distToPlayer > regroupRadius)
             {
                 _isRegrouping = true;
                 _regroupTarget = playerPos + (Vector3)_formationOffset;
             }
-            else if (_isRegrouping && distToPlayer < 2.6f)
+            else if (_isRegrouping && distToPlayer < arrivalDist)
             {
                 _isRegrouping = false;
             }
@@ -312,40 +323,66 @@ namespace HappyShoot.View.Companion
             return HeroSpriteHelper.ViewDirection.Side;
         }
 
-        private void UpdateCombat(float dt)
+        private void UpdateCombat(float dt, CompanionTuningConfig compCfg)
         {
-            if (_spawnerView == null) return;
+            if (_spawnerView == null || Entity == null || Entity.Skills == null || Entity.Skills.Count == 0) return;
 
-            float range = (Entity.Type == CompanionType.Warrior) ? 3.6f : 12.0f;
-            _currentTarget = FindClosestMonster(range);
-            if (_currentTarget == null || !Entity.CanAttack) return;
+            float range = (Entity.Type == CompanionType.Warrior)
+                ? (compCfg != null ? compCfg.WarriorEngageRange : 3.8f)
+                : (compCfg != null ? compCfg.RangerSnipingRange : 12.0f);
 
-            Entity.TriggerAttack();
+            bool protectWizard = compCfg != null && compCfg.PrioritizeProtectWizard;
+            _currentTarget = FindClosestMonster(range, protectWizard);
+            if (_currentTarget == null || _currentTarget.IsDead) return;
 
+            var cfg = SkillConfigRepository.Instance.GetConfig();
             Vector2 attackDir = new Vector2(
                 (float)(_currentTarget.Position.X - Entity.Position.X),
                 (float)(_currentTarget.Position.Y - Entity.Position.Y)).normalized;
 
-            if (Entity.Type == CompanionType.Warrior)
+            for (int i = 0; i < Entity.Skills.Count; i++)
             {
-                ExecuteWarriorSlash(attackDir);
-            }
-            else
-            {
-                ExecuteRangerArrow(attackDir);
+                var skillInstance = Entity.Skills[i];
+                if (!skillInstance.IsReady) continue;
+
+                float baseCd = GetSkillBaseCooldown(skillInstance.SkillId, cfg);
+                float effectiveCd = Entity.CalculateEffectiveCooldown(baseCd);
+                skillInstance.Trigger(effectiveCd);
+
+                CompanionSkillExecutor.ExecuteSkill(
+                    skillInstance.SkillId,
+                    skillInstance.Level,
+                    Entity,
+                    attackDir,
+                    _spawnerView,
+                    _projManager,
+                    _eventBus,
+                    onSlashTriggered: TriggerSlashVisual,
+                    companionTransform: transform);
+
+                break;
             }
         }
 
-        private void ExecuteWarriorSlash(Vector2 attackDir)
+        private float GetSkillBaseCooldown(string skillId, SkillConfigData cfg)
         {
-            float baseDamage = 35f;
-            float actualDamage = Entity.CalculateDamage(baseDamage);
-            float radius = 2.9f * (Entity.Owner != null ? Entity.Owner.Stats.AreaMultiplier : 1.0f);
+            switch (skillId)
+            {
+                case "slash": return cfg.Slash.Cooldown;
+                case "ground_stomp": return cfg.GroundStomp.Cooldown;
+                case "whirlwind": return cfg.Whirlwind.Cooldown;
+                case "bow": return cfg.Bow.Cooldown;
+                case "glaive": return cfg.Glaive.Cooldown;
+                case "arrow_rain": return cfg.ArrowRain.Cooldown;
+                default: return 1.0f;
+            }
+        }
 
-            // Trigger Visual Arc & Greatsword Swing
-            _slashBaseAngle = Mathf.Atan2(attackDir.y, attackDir.x) * Mathf.Rad2Deg;
+        private void TriggerSlashVisual(float baseAngle)
+        {
+            _slashBaseAngle = baseAngle;
             _slashVisualTimer = _slashDuration;
-            if (_weaponSr != null) _weaponSr.sortingOrder = 30; // 몸 앞으로 올려서 대검 휘두름!
+            if (_weaponSr != null) _weaponSr.sortingOrder = 30;
             if (_slashPivotGo != null)
             {
                 _slashPivotGo.SetActive(true);
@@ -354,40 +391,6 @@ namespace HappyShoot.View.Companion
                 if (_weaponPivotGo != null) _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
                 if (_slashVisualSr != null) _slashVisualSr.color = Color.white;
             }
-
-            var activeMonsters = _spawnerView.DomainSpawner?.ActiveMonsters;
-            if (activeMonsters != null)
-            {
-                Vector2D myPos = Entity.Position;
-                for (int i = 0; i < activeMonsters.Count; i++)
-                {
-                    var m = activeMonsters[i];
-                    if (m == null || m.IsDead) continue;
-                    if ((m.Position - myPos).SqrMagnitude <= radius * radius)
-                    {
-                        Vector2 toM = new Vector2((float)(m.Position.X - myPos.X), (float)(m.Position.Y - myPos.Y)).normalized;
-                        if (Vector2.Dot(attackDir, toM) >= 0.25f)
-                            m.TakeDamage(actualDamage, isCritical: false);
-                    }
-                }
-            }
-            _eventBus?.Publish(new PlaySoundEvent(SoundEffectType.SlashAttack));
-        }
-
-        private void ExecuteRangerArrow(Vector2 attackDir)
-        {
-            float actualDamage = Entity.CalculateDamage(22f);
-            if (_projManager?.DomainManager != null)
-            {
-                _projManager.DomainManager.LaunchProjectile(
-                    Entity.Position,
-                    new Vector2D(attackDir.x, attackDir.y),
-                    speed: 16f,
-                    damage: actualDamage,
-                    pierceCount: 999);
-            }
-
-            _eventBus?.Publish(new PlaySoundEvent(SoundEffectType.BowShoot));
         }
 
         private void UpdateSlashVisuals(float dt)
@@ -422,15 +425,18 @@ namespace HappyShoot.View.Companion
             }
         }
 
-        private MonsterEntity FindClosestMonster(float maxRange)
+        private MonsterEntity FindClosestMonster(float maxRange, bool prioritizeProtectWizard)
         {
             if (_spawnerView == null) return null;
             var activeList = _spawnerView.DomainSpawner?.ActiveMonsters;
             if (activeList == null || activeList.Count == 0) return null;
 
             MonsterEntity closest = null;
-            float minSqrDist = maxRange * maxRange;
+            float minSqrDist = float.MaxValue;
             Vector2D myPos = Entity.Position;
+            Vector2D wizardPos = (_playerView != null && _playerView.Entity != null) ? _playerView.Entity.Position : myPos;
+            Vector2D evalPos = prioritizeProtectWizard ? wizardPos : myPos;
+            float maxRangeSqr = maxRange * maxRange;
 
             for (int i = 0; i < activeList.Count; i++)
             {

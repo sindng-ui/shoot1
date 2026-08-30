@@ -47,6 +47,12 @@ namespace HappyShoot.View.UI
                 return;
             }
 
+            if (skillId == "companion_tuning")
+            {
+                SkillTuningCompanionConfigurator.ConfigureCompanionRows(config, container, onRowCreated);
+                return;
+            }
+
             if (skillId == "crit_tuning")
             {
                 if (player == null) return;
