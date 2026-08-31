@@ -45,6 +45,8 @@ graph TD
         GB --> CSU[CharacterSelectUiView]
         CSU --> SSS[StartSkillSelectorView]
         CSU --> CSP[CompanionSelectPreviewHelper]
+        CSU --> MFV[MagicForgeUiView (Modal)]
+        MFV --> RTV[RuneInscriptionTabView]
         GB --> CM[CompanionManagerView]
         CM --> CV[CompanionView (Warrior & Ranger)]
         GB --> STV[SkillTreeUiView (360° Arcane Dial)]
@@ -68,6 +70,9 @@ graph TD
         MUA[MetaUpgradeApplier]
         STMgr[SkillTreeManager]
         STD[SkillTreeSaveData & ClearCount]
+        RNM[RuneManager & 12 RuneDefs]
+        RNMOD[RuneModifiers (Zero-Alloc Struct)]
+        FSD[ForgeSaveData]
         SG[SpatialGrid2D]
         CS[CompositeSkill]
         LS[LevelSystem]
@@ -121,6 +126,16 @@ graph TD
 | | `MetaUpgradeDefinition.cs` | `MetaUpgradeDefinition`, `MetaUpgradeSaveData` | 8종 영구 강화 항목 정의 및 세이브 데이터 구조체 |
 | | `MetaUpgradeApplier.cs` | `MetaUpgradeApplier` | 세이브 데이터를 읽어 플레이어 시작 스탯에 영구 증강 적용 |
 | | `ISaveStorage.cs` | `ISaveStorage` | 영구 저장소 로컬/클라우드 입출력 추상화 인터페이스 |
+| **Magic Forge (Domain)** | `RuneModifiers.cs [NEW]` | `RuneModifiers` | **룬이 스킬에 적용하는 수치 변조 제로할당 구조체 (피해/쿨다운/범위 배율, 투사체/관통 증가, 흡혈, 연쇄, 처치폭발, 시간의룬 무료시전, 공명) (69줄)** |
+| | `RuneDefinition.cs [NEW]` | `RuneDefinition`, `RuneGrade` | **12종 룬 불변 정의 모델 (등급, 해금비용, 기본수정자, 레벨당 스케일링, 주 보석 유형, 레벨업 비용 연산 공식) (133줄)** |
+| | `RuneRegistry.cs [NEW]` | `RuneRegistry` | **12종 룬(일반 4종, 희귀 4종, 전설 4종) 등록소 (완주 시 보석 6개/색 수입 최적화 밸런스) (168줄)** |
+| | `RuneManager.cs [NEW]` | `RuneManager` | **룬 인스크립션 비즈니스 로직 매니저 (해금/강화/스킬슬롯 장착/해제 및 스킬별 최종 수정자 연산) (168줄)** |
+| | `ForgeSaveData.cs [NEW]` | `ForgeSaveData`, `SerializableStringDict` | **마법 대장간 영구 저장 데이터 모델 (룬 레벨, 스킬 슬롯 바인딩, 결정체 레벨/장착, 재련 해금) (130줄)** |
+| **Progression (Skill Tree & Gems)** | `SkillTreeManager.cs [UPDATED]` | `SkillTreeManager` | 영구 성좌 스킬 트리 노드 해금/강화, 3종 보석 및 골드 잔고 관리, 초기화 무료 환불, Save() 공개 저장 인터페이스 (287줄) |
+| | `SkillTreeSaveData.cs [UPDATED]` | `SkillTreeSaveData`, `SerializableDict` | **성좌 스킬 트리 세이브 데이터 (클리어 횟수, 골드, 루비/에메랄드/아메시스트 수량, GetGems/SpendGems 편의 메서드, 노드 레벨 매핑) (186줄)** |
+| | `SkillTreeRegistry.cs` | `SkillTreeRegistry`, `SkillTreeNodeDef` | 3영웅 원소 분기(불/얼음/번개) 54개 성좌 노드 정의 등록소 |
+| | `SkillTreeApplier.cs` | `SkillTreeApplier`, `PlayerProgressionFlags` | 해금된 성좌 노드를 CharacterStats 및 패시브 플래그로 변환 적용기 |
+| | `GemType.cs` | `GemType` | 영구 성장 재화 보석 열거형 (Ruby=0, Emerald=1, Amethyst=2) |
 | **Skills & Passives** | `SkillRewardManager.cs [UPDATED]` | `SkillRewardManager`, `SkillRewardOption`, `PassiveDefinition` | 클래스별 전용 무기 3종, 공통 오비탈 무기, 9종 패시브(**`passive_crit: 치명타의 눈` 포함**), 진화 스킬 롤링 및 추천 관리자 |
 | | `OrbitingBladesEffect.cs [UPDATED]` | `OrbitingBladesEffect` | [전 클래스 공통] 개별 회전 칼날 물리 위치 판정 및 크리티컬 대미지 롤링 연동 |
 | | `ChainLightningEffect.cs [UPDATED]` | `ChainLightningEffect` | [마법사 전용] 연쇄 번개 도메인 로직 및 크리티컬 대미지 롤링 연동 |
@@ -186,7 +201,10 @@ graph TD
 | | `GameOverResultUiView.cs [UPDATED]` | `GameOverResultUiView` | **사망(Game Over) 시 영구 성장 상점/스킬트리 접근 완전 차단, 오직 재도전만 가능하며 3보스 클리어 룰 안내 표시 (292줄)** |
 | | `CharacterSelectUiView.cs [UPDATED]` | `CharacterSelectUiView` | **🧙‍♂️ 마법사 Only 메인 메뉴: 대형 마법사 아바타 프리뷰 + 시작 기본 마법 3종 선택기(StartSkillSelectorView) 연동 + '🔥 게임 시작' 단일 대형 버튼 + '⚒️ 마법 대장간' 진입 버튼, 5인자 콜백(startSkillId 전달) 지원 (446줄)** |
 | | `StartSkillSelectorView.cs [NEW]` | `StartSkillSelectorView` | **🔮 마법사 시작 기본 마법 선택 UI: 🔥 화염구 / ❄️ 서리 폭발 / ⚡ 연쇄 번개 3종 실시간 원클릭 선택, 선택 테두리/배경 하이라이트, 실시간 스킬/스탯 상세 설명, PlayerPrefs 기억, 500줄 규칙 준수 분리 모듈 (249줄)** |
-| **Projectiles** | `ProjectileView.cs [UPDATED]` | `ProjectileManagerView`, `ProjectileView` | 관통 화살(Piercing Arrow, sortingOrder = 24), 황금빛 앰버 골드 일관 유지 (128개 사전 생성 Prewarm 및 0-Allocation 풀링) |
+| | `DevSkillSelectorUiView.cs [UPDATED]` | `DevSkillSelectorUiView` | **🛠️ 인게임 개발자 콘솔 UI: 모든 액티브/진화/패시브 무기 좌클릭(+1Lv)/우클릭(초기화) 실시간 레벨링 제어기 (402줄, 500줄 규칙 준수)** |
+| | `DevCheatButtonHelper.cs [NEW]` | `DevCheatButtonHelper`, `DevCheatContext` | **💎 개발자 치트 모듈 헬퍼: 🔴 루비 +10, 🟢 에메랄드 +10, 🟣 아메시스트 +10, 💎 보석 전체 +50(대장간 테스트), 무적, 풀피, 레벨업, 몬스터전멸, 속도(0.5~4x), 골드+1000, 페이즈점프, AI동료토글 치트 버튼 일체 (213줄)** |
+| | `SettingsDialogUiView.cs` | `SettingsDialogUiView` | 3개 탭 종합 환경 설정 모달 다이얼로그 (자동/수동조준, 볼륨, UI스케일) |
+| | `ProjectileView.cs [UPDATED]` | `ProjectileManagerView`, `ProjectileView` | 관통 화살(Piercing Arrow, sortingOrder = 24), 황금빛 앰버 골드 일관 유지 (128개 사전 생성 Prewarm 및 0-Allocation 풀링) |
 | | `OrbitingBladeView.cs [UPDATED]` | `OrbitingBladeView` | 공통 수호의 검(sortingOrder = 22)으로 몬스터(10) 및 플레이어(15) 상단에서 선명하게 회전 |
 | | `WhirlwindManagerView.cs [UPDATED]` | `WhirlwindManagerView` | 전사 휠윈드 회전 검날(sortingOrder = 28) 및 바람 스파크(sortingOrder = 29)로 몬스터 상단에서 사이클론 폭풍 선명 연출 |
 | | `GroundStompManagerView.cs [UPDATED]` | `GroundStompManagerView` | **💥 전사 지각변동(Upheaval) 뷰 매니저: 0.030초 초고속 간격으로 전방을 향해 쐐기형 V자 지진 충격파(Wedge Shockwave Crest, sortingOrder = 6)가 두두두두! 뻗어나가며 좌우 지반 바위 슬래브(Earth Chunks, sortingOrder = 5)가 들썩이는 역동적 지진 연출 (365줄)** |
@@ -291,14 +309,19 @@ graph TD
 | | `FireballSkillManagerView.cs [UPDATED]` | `FireballSkillManagerView` | 화염구 발사 및 폭발 뷰 매니저 (정확한 `fireball` 카메라 셰이크 연동) |
 | | `MagicSkillManagerView.cs [UPDATED]` | `MagicSkillManagerView` | 서리폭발/빙하샤드/기가스톰/체인라이트닝 뷰 매니저 (스킬별 정확한 고유 카메라 셰이크 연동) |
 | **Camera** | `CameraFollowView.cs [UPDATED]` | `CameraFollowView` | **스킬별(0~100%) 및 마스터(0~100%) 카메라 셰이크 강도 배율 지원, 다중 스킬 셰이크 중첩 시 최대값 우선(Max Clamping) 및 절대 한계선(0.38m) 캡핑으로 눈 피로/어지러움 완벽 차단** |
-| **Utils** | `RewardIconHelper.cs [UPDATED]` | `RewardIconHelper` | 18종 무기/패시브/진화 전용 80x80 고해상도 픽셀아트 아이콘 생성기 |
+| | `RewardIconHelper.cs [UPDATED]` | `RewardIconHelper` | 18종 무기/패시브/진화 전용 80x80 고해상도 픽셀아트 아이콘 생성기 |
 | | `SpriteHelper.cs [UPDATED]` | `SpriteHelper` | **2.5D 고해상도(48x24) 카툰 타원 블롭 섀도우(자연스러운 58% 불투명도 및 소프트 페이드아웃 감쇠) 및 공용 픽셀아트 스프라이트 생성기 (446줄)** |
-| **Bootstrap** | `GameBootstrap.cs [UPDATED]` | `GameBootstrap` | 마스터 부트스트랩 (카메라, 3영웅, 사운드 매니저, 마법 스킬 매니저, 메테오 매니저, 영구 상점, 세션, UI 일괄 생성 및 연동) |
+| **Magic Forge** | `MagicForgeUiView.cs [NEW]` | `MagicForgeUiView` | **마법 대장간 메인 팝업 UI (980x620), 3탭 컨테이너(룬 각인소/마법 결정체/스킬 재련), 보유 보석 및 골드 실시간 지갑 HUD 렌더링 (184줄)** |
+| | `RuneInscriptionTabView.cs [NEW]` | `RuneInscriptionTabView` | **룬 각인소 탭 뷰: 마법사 3대 스킬 슬롯 장착/해제(✕), 12종 룬 카탈로그(일반/희귀/전설), 실시간 수치 변조 프리뷰, 해금 및 Lv.∞ 무한 강화 인터랙션 (342줄)** |
+| | `ForgeSpriteHelper.cs [NEW]` | `ForgeSpriteHelper` | **룬/결정체/빈 슬롯 전용 프로시저럴 픽셀아트 아이콘 및 원형 프레임 생성기 (120줄)** |
+| | `JsonForgeStorage.cs [NEW]` | `JsonForgeStorage` | **마법 대장간 전용 영구 저장소 (PlayerPrefs JSON: HappyShoot_ForgeSave_v1) (42줄)** |
+| **Bootstrap** | `GameBootstrap.cs [UPDATED]` | `GameBootstrap` | 마스터 부트스트랩 (카메라, 3영웅, 사운드 매니저, 마법 스킬 매니저, 메테오 매니저, 영구 상점, 세션, **마법 대장간 룬 주입 및 콜백 연동**, UI 일괄 생성 및 연동) |
 
 ---
 
 ### 3. 🧪 Tests Layer (`Assets/tests/HappyShoot.Domain.Tests` & `HappyShoot.View.Tests`)
-*총 135개 NUnit 단위 테스트 스위트 (100% ALL PASS)*
+*총 140개 NUnit 단위 테스트 스위트 (100% ALL PASS)*
+- **`RuneSystemTests.cs [NEW]`**: **마법 대장간 룬 인스크립션 도메인 단위 테스트 (12종 룬 등록, 지갑 보석 차감 해금, 레벨업 강화 및 수치 스케일링, 스킬 슬롯 장착/해제, CompositeSkill 실시간 룬 주입 및 쿨다운 단축/무료시전 검증) (5개 테스트 100% ALL PASS)**
 - **`WizardStaffPlacementTests.cs [NEW]`**: **마법사 전 방향(8방향 + 정면/후면) 지팡이 오른손 1:1 스냅, 각도, flipX, 소팅오더, 캐스팅 펄스 고도화 및 중심 고정 검증 단위 테스트 (11개 테스트 100% ALL PASS, 결과: `docs/wizard_staff_placement_test_result.txt`)**
 - **`Character Pixel Art Verification [NEW]`**: **전사/궁수/마법사 3영웅 18개 스프라이트 파일 350x450 도트 픽셀아트 포맷, 바닥 Y=431 정렬 무결성 및 누락 검증 (18개 파일 100% PASS, 결과: `docs/character_pixel_art_test_result.txt`)**
 - `WarriorSkillsTests.cs [UPDATED]`: 지면 강타 도메인 반경 검증, 휠윈드 360도 전방위 4방향 타격 검증, 휠윈드 레벨업 시 대미지/반경 스케일링, 블러드 이터 150도 전방 부채꼴 적중 및 플레이어 라이프스틸 회복 검증 등

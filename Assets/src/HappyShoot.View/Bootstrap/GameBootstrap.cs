@@ -225,7 +225,12 @@ namespace HappyShoot.View.Bootstrap
             var timelineGo = new GameObject("WaveTimeline");
             timelineGo.AddComponent<WaveTimelineView>();
 
-            // 5. Setup Evolution Manager & Reward Manager
+            // 5. Setup Evolution Manager & Reward Manager & Magic Forge
+            var forgeStorage = new HappyShoot.View.Forge.JsonForgeStorage();
+            var forgeData = forgeStorage.Load();
+            var runeManager = new HappyShoot.Domain.Forge.RuneManager(forgeData, () => forgeStorage.Save(forgeData));
+            HappyShoot.Domain.Forge.RuneRegistry.RegisterAll(runeManager);
+
             var evolutionManager = new SkillEvolutionManager(playerView.EventBus);
             RegisterAllEvolutions(evolutionManager);
 
@@ -233,6 +238,7 @@ namespace HappyShoot.View.Bootstrap
             rewardManager.SkillLevelHook = (skill, lv) =>
             {
                 SkillConfigRepository.Instance.ApplyConfigToSkillLevel(skill, lv);
+                SkillRegistryHelper.ApplyRuneToSkill(skill, runeManager);
             };
             RegisterAllSkills(rewardManager);
             RegisterAllPassives(rewardManager);
@@ -331,7 +337,7 @@ namespace HappyShoot.View.Bootstrap
             // 7. Developer Skill Selector & Cheat Console UI
             var devConsoleGo = new GameObject("DevSkillSelectorUI");
             var devConsoleView = devConsoleGo.AddComponent<DevSkillSelectorUiView>();
-            devConsoleView.Initialize(playerView, rewardManager, levelSystem, _gameSession, spawnerView, companionManager);
+            devConsoleView.Initialize(playerView, rewardManager, levelSystem, _gameSession, spawnerView, companionManager, skillTreeManager);
             devConsoleView.Hide(); // Hidden until Dev Mode is enabled
 
             // 7-2. Skill Tuning Sandbox UI
@@ -341,11 +347,17 @@ namespace HappyShoot.View.Bootstrap
             skillTuningView.Hide();
 
             // 8. Wizard-Only Main Menu (Game Start & Magic Forge entry)
+            var forgeGo = new GameObject("MagicForgeUI");
+            var magicForgeView = forgeGo.AddComponent<HappyShoot.View.Forge.MagicForgeUiView>();
+            magicForgeView.Initialize(runeManager, skillTreeManager, forgeStorage);
+
             var charSelectGo = new GameObject("CharacterSelectUI");
             var charSelectView = charSelectGo.AddComponent<CharacterSelectUiView>();
             charSelectView.SetSettingsDialog(settingsDialogView);
             charSelectView.SetSkillTreeUiView(skillTreeUiView);
             charSelectView.SetSkillTreeManager(skillTreeManager);
+            charSelectView.SetMagicForgeCallback(() => magicForgeView.Show());
+
             charSelectView.Initialize((selectedClass, isDevMode, isSkillTestMode, startPhase, startSkillId) =>
             {
                 // Always force Wizard class (Wizard-Only mode) with selected starting magic skill
@@ -358,6 +370,7 @@ namespace HappyShoot.View.Bootstrap
                 foreach (var s in playerView.Entity.Skills)
                 {
                     SkillConfigRepository.Instance.ApplyConfigToSkillLevel(s, s.Level);
+                    SkillRegistryHelper.ApplyRuneToSkill(s, runeManager);
                 }
                 Debug.Log($"[GameBootstrap] Wizard Ready with Starting Skill '{startSkillId}'! (DevMode: {isDevMode}, SkillTest: {isSkillTestMode}, StartPhase: {startPhase})");
 

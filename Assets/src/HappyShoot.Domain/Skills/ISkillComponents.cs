@@ -22,6 +22,7 @@ namespace HappyShoot.Domain.Skills
         public ISpatialGrid2D TargetGrid { get; set; }
         public Projectiles.ProjectileManager ProjectileManager { get; set; }
         public EventBus EventBus { get; set; }
+        public Forge.RuneModifiers ActiveRune { get; set; } = Forge.RuneModifiers.None;
 
         /// <summary>
         /// Rolls critical strike through CasterEntity or returns raw damage.

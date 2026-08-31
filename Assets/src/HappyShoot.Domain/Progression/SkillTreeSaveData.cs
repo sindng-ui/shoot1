@@ -83,6 +83,23 @@ namespace HappyShoot.Domain.Progression
             SetGemCount(type, GetGemCount(type) + amount);
         }
 
+        public int GetGems(GemType type) => GetGemCount(type);
+
+        public void SpendGems(GemType type, int amount)
+        {
+            int cur = GetGemCount(type);
+            SetGemCount(type, Math.Max(0, cur - amount));
+        }
+
+        public bool TrySpendGems(GemType type, int amount)
+        {
+            if (amount <= 0) return true;
+            int cur = GetGemCount(type);
+            if (cur < amount) return false;
+            SetGemCount(type, cur - amount);
+            return true;
+        }
+
         // ── Node level helpers ──
 
         public int GetNodeLevel(string nodeId)

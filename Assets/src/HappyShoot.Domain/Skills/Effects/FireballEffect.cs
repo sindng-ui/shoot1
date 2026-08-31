@@ -54,8 +54,15 @@ namespace HappyShoot.Domain.Skills.Effects
             float effectiveDamage = BaseDamage * (context.BaseDamage / 10f);
             float effectiveRadius = Radius * context.AreaMultiplier;
 
+            if (context.ActiveRune.IsActive)
+            {
+                effectiveDamage = context.ActiveRune.ApplyDamage(effectiveDamage);
+                effectiveRadius = context.ActiveRune.ApplyArea(effectiveRadius);
+            }
+
             int extraProj = context.CasterEntity != null ? context.CasterEntity.Stats.ExtraProjectiles : 0;
-            int totalFireballs = Math.Max(1, FireballCount + extraProj);
+            int runeProj = context.ActiveRune.IsActive ? context.ActiveRune.ExtraProjectiles : 0;
+            int totalFireballs = Math.Max(1, FireballCount + extraProj + runeProj);
 
             Vector2D primaryTarget = targetPositions[0];
             Vector2D primaryOffset = primaryTarget - context.CasterPosition;

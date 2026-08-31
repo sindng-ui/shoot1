@@ -224,5 +224,16 @@ namespace HappyShoot.View.Bootstrap
                     return new CompositeSkill("blizzard_nova", "블리자드 노바", new CooldownTrigger(cfg.BlizzardNova.Cooldown), new ClosestEnemyTargeter(), new BlizzardNovaEffect(cfg.BlizzardNova.Damage, cfg.BlizzardNova.Radius, cfg.BlizzardNova.ShardCount), range: cfg.BlizzardNova.Radius);
                 }));
         }
+
+        /// <summary>
+        /// Injects active rune modifiers into a CompositeSkill.
+        /// </summary>
+        public static void ApplyRuneToSkill(ISkill skill, HappyShoot.Domain.Forge.RuneManager runeManager)
+        {
+            if (skill is CompositeSkill comp && runeManager != null)
+            {
+                comp.Rune = runeManager.GetModifiersForSkill(comp.Id);
+            }
+        }
     }
 }

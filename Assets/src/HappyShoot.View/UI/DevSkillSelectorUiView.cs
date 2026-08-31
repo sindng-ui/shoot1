@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Leveling;
+using HappyShoot.Domain.Progression;
 using HappyShoot.Domain.Session;
 using HappyShoot.View.Monsters;
 using HappyShoot.View.Player;
@@ -25,17 +26,13 @@ namespace HappyShoot.View.UI
         private LevelSystem _levelSystem;
         private GameSessionEntity _gameSession;
         private MonsterSpawnerView _spawnerView;
+        private Companion.CompanionManagerView _companionManager;
+        private SkillTreeManager _skillTreeManager;
 
         private GameObject _panelRoot;
         private GameObject _contentBox;
         private bool _isCollapsed;
         private Text _collapseBtnText;
-        private Text _godModeBtnText;
-        private Text _timeScaleBtnText;
-        private float _currentTimeScale = 1.0f;
-        private Text _warriorCompBtnText;
-        private Text _rangerCompBtnText;
-        private Companion.CompanionManagerView _companionManager;
 
         private readonly Dictionary<string, (Button btn, Text text, Image bg)> _skillButtons
             = new Dictionary<string, (Button, Text, Image)>();
@@ -48,7 +45,8 @@ namespace HappyShoot.View.UI
             LevelSystem levelSystem,
             GameSessionEntity gameSession,
             MonsterSpawnerView spawnerView,
-            Companion.CompanionManagerView companionManager = null)
+            Companion.CompanionManagerView companionManager = null,
+            SkillTreeManager skillTreeManager = null)
         {
             _playerView = playerView;
             _rewardManager = rewardManager;
@@ -56,15 +54,21 @@ namespace HappyShoot.View.UI
             _gameSession = gameSession;
             _spawnerView = spawnerView;
             _companionManager = companionManager;
+            _skillTreeManager = skillTreeManager;
 
             BuildUi();
             RefreshAllButtons();
         }
 
+        public void SetSkillTreeManager(SkillTreeManager skillTreeManager)
+        {
+            _skillTreeManager = skillTreeManager;
+        }
+
         public void SetCompanionManager(Companion.CompanionManagerView companionManager)
         {
             _companionManager = companionManager;
-            UpdateCompanionButtons();
+            DevCheatButtonHelper.UpdateCompanionButtons(_companionManager);
         }
 
         public void Show() => _panelRoot?.SetActive(true);
@@ -124,33 +128,16 @@ namespace HappyShoot.View.UI
 
             float currentY = -18f;
 
-            // Header Title
-            CreateText(_contentBox.transform, "Title", "🛠️ 개발자 치트 & 스킬 콘솔", 14, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, currentY), new Vector2(340f, 22f), new Color(0.3f, 1f, 0.5f));
-            currentY -= 28f;
-
-            // Cheat Buttons (GodMode, FullHeal, LevelUp, KillAll, Speed, Gold)
-            CreateSmallButton(_contentBox.transform, "BtnGod", "🛡️ 무적 모드: OFF", new Vector2(-85f, currentY), new Vector2(160f, 26f), new Color(0.3f, 0.3f, 0.35f, 1f), ToggleGodMode, out _godModeBtnText);
-            CreateSmallButton(_contentBox.transform, "BtnHeal", "💖 체력 풀회복", new Vector2(85f, currentY), new Vector2(160f, 26f), new Color(0.2f, 0.6f, 0.3f, 1f), HealFull, out _);
-            currentY -= 30f;
-
-            CreateSmallButton(_contentBox.transform, "BtnLevelUp", "🌟 레벨 +1", new Vector2(-85f, currentY), new Vector2(160f, 26f), new Color(0.6f, 0.4f, 0.15f, 1f), GiveLevelUp, out _);
-            CreateSmallButton(_contentBox.transform, "BtnKillAll", "💀 몬스터 전멸", new Vector2(85f, currentY), new Vector2(160f, 26f), new Color(0.7f, 0.2f, 0.2f, 1f), KillAllMonsters, out _);
-            currentY -= 30f;
-
-            CreateSmallButton(_contentBox.transform, "BtnSpeed", "⏩ 속도: 1x", new Vector2(-85f, currentY), new Vector2(160f, 26f), new Color(0.3f, 0.3f, 0.6f, 1f), ToggleTimeScale, out _timeScaleBtnText);
-            CreateSmallButton(_contentBox.transform, "BtnGold", "💰 골드 +1000", new Vector2(85f, currentY), new Vector2(160f, 26f), new Color(0.75f, 0.65f, 0.1f, 1f), AddGold1000, out _);
-            currentY -= 30f;
-
-            // Phase Jump Buttons
-            CreateSmallButton(_contentBox.transform, "BtnP1", "1️⃣ Phase 1", new Vector2(-112f, currentY), new Vector2(106f, 26f), new Color(0.20f, 0.45f, 0.70f, 1f), () => _spawnerView?.JumpToPhase(1), out _);
-            CreateSmallButton(_contentBox.transform, "BtnP2", "2️⃣ Phase 2", new Vector2(0f, currentY), new Vector2(106f, 26f), new Color(0.65f, 0.35f, 0.15f, 1f), () => _spawnerView?.JumpToPhase(2), out _);
-            CreateSmallButton(_contentBox.transform, "BtnP3", "3️⃣ Phase 3", new Vector2(112f, currentY), new Vector2(106f, 26f), new Color(0.55f, 0.15f, 0.65f, 1f), () => _spawnerView?.JumpToPhase(3), out _);
-            currentY -= 30f;
-
-            // Companion Cheat Toggle Buttons
-            CreateSmallButton(_contentBox.transform, "BtnWarComp", "🛡️ 전사 동료: OFF", new Vector2(-85f, currentY), new Vector2(160f, 26f), new Color(0.7f, 0.3f, 0.2f, 1f), ToggleWarriorComp, out _warriorCompBtnText);
-            CreateSmallButton(_contentBox.transform, "BtnRngComp", "🏹 궁수 동료: OFF", new Vector2(85f, currentY), new Vector2(160f, 26f), new Color(0.2f, 0.6f, 0.4f, 1f), ToggleRangerComp, out _rangerCompBtnText);
-            currentY -= 32f;
+            var ctx = new DevCheatContext
+            {
+                PlayerView = _playerView,
+                LevelSystem = _levelSystem,
+                GameSession = _gameSession,
+                SpawnerView = _spawnerView,
+                CompanionManager = _companionManager,
+                SkillTreeManager = _skillTreeManager
+            };
+            DevCheatButtonHelper.BuildCheatSection(_contentBox, ref currentY, ctx, CreateText);
 
             // 1. ACTIVE SKILLS (좌클릭: +1 Lv / 우클릭: Lv.0 해제)
             CreateText(_contentBox.transform, "Sec_Active", "🗡️ 액티브 무기 (좌: +1Lv / 우: Lv.0 해제)", 12, TextAnchor.MiddleLeft, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, currentY), new Vector2(330f, 18f), new Color(1f, 0.65f, 0.65f, 1f));
@@ -360,7 +347,7 @@ namespace HappyShoot.View.UI
                 }
             }
 
-            UpdateCompanionButtons();
+            DevCheatButtonHelper.UpdateCompanionButtons(_companionManager);
         }
 
         private string GetSkillNameById(string id) => id switch
@@ -391,87 +378,6 @@ namespace HappyShoot.View.UI
             "passive_heart" => "생명의 펜던트",
             _ => id
         };
-
-        private void ToggleGodMode()
-        {
-            if (_playerView?.Entity == null) return;
-            var p = _playerView.Entity;
-            p.IsGodMode = !p.IsGodMode;
-            _godModeBtnText.text = p.IsGodMode ? "🛡️ 무적 모드: ON" : "🛡️ 무적 모드: OFF";
-        }
-
-        private void HealFull()
-        {
-            if (_playerView?.Entity == null) return;
-            _playerView.Entity.Heal(999999f);
-        }
-
-        private void GiveLevelUp() => _levelSystem?.AddExp(_levelSystem.RequiredExp);
-        private void AddGold1000() => _gameSession?.AddGold(1000);
-
-        private void KillAllMonsters()
-        {
-            if (_spawnerView == null) return;
-            var activeList = _spawnerView.DomainSpawner?.ActiveMonsters;
-            if (activeList == null) return;
-            for (int i = activeList.Count - 1; i >= 0; i--)
-            {
-                if (activeList[i].IsActive && !activeList[i].IsDead) activeList[i].TakeDamage(999999f);
-            }
-        }
-
-        private void ToggleTimeScale()
-        {
-            if (Mathf.Approximately(_currentTimeScale, 1.0f)) _currentTimeScale = 2.0f;
-            else if (Mathf.Approximately(_currentTimeScale, 2.0f)) _currentTimeScale = 4.0f;
-            else if (Mathf.Approximately(_currentTimeScale, 4.0f)) _currentTimeScale = 0.5f;
-            else _currentTimeScale = 1.0f;
-
-            Time.timeScale = _currentTimeScale;
-            if (_timeScaleBtnText != null) _timeScaleBtnText.text = $"⏩ 속도: {_currentTimeScale}x";
-        }
-
-        private void ToggleWarriorComp()
-        {
-            _companionManager?.ToggleWarrior();
-            UpdateCompanionButtons();
-        }
-
-        private void ToggleRangerComp()
-        {
-            _companionManager?.ToggleRanger();
-            UpdateCompanionButtons();
-        }
-
-        private void UpdateCompanionButtons()
-        {
-            if (_warriorCompBtnText != null && _companionManager != null)
-                _warriorCompBtnText.text = _companionManager.IsWarriorActive ? "🛡️ 전사 동료: ON" : "🛡️ 전사 동료: OFF";
-            if (_rangerCompBtnText != null && _companionManager != null)
-                _rangerCompBtnText.text = _companionManager.IsRangerActive ? "🏹 궁수 동료: ON" : "🏹 궁수 동료: OFF";
-        }
-
-        private void CreateSmallButton(Transform parent, string name, string label, Vector2 pos, Vector2 size, Color color, Action onClick, out Text outText)
-        {
-            var btnGo = new GameObject(name);
-            btnGo.transform.SetParent(parent, false);
-            var rt = btnGo.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.5f, 1f);
-            rt.anchorMax = new Vector2(0.5f, 1f);
-            rt.pivot = new Vector2(0.5f, 1f);
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
-
-            var img = btnGo.AddComponent<Image>();
-            img.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            img.color = color;
-
-            var btn = btnGo.AddComponent<Button>();
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(() => onClick?.Invoke());
-
-            outText = CreateText(btnGo.transform, "Label", label, 11, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
-        }
 
         private Text CreateText(Transform parent, string name, string text, int fontSize, TextAnchor alignment, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 pos, Vector2 size, Color color)
         {

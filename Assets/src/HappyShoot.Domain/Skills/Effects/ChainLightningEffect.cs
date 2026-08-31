@@ -47,9 +47,16 @@ namespace HappyShoot.Domain.Skills.Effects
             float effectiveDamage = BaseDamage * (context.BaseDamage / 10f);
             float effectiveJumpRadius = JumpRadius * context.AreaMultiplier;
 
-            // Bonus chain jumps from AreaMultiplier (범위 증가 패시브에 따른 연쇄 수 추가 증가)
+            if (context.ActiveRune.IsActive)
+            {
+                effectiveDamage = context.ActiveRune.ApplyDamage(effectiveDamage);
+                effectiveJumpRadius = context.ActiveRune.ApplyArea(effectiveJumpRadius);
+            }
+
+            // Bonus chain jumps from AreaMultiplier & Rune Pierce/Split
             int bonusChains = (int)((context.AreaMultiplier - 1.0f) * 6f + 0.5f);
-            int totalChains = ChainCount + (bonusChains > 0 ? bonusChains : 0);
+            int runeExtraChains = context.ActiveRune.IsActive ? (context.ActiveRune.ExtraPierceCount + context.ActiveRune.ExtraProjectiles) : 0;
+            int totalChains = ChainCount + (bonusChains > 0 ? bonusChains : 0) + runeExtraChains;
 
             _hitMonsterIds.Clear();
             _hitPositions.Clear();

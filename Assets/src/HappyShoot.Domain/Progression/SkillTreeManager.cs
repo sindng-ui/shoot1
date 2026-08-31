@@ -258,7 +258,7 @@ namespace HappyShoot.Domain.Progression
         public BranchType GetAwakenedBranch(CharacterClassType classType) =>
             _saveData.GetAwakenedBranch(classType);
 
-        private void Save()
+        public void Save()
         {
             _storage.Save(_saveData);
             OnTreeStateChanged?.Invoke();

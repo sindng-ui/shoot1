@@ -129,9 +129,25 @@ namespace HappyShoot.View.UI
                     _skillTreeManager.AddGold(_gameSession.GoldEarned);
                 }
 
-                if (_gemsEarnedText != null)
+                // Settle gems into permanent wallet even on game over for Forge progression
+                if (_gemCounter != null && _skillTreeManager != null)
                 {
-                    _gemsEarnedText.text = "🔒 영구 성장(스킬트리)은 3보스 클리어 시 개방됩니다!";
+                    int r = _gemCounter.RunRubyCount;
+                    int e = _gemCounter.RunEmeraldCount;
+                    int a = _gemCounter.RunAmethystCount;
+
+                    if (r > 0) _skillTreeManager.AddGems(GemType.Ruby, r);
+                    if (e > 0) _skillTreeManager.AddGems(GemType.Emerald, e);
+                    if (a > 0) _skillTreeManager.AddGems(GemType.Amethyst, a);
+
+                    if (_gemsEarnedText != null)
+                    {
+                        _gemsEarnedText.text = $"💎 획득 보석(대장간 저장): 🔴+{r}  🟢+{e}  🟣+{a}";
+                    }
+                }
+                else if (_gemsEarnedText != null)
+                {
+                    _gemsEarnedText.text = "💎 획득 보석: 🔴+0  🟢+0  🟣+0";
                 }
             }
 

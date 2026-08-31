@@ -20,7 +20,9 @@ namespace HappyShoot.Domain.Skills
         public ISkillTargeter Targeter { get; set; }
         public ISkillEffect Effect { get; set; }
         public float Range { get; set; }
+        public Forge.RuneModifiers Rune { get; set; } = Forge.RuneModifiers.None;
 
+        private int _castCount;
         private readonly List<Vector2D> _cachedTargetPositions = new List<Vector2D>(8);
 
         public CompositeSkill(
@@ -57,7 +59,11 @@ namespace HappyShoot.Domain.Skills
 
         public void Update(float deltaTime, SkillContext context)
         {
-            if (context != null) context.SkillId = Id;
+            if (context != null)
+            {
+                context.SkillId = Id;
+                context.ActiveRune = Rune;
+            }
 
             // 1. Update continuous / tick-based effects (e.g. Arrow Rain ongoing barrage)
             if (Effect is ITickableEffect tickable)
@@ -66,12 +72,28 @@ namespace HappyShoot.Domain.Skills
             }
 
             // 2. Trigger new skill activations when cooldown/trigger is ready
-            if (Trigger.CanTrigger(deltaTime))
+            float effectiveDelta = deltaTime;
+            if (Rune.IsActive && Rune.CooldownMultiplier > 0f)
+            {
+                effectiveDelta = deltaTime / Rune.CooldownMultiplier;
+            }
+
+            if (Trigger.CanTrigger(effectiveDelta))
             {
                 if (Targeter.TryFindTargets(context, Range, _cachedTargetPositions))
                 {
                     Effect.ApplyEffect(context, _cachedTargetPositions);
                     Trigger.OnTriggered();
+
+                    _castCount++;
+                    // Tempo Rune: free cast every Nth use
+                    if (Rune.IsActive && Rune.FreecastEveryN > 0 && (_castCount % Rune.FreecastEveryN == 0))
+                    {
+                        if (Targeter.TryFindTargets(context, Range, _cachedTargetPositions))
+                        {
+                            Effect.ApplyEffect(context, _cachedTargetPositions);
+                        }
+                    }
                 }
             }
         }
