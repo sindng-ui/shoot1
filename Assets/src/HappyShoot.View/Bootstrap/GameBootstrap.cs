@@ -300,7 +300,7 @@ namespace HappyShoot.View.Bootstrap
 
             var gemCounterGo = new GameObject("GemCounterHUD");
             var gemCounterView = gemCounterGo.AddComponent<InGameGemCounterHudView>();
-            gemCounterView.Initialize(playerView.EventBus, hudGo.transform);
+            gemCounterView.Initialize(playerView.EventBus, hudView.Components);
 
             var bossBarGo = new GameObject("BossHealthBarUI");
             var bossBarView = bossBarGo.AddComponent<BossHealthBarView>();

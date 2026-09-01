@@ -30,6 +30,8 @@ namespace HappyShoot.View.UI
         private Text _killCountText;
         private Text _goldText;
 
+        public InGameHudBuilder.HudComponents Components { get; private set; }
+
         private PlayerView _playerView;
         private LevelSystem _levelSystem;
         private GameSessionEntity _gameSession;
@@ -382,9 +384,7 @@ namespace HappyShoot.View.UI
 
             if (_killCountText != null)
             {
-                _sb.Clear();
-                _sb.Append("💀 ").Append(kills);
-                _killCountText.text = _sb.ToString();
+                _killCountText.text = kills.ToString();
             }
         }
 
@@ -395,9 +395,7 @@ namespace HappyShoot.View.UI
 
             if (_goldText != null)
             {
-                _sb.Clear();
-                _sb.Append("💰 ").Append(gold);
-                _goldText.text = _sb.ToString();
+                _goldText.text = $"{gold} G";
             }
         }
 
@@ -415,6 +413,7 @@ namespace HappyShoot.View.UI
 
             // Build full HUD via modular InGameHudBuilder
             var hud = InGameHudBuilder.BuildHud(this.transform);
+            Components = hud;
 
             _scaler = hud.Scaler;
             _expSlider = hud.ExpSlider;

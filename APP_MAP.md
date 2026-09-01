@@ -236,11 +236,13 @@ graph TD
 | | `SkillTreeBackgroundHelper.cs [NEW]` | `SkillTreeBackgroundHelper` | **🌌 512x512 고대 천구 석판 다이얼 및 4중 동심원 룬 궤도 홈 프로시저럴 텍스처 생성기** |
 | | `SkillTreeNodeView.cs [UPDATED]` | `SkillTreeNodeView` | **개별 스킬 트리 노드 UI 버튼: 원형 룬 뱃지, 속성 아이콘, 하단 필요 골드(GoldCost G) 표기, 상태 뷰어 (105줄)** |
 | | `SkillTreeLayoutHelper.cs [UPDATED]` | `SkillTreeLayoutHelper` | **마법사 360° 대칭 비전 성좌(화염 90°, 빙결 210°, 전격 330°) 극좌표계 배치 및 120° 디바이더 레이저 렌더링 (150줄)** |
-| | `SkillTreeSpriteHelper.cs [UPDATED]` | `SkillTreeSpriteHelper` | **원형 룬 젬 뱃지 4종(해금/가능/잠김/차단)**, 중앙 황금 룬 허브 텍스처, 보석 3종, 속성 아이콘(🔥❄️⚡) 프로시저럴 픽셀아트 생성기 |
+| | `SkillTreeSpriteHelper.cs [UPDATED]` | `SkillTreeSpriteHelper` | **원형 룬 젬 뱃지 4종(해금/가능/잠김/차단)**, 중앙 황금 룬 허브 텍스처, 속성 아이콘(🔥❄️⚡) 프로시저럴 픽셀아트 생성기 (254줄) |
+| | `GemSpriteHelper.cs [NEW]` | `GemSpriteHelper` | **💎 고대비 찬란한 브릴리언트/스텝 컷 3종 보석(루비/에메랄드/자수정) 프로시저럴 픽셀아트 스프라이트 생성기 (271줄, 500줄 규칙 준수 분리)** |
 | | `JsonSkillTreeStorage.cs [NEW]` | `JsonSkillTreeStorage` | Unity PlayerPrefs JSON 기반 스킬 트리 세이브 데이터 영구 저장소 |
 | **Shop** | `MetaShopUiView.cs` | `MetaShopUiView`, `JsonPlayerPrefsStorage` | (구 시스템) 8종 영구 강화 카드 목록 상점 UI |
 | | `GameOverResultUiView.cs [UPDATED]` | `GameOverResultUiView` | 플레이어 사망 시 골드 + **💎 3종 보석 영구 저장소 자동 적립**, 런 통계창, **[💎 스킬 트리 (영구 성장)]** 및 [PLAY AGAIN] 연동 |
-| **UI** | `InGameGemCounterHudView.cs [UPDATED]` | `InGameGemCounterHudView` | **인게임 상단 일체형 전리품 HUD: 💰 획득 금화(Gold) 및 3종 보석(🔴 루비, 🟢 에메랄드, 🟣 아메시스트) 실시간 수집 현황 캡슐 바 표시, 캔버스 자동 부착 및 런 통계 추적 (130줄)** |
+| **UI** | `InGameGemCounterHudView.cs [UPDATED]` | `InGameGemCounterHudView` | **인게임 보석 카운터 컨트롤러: 상단 좌측 5종 통합 리소스 HUD(보석 3종, 골드, 킬수) 내 루비/에메랄드/자수정 수량 및 1.40x 펀치 루팅 애니메이션 제어 (165줄)** |
+| | `InGameSlotBuilder.cs [NEW]` | `InGameSlotBuilder` | **스킬 슬롯, 대시 슬롯, 패시브 슬롯 생성 및 360° 쿨다운 마스크 팩토리 (136줄, 500줄 규칙 준수 분리)** |
 | **Skills & Evolutions** | `OrbitingBladeView.cs` | `OrbitingBladeView` | 플레이어 주위를 원형 회전하는 공통 오비탈 칼날 시각화 (실시간 생성 및 칼날 수/반경 동기화) |
 | | `EvolutionPopupView.cs` | `EvolutionPopupView` | 스킬 진화 성공 시 상단에 등장하는 축하 배너 팝업 및 자동 생성 |
 | | `LevelUpUiView.cs [UPDATED]` | `LevelUpUiView` | **레벨업 시 320x460 대형 카드 및 80x80 픽셀아트 아이콘 3지선다 보상 선택 UI (Unity New Input System 연동: Q/W/E 위 1, 2, 3 숫자키 및 마우스 클릭 즉시 선택 지원)** |

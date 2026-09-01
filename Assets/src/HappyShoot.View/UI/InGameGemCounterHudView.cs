@@ -2,24 +2,54 @@ using UnityEngine;
 using UnityEngine.UI;
 using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Progression;
-using HappyShoot.View.Utils;
 
 namespace HappyShoot.View.UI
 {
     /// <summary>
-    /// Displays real-time run currency (Gold + Ruby, Emerald, Amethyst) at the top of the HUD.
-    /// Tracks all loot collected during the current run for end-of-run saving and player clarity.
-    /// Strictly modular and under 500 lines.
+    /// Manages real-time run progression gem stone counters (Ruby, Emerald, Amethyst)
+    /// within the unified Top-Right Resource HUD, driving sparkling loot punch animations.
+    /// Strictly modular and under 500 lines (500-line architecture rule).
     /// </summary>
     public class InGameGemCounterHudView : MonoBehaviour
     {
         private EventBus _eventBus;
-        private Text _lootText;
+
+        private RectTransform _rubyIconRt;
+        private RectTransform _emeraldIconRt;
+        private RectTransform _amethystIconRt;
+
+        private Text _rubyText;
+        private Text _emeraldText;
+        private Text _amethystText;
+
+        private float _rubyPunchScale = 1.0f;
+        private float _emeraldPunchScale = 1.0f;
+        private float _amethystPunchScale = 1.0f;
 
         public int RunGoldCount { get; private set; }
         public int RunRubyCount { get; private set; }
         public int RunEmeraldCount { get; private set; }
         public int RunAmethystCount { get; private set; }
+
+        public void Initialize(EventBus eventBus, InGameHudBuilder.HudComponents hud)
+        {
+            _eventBus = eventBus;
+            if (_eventBus != null)
+            {
+                _eventBus.Subscribe<GemStoneCollectedEvent>(OnGemCollected);
+                _eventBus.Subscribe<GoldGainedEvent>(OnGoldGained);
+            }
+
+            _rubyIconRt = hud.RubyIconRt;
+            _emeraldIconRt = hud.EmeraldIconRt;
+            _amethystIconRt = hud.AmethystIconRt;
+
+            _rubyText = hud.RubyText;
+            _emeraldText = hud.EmeraldText;
+            _amethystText = hud.AmethystText;
+
+            UpdateCounters();
+        }
 
         public void Initialize(EventBus eventBus, Transform parent)
         {
@@ -30,8 +60,30 @@ namespace HappyShoot.View.UI
                 _eventBus.Subscribe<GoldGainedEvent>(OnGoldGained);
             }
 
-            BuildUi(parent);
-            UpdateText();
+            var canvas = parent != null ? (parent.GetComponent<Canvas>() ?? parent.GetComponentInChildren<Canvas>()) : null;
+            if (canvas != null)
+            {
+                var rubySlot = canvas.transform.Find("TopLeftUnifiedResourceCapsule/RubyBadge");
+                if (rubySlot != null)
+                {
+                    _rubyIconRt = rubySlot.Find("Icon") as RectTransform;
+                    _rubyText = rubySlot.Find("ValueText")?.GetComponent<Text>();
+                }
+                var emeraldSlot = canvas.transform.Find("TopLeftUnifiedResourceCapsule/EmeraldBadge");
+                if (emeraldSlot != null)
+                {
+                    _emeraldIconRt = emeraldSlot.Find("Icon") as RectTransform;
+                    _emeraldText = emeraldSlot.Find("ValueText")?.GetComponent<Text>();
+                }
+                var amethystSlot = canvas.transform.Find("TopLeftUnifiedResourceCapsule/AmethystBadge");
+                if (amethystSlot != null)
+                {
+                    _amethystIconRt = amethystSlot.Find("Icon") as RectTransform;
+                    _amethystText = amethystSlot.Find("ValueText")?.GetComponent<Text>();
+                }
+            }
+
+            UpdateCounters();
         }
 
         private void OnDestroy()
@@ -43,79 +95,59 @@ namespace HappyShoot.View.UI
             }
         }
 
-        private void BuildUi(Transform parent)
+        private void Update()
         {
-            Transform targetParent = parent;
-            if (parent != null)
+            // Smoothly decay punch scale animations
+            if (_rubyPunchScale > 1.001f && _rubyIconRt != null)
             {
-                var canvas = parent.GetComponent<Canvas>() ?? parent.GetComponentInChildren<Canvas>();
-                if (canvas != null)
-                {
-                    targetParent = canvas.transform;
-                }
+                _rubyPunchScale = Mathf.MoveTowards(_rubyPunchScale, 1.0f, Time.unscaledDeltaTime * 2.5f);
+                _rubyIconRt.localScale = Vector3.one * _rubyPunchScale;
             }
 
-            // Container Capsule Bar (Top Center, below Timer)
-            var go = new GameObject("RunLootCounterHud");
-            go.transform.SetParent(targetParent, false);
-            var rt = go.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.5f, 1f);
-            rt.anchorMax = new Vector2(0.5f, 1f);
-            rt.pivot = new Vector2(0.5f, 1f);
-            rt.anchoredPosition = new Vector2(0f, -62f);
-            rt.sizeDelta = new Vector2(430f, 32f);
+            if (_emeraldPunchScale > 1.001f && _emeraldIconRt != null)
+            {
+                _emeraldPunchScale = Mathf.MoveTowards(_emeraldPunchScale, 1.0f, Time.unscaledDeltaTime * 2.5f);
+                _emeraldIconRt.localScale = Vector3.one * _emeraldPunchScale;
+            }
 
-            // Capsule Background
-            var bgImg = go.AddComponent<Image>();
-            bgImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            bgImg.color = new Color(0.06f, 0.08f, 0.14f, 0.85f);
-
-            var outline = go.AddComponent<Outline>();
-            outline.effectColor = new Color(0.85f, 0.70f, 0.30f, 0.35f);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
-
-            // Currency Text
-            var textGo = new GameObject("LootText");
-            textGo.transform.SetParent(go.transform, false);
-            var textRt = textGo.AddComponent<RectTransform>();
-            textRt.anchorMin = Vector2.zero;
-            textRt.anchorMax = Vector2.one;
-            textRt.offsetMin = new Vector2(10f, 0f);
-            textRt.offsetMax = new Vector2(-10f, 0f);
-
-            _lootText = textGo.AddComponent<Text>();
-            _lootText.font = FontHelper.GetKoreanFont();
-            _lootText.fontSize = 16;
-            _lootText.fontStyle = FontStyle.Bold;
-            _lootText.alignment = TextAnchor.MiddleCenter;
-            _lootText.color = Color.white;
-            _lootText.raycastTarget = false;
+            if (_amethystPunchScale > 1.001f && _amethystIconRt != null)
+            {
+                _amethystPunchScale = Mathf.MoveTowards(_amethystPunchScale, 1.0f, Time.unscaledDeltaTime * 2.5f);
+                _amethystIconRt.localScale = Vector3.one * _amethystPunchScale;
+            }
         }
 
         private void OnGemCollected(GemStoneCollectedEvent evt)
         {
             switch (evt.GemType)
             {
-                case GemType.Ruby: RunRubyCount++; break;
-                case GemType.Emerald: RunEmeraldCount++; break;
-                case GemType.Amethyst: RunAmethystCount++; break;
+                case GemType.Ruby:
+                    RunRubyCount++;
+                    _rubyPunchScale = 1.40f;
+                    break;
+                case GemType.Emerald:
+                    RunEmeraldCount++;
+                    _emeraldPunchScale = 1.40f;
+                    break;
+                case GemType.Amethyst:
+                    RunAmethystCount++;
+                    _amethystPunchScale = 1.40f;
+                    break;
             }
 
-            UpdateText();
+            UpdateCounters();
         }
 
         private void OnGoldGained(GoldGainedEvent evt)
         {
             RunGoldCount = evt.TotalGold;
-            UpdateText();
         }
 
-        private void UpdateText()
+        private void UpdateCounters()
         {
-            if (_lootText != null)
-            {
-                _lootText.text = $"💰 {RunGoldCount:N0} G   │   🔴 {RunRubyCount}   🟢 {RunEmeraldCount}   🟣 {RunAmethystCount}";
-            }
+            if (_rubyText != null) _rubyText.text = RunRubyCount.ToString();
+            if (_emeraldText != null) _emeraldText.text = RunEmeraldCount.ToString();
+            if (_amethystText != null) _amethystText.text = RunAmethystCount.ToString();
         }
 
         public void ResetRun()
@@ -124,7 +156,10 @@ namespace HappyShoot.View.UI
             RunRubyCount = 0;
             RunEmeraldCount = 0;
             RunAmethystCount = 0;
-            UpdateText();
+            _rubyPunchScale = 1f;
+            _emeraldPunchScale = 1f;
+            _amethystPunchScale = 1f;
+            UpdateCounters();
         }
     }
 }

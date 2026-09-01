@@ -291,5 +291,140 @@ namespace HappyShoot.View.Utils
             _cache[key] = sprite;
             return sprite;
         }
+
+        /// <summary>
+        /// 24x24 Crisp Pixel-Art Skull Icon for Kill Count.
+        /// </summary>
+        public static Sprite GetOrCreateSkullIcon(int size = 24)
+        {
+            const string key = "hud_skull_icon_24";
+            if (_cache.TryGetValue(key, out var cached) && cached != null) return cached;
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            var p = new Color[size * size];
+            for (int i = 0; i < p.Length; i++) p[i] = Color.clear;
+
+            Color boneWhite = new Color(0.95f, 0.95f, 0.98f, 1f);
+            Color boneShade = new Color(0.68f, 0.72f, 0.82f, 1f);
+            Color socketDark = new Color(0.12f, 0.08f, 0.14f, 1f);
+            Color outline = new Color(0.10f, 0.04f, 0.08f, 0.95f);
+            Color eyeGlow = new Color(1.0f, 0.35f, 0.35f, 1f);
+
+            int cx = size / 2; // 12
+
+            for (int y = 3; y <= 21; y++)
+            {
+                // Cranium (y: 10..21) vs Jaw (y: 3..9)
+                int halfW = (y >= 10) ? (int)Mathf.Sqrt(36f - Mathf.Pow((y - 15) * 1.1f, 2)) + 2 : 4;
+                if (halfW < 1) halfW = 1;
+                if (halfW > 8) halfW = 8;
+
+                for (int x = cx - halfW; x <= cx + halfW; x++)
+                {
+                    int dx = x - cx;
+                    bool isBorder = (x == cx - halfW || x == cx + halfW || y == 3 || y == 21);
+
+                    // Eye sockets at y: 12..14, dx: -4..-2 and 2..4
+                    bool isLeftEye = (y >= 12 && y <= 14 && dx >= -4 && dx <= -2);
+                    bool isRightEye = (y >= 12 && y <= 14 && dx >= 2 && dx <= 4);
+                    // Nose at y: 10, dx: -1..0
+                    bool isNose = (y == 10 && dx >= -1 && dx <= 0);
+                    // Teeth slits at y: 4..6, x % 2 == 0
+                    bool isTeethGap = (y >= 4 && y <= 6 && (dx == -2 || dx == 0 || dx == 2));
+
+                    if (isBorder)
+                    {
+                        p[y * size + x] = outline;
+                    }
+                    else if (isLeftEye || isRightEye)
+                    {
+                        p[y * size + x] = (y == 13 && (dx == -3 || dx == 3)) ? eyeGlow : socketDark;
+                    }
+                    else if (isNose || isTeethGap)
+                    {
+                        p[y * size + x] = socketDark;
+                    }
+                    else
+                    {
+                        p[y * size + x] = (y >= 16 && dx <= 0) ? boneWhite : boneShade;
+                    }
+                }
+            }
+
+            tex.SetPixels(p);
+            tex.Apply();
+            var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16);
+            _cache[key] = sprite;
+            return sprite;
+        }
+
+        /// <summary>
+        /// 24x24 Radiant Golden Coin Icon for Gold Earned.
+        /// </summary>
+        public static Sprite GetOrCreateCoinIcon(int size = 24)
+        {
+            const string key = "hud_coin_icon_24";
+            if (_cache.TryGetValue(key, out var cached) && cached != null) return cached;
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            var p = new Color[size * size];
+            for (int i = 0; i < p.Length; i++) p[i] = Color.clear;
+
+            Color glint = new Color(1.0f, 1.0f, 0.90f, 1f);
+            Color rimBright = new Color(1.0f, 0.90f, 0.35f, 1f);
+            Color goldMain = new Color(0.95f, 0.72f, 0.12f, 1f);
+            Color goldDark = new Color(0.70f, 0.45f, 0.05f, 1f);
+            Color outline = new Color(0.28f, 0.15f, 0.02f, 0.95f);
+
+            int cx = size / 2;
+            int cy = size / 2;
+            float r = (size / 2f) - 2.5f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x - cx;
+                    float dy = y - cy;
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+
+                    if (dist > r + 0.5f)
+                    {
+                        continue;
+                    }
+                    else if (dist >= r - 1.2f)
+                    {
+                        p[y * size + x] = outline;
+                    }
+                    else if (dist >= r - 2.8f)
+                    {
+                        p[y * size + x] = (dx <= 0 && dy >= 0) ? rimBright : goldDark;
+                    }
+                    else
+                    {
+                        // Inner stamp / core
+                        if (dx >= -2 && dx <= 2 && dy >= -4 && dy <= 4)
+                        {
+                            p[y * size + x] = rimBright; // Inner G stamp
+                        }
+                        else
+                        {
+                            p[y * size + x] = (dx < 0) ? goldMain : goldDark;
+                        }
+                    }
+                }
+            }
+
+            // Specular Glint Dot
+            p[(cy + 4) * size + (cx - 4)] = glint;
+            p[(cy + 5) * size + (cx - 4)] = glint;
+            p[(cy + 4) * size + (cx - 5)] = glint;
+
+            tex.SetPixels(p);
+            tex.Apply();
+            var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16);
+            _cache[key] = sprite;
+            return sprite;
+        }
     }
 }

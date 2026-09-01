@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using HappyShoot.View.SkillTree;
 using HappyShoot.View.Utils;
 
 namespace HappyShoot.View.UI
@@ -25,6 +26,12 @@ namespace HappyShoot.View.UI
             public Text TimerText;
             public Text KillCountText;
             public Text GoldText;
+            public Text RubyText;
+            public Text EmeraldText;
+            public Text AmethystText;
+            public RectTransform RubyIconRt;
+            public RectTransform EmeraldIconRt;
+            public RectTransform AmethystIconRt;
             public Image[] SkillSlotIcons;
             public Image[] SkillSlotCooldownMasks;
             public Text[] SkillSlotLevelTexts;
@@ -159,7 +166,7 @@ namespace HappyShoot.View.UI
             float spacing = 54f;
             float startX = -((MaxSkillSlots * spacing) * 0.5f) + 27f;
 
-            var dashSlotGo = CreateSlotElement(skillRowGo.transform, "Slot_Dash", new Vector2(startX - 62f, 0f), slotSize, isDash: true, out var dashIcon, out var dashMask, out _, out _);
+            var dashSlotGo = InGameSlotBuilder.CreateSlotElement(skillRowGo.transform, "Slot_Dash", new Vector2(startX - 62f, 0f), slotSize, isDash: true, out var dashIcon, out var dashMask, out _, out _);
             dashIcon.sprite = RewardIconHelper.GetOrCreateRewardIcon("passive_feather");
             res.DashIcon = dashIcon;
             res.DashCooldownMask = dashMask;
@@ -167,7 +174,7 @@ namespace HappyShoot.View.UI
             // 6 Active Skill Slots
             for (int i = 0; i < MaxSkillSlots; i++)
             {
-                var slotGo = CreateSlotElement(skillRowGo.transform, $"Slot_{i}", new Vector2(startX + i * spacing, 0f), slotSize, isDash: false, out var icon, out var mask, out var lvTxt, out var countTxt);
+                var slotGo = InGameSlotBuilder.CreateSlotElement(skillRowGo.transform, $"Slot_{i}", new Vector2(startX + i * spacing, 0f), slotSize, isDash: false, out var icon, out var mask, out var lvTxt, out var countTxt);
                 res.SkillSlotRoots[i] = slotGo;
                 res.SkillSlotIcons[i] = icon;
                 res.SkillSlotCooldownMasks[i] = mask;
@@ -254,19 +261,52 @@ namespace HappyShoot.View.UI
             res.HealthText = healthText;
 
             // =========================================================================
-            // TOP STATUS: Timer (Center), Kills & Gold (Right)
+            // TOP STATUS: Center Timer & Top-Left Unified 5-Resource Capsule (Gems + Gold + Kills)
             // =========================================================================
             res.TimerText = CreateText(canvasGo.transform, "TimerText", "00:00", 28, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(160f, 40f), new Color(1f, 0.95f, 0.7f, 1f));
             var timerOutline = res.TimerText.gameObject.AddComponent<Outline>();
             timerOutline.effectColor = new Color(0f, 0f, 0f, 0.8f);
 
-            res.KillCountText = CreateText(canvasGo.transform, "KillsText", "💀 0", 18, TextAnchor.MiddleRight, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-40f, -24f), new Vector2(140f, 30f), new Color(1f, 0.45f, 0.45f, 1f));
-            var killOutline = res.KillCountText.gameObject.AddComponent<Outline>();
-            killOutline.effectColor = Color.black;
+            // Unified Top-Left Capsule (3 Gems + Gold + Kills) - Aligned with Left Passive Column
+            var statsCapsuleGo = new GameObject("TopLeftUnifiedResourceCapsule");
+            statsCapsuleGo.transform.SetParent(canvasGo.transform, false);
+            var statsRt = statsCapsuleGo.AddComponent<RectTransform>();
+            statsRt.anchorMin = new Vector2(0f, 1f);
+            statsRt.anchorMax = new Vector2(0f, 1f);
+            statsRt.pivot = new Vector2(0f, 1f);
+            statsRt.anchoredPosition = new Vector2(20f, -16f);
+            statsRt.sizeDelta = new Vector2(365f, 36f);
 
-            res.GoldText = CreateText(canvasGo.transform, "GoldText", "💰 0", 18, TextAnchor.MiddleRight, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-40f, -54f), new Vector2(140f, 30f), new Color(1f, 0.85f, 0.25f, 1f));
-            var goldOutline = res.GoldText.gameObject.AddComponent<Outline>();
-            goldOutline.effectColor = Color.black;
+            var statsBg = statsCapsuleGo.AddComponent<Image>();
+            statsBg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            statsBg.color = new Color(0.06f, 0.08f, 0.13f, 0.90f);
+
+            var statsOutline = statsCapsuleGo.AddComponent<Outline>();
+            statsOutline.effectColor = new Color(0.85f, 0.70f, 0.30f, 0.40f);
+            statsOutline.effectDistance = new Vector2(1f, -1f);
+
+            // 1. 3 Gem Slots (🔴 Ruby, 🟢 Emerald, 🟣 Amethyst)
+            CreateResourceBadge(statsCapsuleGo.transform, "RubyBadge", 28f, GemSpriteHelper.GetOrCreateRubySprite(32), new Color(1.0f, 0.85f, 0.88f), 48f, out res.RubyIconRt, out res.RubyText);
+            CreateResourceBadge(statsCapsuleGo.transform, "EmeraldBadge", 80f, GemSpriteHelper.GetOrCreateEmeraldSprite(32), new Color(0.85f, 1.0f, 0.90f), 48f, out res.EmeraldIconRt, out res.EmeraldText);
+            CreateResourceBadge(statsCapsuleGo.transform, "AmethystBadge", 132f, GemSpriteHelper.GetOrCreateAmethystSprite(32), new Color(0.94f, 0.85f, 1.0f), 48f, out res.AmethystIconRt, out res.AmethystText);
+
+            // Divider Line
+            var divGo = new GameObject("ResourceDivider");
+            divGo.transform.SetParent(statsCapsuleGo.transform, false);
+            var divRt = divGo.AddComponent<RectTransform>();
+            divRt.anchorMin = new Vector2(0f, 0.5f);
+            divRt.anchorMax = new Vector2(0f, 0.5f);
+            divRt.pivot = new Vector2(0.5f, 0.5f);
+            divRt.anchoredPosition = new Vector2(162f, 0f);
+            divRt.sizeDelta = new Vector2(1.5f, 20f);
+            var divImg = divGo.AddComponent<Image>();
+            divImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
+            divImg.color = new Color(0.85f, 0.70f, 0.30f, 0.35f);
+            divImg.raycastTarget = false;
+
+            // 2. Gold & Kills Slots (💰 Gold, 💀 Kills)
+            CreateResourceBadge(statsCapsuleGo.transform, "GoldBadge", 218f, HudSpriteHelper.GetOrCreateCoinIcon(24), new Color(1.0f, 0.88f, 0.30f), 80f, out _, out res.GoldText);
+            CreateResourceBadge(statsCapsuleGo.transform, "KillsBadge", 305f, HudSpriteHelper.GetOrCreateSkullIcon(24), new Color(1.0f, 0.65f, 0.65f), 65f, out _, out res.KillCountText);
 
             // =========================================================================
             // LAYER 4 (Left Column): 9 Passive Buff Slots with Level & Value Display
@@ -286,7 +326,7 @@ namespace HappyShoot.View.UI
 
             for (int i = 0; i < MaxPassiveSlots; i++)
             {
-                var slotGo = CreatePassiveSlotElement(passiveColGo.transform, $"PassiveSlot_{i}", new Vector2(0f, pStartY - i * pSpacing), pSlotSize, out var icon, out var lvTxt, out var valTxt);
+                var slotGo = InGameSlotBuilder.CreatePassiveSlotElement(passiveColGo.transform, $"PassiveSlot_{i}", new Vector2(0f, pStartY - i * pSpacing), pSlotSize, out var icon, out var lvTxt, out var valTxt);
                 res.PassiveSlotRoots[i] = slotGo;
                 res.PassiveSlotIcons[i] = icon;
                 res.PassiveSlotLevelTexts[i] = lvTxt;
@@ -295,130 +335,6 @@ namespace HappyShoot.View.UI
             }
 
             return res;
-        }
-
-        private static GameObject CreatePassiveSlotElement(Transform parent, string name, Vector2 pos, float size, out Image icon, out Text lvlTxt, out Text valTxt)
-        {
-            var root = new GameObject(name);
-            root.transform.SetParent(parent, false);
-            var rt = root.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0f, 0.5f);
-            rt.anchorMax = new Vector2(0f, 0.5f);
-            rt.pivot = new Vector2(0f, 0.5f);
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = new Vector2(size + 110f, size);
-
-            // Frame Image (Left-aligned)
-            var frameGo = new GameObject("Frame");
-            frameGo.transform.SetParent(root.transform, false);
-            var frameRt = frameGo.AddComponent<RectTransform>();
-            frameRt.anchorMin = new Vector2(0f, 0.5f);
-            frameRt.anchorMax = new Vector2(0f, 0.5f);
-            frameRt.pivot = new Vector2(0f, 0.5f);
-            frameRt.anchoredPosition = Vector2.zero;
-            frameRt.sizeDelta = new Vector2(size, size);
-
-            var frameImg = frameGo.AddComponent<Image>();
-            frameImg.sprite = HudSpriteHelper.GetOrCreateSkillSlotFrameSprite();
-            frameImg.type = Image.Type.Sliced;
-
-            // Icon Image
-            var iconGo = new GameObject("Icon");
-            iconGo.transform.SetParent(frameGo.transform, false);
-            var iconRt = iconGo.AddComponent<RectTransform>();
-            iconRt.anchorMin = Vector2.zero;
-            iconRt.anchorMax = Vector2.one;
-            iconRt.offsetMin = new Vector2(3f, 3f);
-            iconRt.offsetMax = new Vector2(-3f, -3f);
-
-            icon = iconGo.AddComponent<Image>();
-            icon.raycastTarget = false;
-
-            // Level Badge (Inside Icon bottom-right)
-            lvlTxt = CreateText(frameGo.transform, "LvBadge", "1", 10, TextAnchor.LowerRight, Vector2.zero, Vector2.one, new Vector2(1f, 0f), new Vector2(-2f, 2f), Vector2.zero, new Color(1f, 0.90f, 0.30f, 1f));
-            var lvOutline = lvlTxt.gameObject.AddComponent<Outline>();
-            lvOutline.effectColor = Color.black;
-            lvOutline.effectDistance = new Vector2(1f, -1f);
-
-            // Value / Stat Label (Right of icon)
-            valTxt = CreateText(root.transform, "ValueText", "+15% ATK", 11, TextAnchor.MiddleLeft, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(size + 6f, 0f), new Vector2(100f, 20f), new Color(0.9f, 0.95f, 1f, 1f));
-            var valOutline = valTxt.gameObject.AddComponent<Outline>();
-            valOutline.effectColor = Color.black;
-            valOutline.effectDistance = new Vector2(1f, -1f);
-
-            return root;
-        }
-
-        private static GameObject CreateSlotElement(Transform parent, string name, Vector2 pos, float size, bool isDash, out Image icon, out Image cooldownMask, out Text lvlTxt, out Text countTxt)
-        {
-            var root = new GameObject(name);
-            root.transform.SetParent(parent, false);
-            var rt = root.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = new Vector2(size, size);
-
-            // Frame Image
-            var frameImg = root.AddComponent<Image>();
-            frameImg.sprite = HudSpriteHelper.GetOrCreateSkillSlotFrameSprite();
-            frameImg.type = Image.Type.Sliced;
-
-            // Icon Image
-            var iconGo = new GameObject("Icon");
-            iconGo.transform.SetParent(root.transform, false);
-            var iconRt = iconGo.AddComponent<RectTransform>();
-            iconRt.anchorMin = Vector2.zero;
-            iconRt.anchorMax = Vector2.one;
-            iconRt.offsetMin = new Vector2(4f, 4f);
-            iconRt.offsetMax = new Vector2(-4f, -4f);
-
-            icon = iconGo.AddComponent<Image>();
-            icon.raycastTarget = false;
-
-            // Radial 360 Cooldown Dark Mask
-            var cdGo = new GameObject("CooldownMask");
-            cdGo.transform.SetParent(root.transform, false);
-            var cdRt = cdGo.AddComponent<RectTransform>();
-            cdRt.anchorMin = Vector2.zero;
-            cdRt.anchorMax = Vector2.one;
-            cdRt.offsetMin = new Vector2(4f, 4f);
-            cdRt.offsetMax = new Vector2(-4f, -4f);
-
-            cooldownMask = cdGo.AddComponent<Image>();
-            cooldownMask.sprite = SpriteHelper.GetOrCreateWhiteSprite();
-            cooldownMask.color = new Color(0f, 0f, 0f, 0.68f);
-            cooldownMask.type = Image.Type.Filled;
-            cooldownMask.fillMethod = Image.FillMethod.Radial360;
-            cooldownMask.fillOrigin = (int)Image.Origin360.Top;
-            cooldownMask.fillClockwise = true;
-            cooldownMask.fillAmount = 0f; // 0 = ready, 1 = on cooldown
-            cooldownMask.raycastTarget = false;
-
-            // Badge / Key Label
-            if (isDash)
-            {
-                lvlTxt = null;
-                countTxt = null;
-                var keyTxt = CreateText(root.transform, "KeyBadge", "Space", 10, TextAnchor.LowerCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, -6f), new Vector2(42f, 16f), new Color(0.4f, 0.9f, 1f, 1f));
-                var keyOutline = keyTxt.gameObject.AddComponent<Outline>();
-                keyOutline.effectColor = Color.black;
-            }
-            else
-            {
-                lvlTxt = CreateText(root.transform, "LvBadge", "Lv.1", 11, TextAnchor.MiddleCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, -6f), new Vector2(36f, 16f), new Color(1f, 0.90f, 0.30f, 1f));
-                var lvOutline = lvlTxt.gameObject.AddComponent<Outline>();
-                lvOutline.effectColor = Color.black;
-
-                // Projectile / Sub-Count Badge (Top-Right of Slot)
-                countTxt = CreateText(root.transform, "CountBadge", "", 12, TextAnchor.UpperRight, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-4f, -4f), new Vector2(24f, 16f), new Color(0.35f, 0.95f, 1f, 1f));
-                var countOutline = countTxt.gameObject.AddComponent<Outline>();
-                countOutline.effectColor = Color.black;
-                countOutline.effectDistance = new Vector2(1f, -1f);
-            }
-
-            return root;
         }
 
         public static Text CreateText(Transform parent, string name, string defaultText, int fontSize, TextAnchor alignment, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta, Color color)
@@ -440,6 +356,57 @@ namespace HappyShoot.View.UI
             txt.raycastTarget = false;
             txt.font = FontHelper.GetKoreanFont();
             return txt;
+        }
+
+        private static void CreateResourceBadge(Transform parent, string name, float centerX, Sprite iconSprite, Color textColor, float width, out RectTransform iconRt, out Text textComponent)
+        {
+            var badgeGo = new GameObject(name);
+            badgeGo.transform.SetParent(parent, false);
+            var badgeRt = badgeGo.AddComponent<RectTransform>();
+            badgeRt.anchorMin = new Vector2(0f, 0.5f);
+            badgeRt.anchorMax = new Vector2(0f, 0.5f);
+            badgeRt.pivot = new Vector2(0.5f, 0.5f);
+            badgeRt.anchoredPosition = new Vector2(centerX, 0f);
+            badgeRt.sizeDelta = new Vector2(width, 30f);
+
+            // Icon Image
+            var iconGo = new GameObject("Icon");
+            iconGo.transform.SetParent(badgeGo.transform, false);
+            iconRt = iconGo.AddComponent<RectTransform>();
+            iconRt.anchorMin = new Vector2(0f, 0.5f);
+            iconRt.anchorMax = new Vector2(0f, 0.5f);
+            iconRt.pivot = new Vector2(0.5f, 0.5f);
+            iconRt.anchoredPosition = new Vector2(12f, 0f);
+            iconRt.sizeDelta = new Vector2(22f, 22f);
+
+            var iconImg = iconGo.AddComponent<Image>();
+            iconImg.sprite = iconSprite;
+            iconImg.color = Color.white;
+            iconImg.preserveAspect = true;
+            iconImg.raycastTarget = false;
+
+            // Value Text
+            var textGo = new GameObject("ValueText");
+            textGo.transform.SetParent(badgeGo.transform, false);
+            var textRt = textGo.AddComponent<RectTransform>();
+            textRt.anchorMin = new Vector2(0f, 0.5f);
+            textRt.anchorMax = new Vector2(0f, 0.5f);
+            textRt.pivot = new Vector2(0f, 0.5f);
+            textRt.anchoredPosition = new Vector2(26f, 0f);
+            textRt.sizeDelta = new Vector2(width - 26f, 22f);
+
+            textComponent = textGo.AddComponent<Text>();
+            textComponent.font = FontHelper.GetKoreanFont();
+            textComponent.fontSize = 15;
+            textComponent.fontStyle = FontStyle.Bold;
+            textComponent.alignment = TextAnchor.MiddleLeft;
+            textComponent.color = textColor;
+            textComponent.text = "0";
+            textComponent.raycastTarget = false;
+
+            var outline = textGo.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.95f);
+            outline.effectDistance = new Vector2(1.2f, -1.2f);
         }
     }
 }
