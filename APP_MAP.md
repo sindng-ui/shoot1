@@ -164,7 +164,7 @@ graph TD
 | | `PlayerClassFactory.cs [UPDATED]` | `PlayerClassFactory`, `CharacterClassType` | 전사/마법사 기본 크리 10%, 궁수 기본 크리 20% 및 **마법사 생성 시 startSkillId(fireball, frost_nova, chain_lightning)에 따른 시작 스킬 분기 지원 (140줄)** |
 | | `MonsterEntity.cs [UPDATED]` | `MonsterEntity` | 몬스터 도메인 로직, `TakeDamage(float damage, bool isCritical = false)` 및 원거리 AI 타이머 지원 |
 | | `MonsterType.cs [UPDATED]`| `MonsterType`, `MonsterDefinition` | **흑기사(DarkKnight) 원거리 암흑 검기 공격 속성(`isRanged: true, preferredDistance: 4.8f, attackInterval: 2.5f`)** 및 7종 일반 몬스터/보스 아키타입 정의 |
-| **Editor / CI/CD** | `BuildScript.cs [NEW]` | `BuildScript` | **GitHub Actions CI/CD 배치모드 헤드리스 빌드 자동화 스크립트** (`BuildWindows()`, SampleScene 자동 수집, BuildReport 검증 및 종료코드 반환) (90줄) |
+| **Editor / CI/CD** | `BuildScript.cs [UPDATED]` | `BuildScript` | **Unity 에디터 상단 메뉴 원클릭 빌드 및 GitHub Actions CI/CD 배치모드 헤드리스 빌드 자동화 스크립트** (`HappyShoot > Build` 메뉴: `Build Windows 64-bit`, `Build Android (APK)`, `Build Android (Google Play AAB)`, 공통 `ExecuteBuild()` 파이프라인, SampleScene 자동 수집, BuildReport 검증, 에디터 완료/실패 다이얼로그 팝업 안내, CI/CD 종료코드 반환) (196줄) |
 | | `.github/workflows/build.yml [NEW]` | `CI Workflow` | **GitHub Actions Windows Standalone (.exe) 자동 빌드 & Zip 아티팩트 업로드 및 Release 게시 플로우** |
 | | `.github/workflows/activation.yml [NEW]` | `Activation Workflow` | **Game-CI v2 공식 Unity 활성화 요청 파일(.alf) 자동 생성 워크플로우** |
 | | `docs/GITHUB_ACTIONS_SETUP.md [NEW]` | `CI Setup Guide` | **Unity 활성화 및 라이선스(`UNITY_LICENSE`) 등록 가이드** |
@@ -273,7 +273,12 @@ graph TD
 | | `PlayerHealthBarView.cs [UPDATED]` | `PlayerHealthBarView` | 플레이어 머리 위 오버헤드 미니 체력바 (SpriteRenderer 기반 무할당, 고화질 캐릭터 최적화 오프셋 `(0, 0.95, 0)` 및 sortingOrder 20/21 적용, 124줄) |
 | **Visual Feedback** | `AimReticleView.cs [UPDATED]` | `AimReticleView` | **최상위 Canvas Overlay (`ScreenSpaceOverlay`, sortingOrder: 32760) 기반 조준선**: UI/캐릭터선택 일시정지 복귀 시 마우스 델타 오인식 방지(`_wasPaused`), 실시간 마우스 능동 조작 감지(`IsMouseActivelyMoving`), 마우스 2초 유휴 시 부드러운 페이드아웃 및 이동 방향 자동 복귀, 클릭 펄스(1.35x), 브리딩 펄스(1.0~1.08x) (193줄) |
 | | `ReticleSpriteHelper.cs [NEW]` | `ReticleSpriteHelper` | 48x48 네온 라임-그린 십자선 과녁 링 프로시저럴 픽셀아트 생성기 (104줄) |
-| | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
+| | **Mobile / UI** | `TouchJoystickView.cs [RESTORED]` | `TouchJoystickView` | **모바일 순수 플로팅 가상 터치 조이스틱 (손 뗄 시 100% 즉시 완전 은닉, 터치 중에만 손가락 위치에 팝업, Windows/PC 마우스 간섭 완전 차단)** (화면 좌측 터치 시 동적 생성, 0-GC 벡터 계산, 손맛 최적화 드래그 조작) (217줄) |
+| | `TouchJoystickSpriteHelper.cs [RESTORED]` | `TouchJoystickSpriteHelper` | 픽셀아트 스타일 조이스틱 베이스 링(160x160) & 노브(64x64) 절차적 생성 헬퍼 (128줄) |
+| | `MobilePauseButtonView.cs [RESTORED]` | `MobilePauseButtonView` | 모바일 우측 상단 인게임 터치 전용 일시정지 [⏸] 버튼 (141줄) |
+| | `PlayerDamageVignetteView.cs [RESTORED]` | `PlayerDamageVignetteView` | 피격 시 화면 테두리 붉은 비네트 0-GC 절차적 연출 (148줄) |
+| | `PlayerHitFeedbackView.cs [RESTORED]` | `PlayerHitFeedbackView` | 피격 시 플레이어 깜빡임/무적 피드백 (266줄) |
+| `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
 | | `PauseMenuUiView.cs` | `PauseMenuUiView` | ESC 일시정지 다이얼로그 (계속하기, ⚙️ 환경 설정, 다시 시작, 게임 종료) |
 | | `DamageTextView.cs` | `DamageTextManagerView`, `DamageTextView` | 이벤트 기반 무할당 32개 풀링 (GameSettings.ShowDamageText 옵션 적용) |
 | **Player** | `PlayerView.cs [UPDATED]` | `PlayerView` | **스마트 하이브리드 시선 제어 및 무기 파지 위임**: WASD 이동 즉시 시선 질주, 마우스 실시간 조작 시 즉시 조준 전환, 레인저 활 정방향 파지 및 좌우 flipX, 마법사 지팡이 배치를 `WizardWeaponPlacementHelper`로 위임하여 488줄로 대폭 감량 (500줄 규칙 철저 준수) |
@@ -283,7 +288,12 @@ graph TD
 | | `Warrior Sprites [UPDATED]` | `Assets/Resources/Characters/Warrior/*.png` | **전사 9방향 대응 5종 투명 PNG 스프라이트: 인게임 몬스터 및 도트 리소스와 조화되는 세련된 픽셀아트(BlockSize=3, ~116x150 도트 급) 도트화 변환 완료, 350x450 표준 캔버스 및 발바닥 중심 피벗/PPU=520 최적화 정렬 100% 보존** |
 | | `Ranger Sprites [UPDATED]` | `Assets/Resources/Characters/Ranger/*.png` | **궁수 9방향 대응 5종 투명 PNG 스프라이트: 인게임 도트 분위기에 맞춘 정밀 픽셀아트(BlockSize=3, 화살깃/모자 디테일 보존) 도트화 변환 완료, 350x450 표준 캔버스 및 피벗(0.5, 0.30) / PPU=400 최적화 정렬 100% 보존** |
 | | `Wizard Sprites [UPDATED]` | `Assets/Resources/Characters/Wizard/*.png` | **마법사 9방향 대응 5종 투명 PNG 스프라이트: 인게임 도트 분위기에 맞춘 정밀 픽셀아트(BlockSize=3, 눈빛/로브/모자 곡선 보존) 도트화 변환 완료, 피벗(0.5, 0.30) / PPU=450 및 지팡이 파지 위치 100% 호환 보존** |
-| | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
+| | **Mobile / UI** | `TouchJoystickView.cs [RESTORED]` | `TouchJoystickView` | **모바일 플로팅 가상 터치 조이스틱** (화면 좌측 터치 시 동적 생성, 0-GC 벡터 계산, 손맛 최적화 드래그 조작) (217줄) |
+| | `TouchJoystickSpriteHelper.cs [RESTORED]` | `TouchJoystickSpriteHelper` | 픽셀아트 스타일 조이스틱 베이스 링(160x160) & 노브(64x64) 절차적 생성 헬퍼 (128줄) |
+| | `MobilePauseButtonView.cs [RESTORED]` | `MobilePauseButtonView` | 모바일 우측 상단 인게임 터치 전용 일시정지 [⏸] 버튼 (141줄) |
+| | `PlayerDamageVignetteView.cs [RESTORED]` | `PlayerDamageVignetteView` | 피격 시 화면 테두리 붉은 비네트 0-GC 절차적 연출 (148줄) |
+| | `PlayerHitFeedbackView.cs [RESTORED]` | `PlayerHitFeedbackView` | 피격 시 플레이어 깜빡임/무적 피드백 (266줄) |
+| `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 이동 입력 수신 및 도메인 전달 |
 | **Monsters** | `MonsterView.cs [UPDATED]` | `MonsterView` | **7종 몬스터(Slime, Bat, Skeleton, Golem, FireImp, ToxicSpider, DarkKnight) + 2종 보스(Golem King, Laser Archdemon) 고퀄리티 픽셀아트 때깔/명암/발광 코어 강화**, 2.5D Blob Shadow 타원 그림자, 타입별 젤리 물리 모션 (316줄) |
 | | `MonsterDeathFxManagerView.cs [NEW]` | `MonsterDeathFxManagerView` | **몬스터 속성별(암석 파편/형광 독즙/화염 불씨/영혼 가루/골드 룬) 처치 미니 파티클 무할당 풀링(64개) 뷰 매니저 (154줄)** |
 | | `MonsterSpriteHelper.cs [UPDATED]` | `MonsterSpriteHelper` | **7종 일반 몬스터 + 보스 2종 고해상도 셀 셰이딩/글레어/발광 코어/룬 픽셀아트 프로시저럴 생성기 (367줄)** |

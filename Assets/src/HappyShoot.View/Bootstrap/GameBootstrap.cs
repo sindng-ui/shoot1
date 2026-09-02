@@ -92,6 +92,10 @@ namespace HappyShoot.View.Bootstrap
 
         private void Start()
         {
+            // Mobile Optimization: Prevent sleep and cap target framerate to smooth 60fps
+            Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            Application.targetFrameRate = 60;
+
             Debug.Log("[GameBootstrap] Initializing HappyShoot 2D Game Loop...");
 
             // 0. Initialize Game Settings Storage
@@ -297,6 +301,31 @@ namespace HappyShoot.View.Bootstrap
             var hudView = hudGo.AddComponent<InGameHudView>();
             hudView.SetSettingsDialog(settingsDialogView);
             hudView.Initialize(playerView, levelSystem, _gameSession);
+
+            
+            // 6.0. Mobile Touch Controls (Floating Virtual Joystick & Mobile Pause Button)
+            var hudCanvas = hudView.HudCanvas ?? hudView.Components.Canvas ?? hudGo.GetComponentInChildren<Canvas>();
+            if (hudCanvas != null)
+            {
+                Debug.Log($"[GameBootstrap] Initializing Mobile Touch Controls on Canvas '{hudCanvas.name}' (Root: {hudCanvas.gameObject.name})");
+                var joystick = UI.TouchJoystickView.Create(hudCanvas.transform, hudCanvas);
+                var inputHandler = playerView.GetComponent<Player.PlayerInputHandler>();
+                if (inputHandler != null)
+                {
+                    inputHandler.SetTouchJoystick(joystick);
+                    Debug.Log("[GameBootstrap] Touch Joystick bound to PlayerInputHandler successfully!");
+                }
+                UI.MobilePauseButtonView.Create(hudCanvas.transform, _gameSession, playerView.EventBus);
+
+                // 6.0.1. Screen-Edge Hit Damage Vignette UI (0-GC Procedural Feedback)
+                var vignetteGo = new GameObject("PlayerDamageVignetteUI");
+                var vignetteView = vignetteGo.AddComponent<UI.PlayerDamageVignetteView>();
+                vignetteView.Initialize(playerView.EventBus, hudCanvas.transform);
+            }
+            else
+            {
+                Debug.LogError("[GameBootstrap] ERROR: Failed to locate HUD Canvas for Touch Joystick initialization!");
+            }
 
             var gemCounterGo = new GameObject("GemCounterHUD");
             var gemCounterView = gemCounterGo.AddComponent<InGameGemCounterHudView>();

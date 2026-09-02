@@ -21,6 +21,8 @@ namespace HappyShoot.View.UI
     /// </summary>
     public class InGameHudView : MonoBehaviour
     {
+        public Canvas HudCanvas => Components.Canvas != null ? Components.Canvas : GetComponentInChildren<Canvas>();
+
         private Slider _expSlider;
         private Text _levelText;
         private Text _expText;
@@ -408,7 +410,8 @@ namespace HappyShoot.View.UI
             {
                 var eventSystemGo = new GameObject("EventSystem");
                 eventSystemGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                eventSystemGo.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+                var inputModule = eventSystemGo.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+                inputModule.AssignDefaultActions();
             }
 
             // Build full HUD via modular InGameHudBuilder

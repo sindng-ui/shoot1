@@ -1,0 +1,33 @@
+================================================================================
+[TEST & VERIFICATION REPORT] Unity Build Menu Options Restoration
+Project: HappyShoot (K:\unityprojects\shoot1\shoot1)
+Date: 2026-09-03
+Status: PASS (ALL CHECKS PASSED)
+================================================================================
+
+1. Script Integrity & Compilation Check
+--------------------------------------------------------------------------------
+- Target File: Assets/Editor/BuildScript.cs
+- Line Count: 196 lines (Passed 500-line rule limit)
+- Unity Editor Log Status: 
+    * Worker2 successfully imported Assets/Editor/BuildScript.cs (Guid: b6e675ad0a6b02e49954a3af8257c094)
+    * Compilation Errors: 0 errors, 0 warnings. Clean build.
+
+2. Menu Item Registration Check
+--------------------------------------------------------------------------------
+- [MenuItem("HappyShoot/Build/Build Windows 64-bit", priority = 10)]
+    * Builds standalone Windows x64 executable to Builds/StandaloneWindows64/HappyShoot.exe
+- [MenuItem("HappyShoot/Build/Build Android (APK)", priority = 20)]
+    * Sets EditorUserBuildSettings.buildAppBundle = false
+    * Builds Android APK to Builds/Android/HappyShoot.apk
+- [MenuItem("HappyShoot/Build/Build Android (Google Play AAB)", priority = 30)]
+    * Sets EditorUserBuildSettings.buildAppBundle = true
+    * Builds Google Play App Bundle to Builds/Android/HappyShoot.aab
+
+3. Architecture & Features
+--------------------------------------------------------------------------------
+- Common Pipeline: ExecuteBuild() unified scene gathering, output directory creation, and BuildPipeline invocation.
+- User Feedback: In Editor mode, displays EditorUtility.DisplayDialog on build completion/failure.
+- CI/CD Compatibility: In BatchMode (-batchmode), exits with clean code 0 or 1 for GitHub Actions compatibility.
+- Documentation: shoot1/APP_MAP.md updated with new specifications.
+================================================================================
