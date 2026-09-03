@@ -15,11 +15,11 @@ namespace HappyShoot.View.Utils
 
         // Class-specific high-res PPU tuning:
         // Warrior: canvas 350x450, char height ~405px -> PPU 520f (scaled height ~1.29m)
-        private const float WarriorPPU = 520f;
+        private const float WarriorPPU = 420f;
         // Ranger: canvas 350x450, char height ~325px -> PPU 400f (scaled height ~1.22m, nimble hunter ratio)
-        private const float RangerPPU = 400f;
+        private const float RangerPPU = 320f;
         // Wizard: canvas 350x450, char height ~365px -> PPU 450f (scaled height ~1.22m, cute pointed hat mage)
-        private const float WizardPPU = 450f;
+        private const float WizardPPU = 360f;
 
         // Shared bottom-aligned pivot: places feet precisely at Y = -0.33m, directly on top of BlobShadow (Y = -0.36m)
         private static readonly Vector2 DefaultPivot = new Vector2(0.5f, 0.30f);

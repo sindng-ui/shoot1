@@ -318,7 +318,7 @@ namespace HappyShoot.View.Bootstrap
                 UI.MobilePauseButtonView.Create(hudCanvas.transform, _gameSession, playerView.EventBus);
 
                 // 6.0.1. Screen-Edge Hit Damage Vignette UI (0-GC Procedural Feedback)
-                var vignetteGo = new GameObject("PlayerDamageVignetteUI");
+                var vignetteGo = new GameObject("PlayerDamageVignetteUI", typeof(RectTransform));
                 var vignetteView = vignetteGo.AddComponent<UI.PlayerDamageVignetteView>();
                 vignetteView.Initialize(playerView.EventBus, hudCanvas.transform);
             }

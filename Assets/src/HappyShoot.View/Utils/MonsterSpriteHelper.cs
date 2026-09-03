@@ -1,4 +1,5 @@
 using UnityEngine;
+using HappyShoot.Domain.Entities;
 
 namespace HappyShoot.View.Utils
 {
@@ -25,6 +26,8 @@ namespace HappyShoot.View.Utils
         /// </summary>
         public static Sprite GetOrCreateSlimeSprite(int size = 28)
         {
+            var custom = CustomMonsterSpriteLoader.TryGetCustomMonsterSprite(MonsterType.Slime);
+            if (custom != null) return custom;
             if (_slimeSprite != null) return _slimeSprite;
 
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
@@ -69,6 +72,8 @@ namespace HappyShoot.View.Utils
         /// </summary>
         public static Sprite GetOrCreateBatSprite(int size = 28)
         {
+            var custom = CustomMonsterSpriteLoader.TryGetCustomMonsterSprite(MonsterType.Bat);
+            if (custom != null) return custom;
             if (_batSprite != null) return _batSprite;
 
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
@@ -124,6 +129,8 @@ namespace HappyShoot.View.Utils
         /// </summary>
         public static Sprite GetOrCreateSkeletonSprite(int size = 32)
         {
+            var custom = CustomMonsterSpriteLoader.TryGetCustomMonsterSprite(MonsterType.Skeleton);
+            if (custom != null) return custom;
             if (_skeletonSprite != null) return _skeletonSprite;
 
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
@@ -189,6 +196,8 @@ namespace HappyShoot.View.Utils
         /// </summary>
         public static Sprite GetOrCreateGolemSprite(int size = 36)
         {
+            var custom = CustomMonsterSpriteLoader.TryGetCustomMonsterSprite(MonsterType.Golem);
+            if (custom != null) return custom;
             if (_golemSprite != null) return _golemSprite;
 
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
@@ -239,78 +248,15 @@ namespace HappyShoot.View.Utils
             return _golemSprite;
         }
 
-        /// <summary>
-        /// 56x56 Epic Demon Lord with massive wings, obsidian horns, and 3-eye laser cannon core.
-        /// </summary>
-        public static Sprite GetOrCreateBossSprite(int size = 56)
-        {
-            if (_bossSprite != null) return _bossSprite;
-
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-            Color[] pixels = new Color[size * size];
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
-
-            Color bodyOuter = new Color(0.12f, 0.04f, 0.08f);
-            Color bodyMid = new Color(0.50f, 0.12f, 0.18f);
-            Color bodyInner = new Color(0.72f, 0.16f, 0.24f);
-            Color hornBase = new Color(0.55f, 0.08f, 0.08f);
-            Color hornTip = new Color(0.95f, 0.40f, 0.15f);
-            Color eyeGlow = new Color(1.0f, 0.92f, 0.15f);
-            Color eyeCore = new Color(1.0f, 0.45f, 0.05f);
-            Color laserEye = new Color(0.20f, 0.95f, 1.0f); // Cyan 3rd Eye for laser cannon
-
-            int cx = size / 2, cy = size / 2;
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    int dx = x - cx;
-                    int dy = y - cy;
-                    int adx = Mathf.Abs(dx);
-                    int ady = Mathf.Abs(dy);
-
-                    // Body: rounded diamond shape
-                    float bodyEllipse = (adx / 14f) * (adx / 14f) + (ady / 18f) * (ady / 18f);
-                    if (bodyEllipse <= 1.0f)
-                    {
-                        pixels[y * size + x] = bodyEllipse > 0.72f ? bodyOuter : (bodyEllipse > 0.42f ? bodyMid : bodyInner);
-                    }
-
-                    // Left & Right Curved Horns
-                    for (int ht = 0; ht < 16; ht++)
-                    {
-                        int hxL = cx - 6 - ht, hxR = cx + 6 + ht;
-                        int hy = cy + 18 - ht * 2 + (ht > 7 ? ht - 7 : 0);
-                        int thickness = ht < 5 ? 3 : (ht < 10 ? 2 : 1);
-                        if (Mathf.Abs(x - hxL) <= thickness && Mathf.Abs(y - hy) <= thickness) pixels[y * size + x] = ht < 5 ? hornBase : hornTip;
-                        if (Mathf.Abs(x - hxR) <= thickness && Mathf.Abs(y - hy) <= thickness) pixels[y * size + x] = ht < 5 ? hornBase : hornTip;
-                    }
-
-                    // Main Glowing Eyes
-                    bool leftEye = (Mathf.Abs(dx + 5) <= 3 && Mathf.Abs(dy - 5) <= 2);
-                    bool rightEye = (Mathf.Abs(dx - 5) <= 3 && Mathf.Abs(dy - 5) <= 2);
-                    if (leftEye || rightEye) pixels[y * size + x] = eyeGlow;
-
-                    // 3rd Eye Laser Cannon in forehead
-                    if (Mathf.Abs(dx) <= 2 && Mathf.Abs(dy - 11) <= 2)
-                    {
-                        pixels[y * size + x] = (dx == 0 && dy == 11) ? Color.white : laserEye;
-                    }
-                }
-            }
-
-            tex.SetPixels(pixels);
-            tex.Apply();
-            _bossSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-            return _bossSprite;
-        }
+        public static Sprite GetOrCreateBossSprite(int size = 56) => BossSpriteHelper.GetOrCreateBoss1Sprite();
 
         /// <summary>
         /// 30x30 Crimson Fire Imp with sharp horns, bat-like wings, and fiery tail tip.
         /// </summary>
         public static Sprite GetOrCreateFireImpSprite(int size = 30)
         {
+            var custom = CustomMonsterSpriteLoader.TryGetCustomMonsterSprite(MonsterType.FireImp);
+            if (custom != null) return custom;
             if (_fireImpSprite != null) return _fireImpSprite;
 
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
@@ -358,6 +304,8 @@ namespace HappyShoot.View.Utils
         /// </summary>
         public static Sprite GetOrCreateToxicSpiderSprite(int size = 34)
         {
+            var custom = CustomMonsterSpriteLoader.TryGetCustomMonsterSprite(MonsterType.ToxicSpider);
+            if (custom != null) return custom;
             if (_toxicSpiderSprite != null) return _toxicSpiderSprite;
 
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
@@ -408,6 +356,8 @@ namespace HappyShoot.View.Utils
         /// </summary>
         public static Sprite GetOrCreateDarkKnightSprite(int size = 40)
         {
+            var custom = CustomMonsterSpriteLoader.TryGetCustomMonsterSprite(MonsterType.DarkKnight);
+            if (custom != null) return custom;
             if (_darkKnightSprite != null) return _darkKnightSprite;
 
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };

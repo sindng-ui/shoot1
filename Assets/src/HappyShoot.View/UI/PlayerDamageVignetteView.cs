@@ -10,6 +10,7 @@ namespace HappyShoot.View.UI
     /// Pure procedural texture, zero blur shaders, 60fps mobile friendly.
     /// Strictly modular and under 500 lines.
     /// </summary>
+    [RequireComponent(typeof(RectTransform))]
     public class PlayerDamageVignetteView : MonoBehaviour
     {
         private Image _vignetteImage;
@@ -39,7 +40,7 @@ namespace HappyShoot.View.UI
 
         private void SetupVignetteImage()
         {
-            var rect = gameObject.GetComponent<RectTransform>() ?? gameObject.AddComponent<RectTransform>();
+            var rect = GetComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;

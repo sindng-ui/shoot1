@@ -295,53 +295,15 @@ namespace HappyShoot.View.Utils
         /// <summary>
         /// 24x24 Bouncy Jelly Slime.
         /// </summary>
-        public static Sprite GetOrCreateSlimeSprite(int size = 24)
-        {
-            if (_slimeSprite != null) return _slimeSprite;
-
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Point;
-            Color[] pixels = new Color[size * size];
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
-
-            Color slimeBody = new Color(0.20f, 0.85f, 0.35f, 0.95f);
-            Color slimeShine = new Color(0.65f, 1.0f, 0.70f, 0.95f);
-            Color slimeDark = new Color(0.10f, 0.55f, 0.20f, 0.95f);
-            Color eyeWhite = Color.white;
-            Color eyePupil = new Color(0.05f, 0.15f, 0.08f);
-
-            int cx = size / 2;
-            int cy = size / 2 - 2;
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = (x - cx) / 8.5f;
-                    float dy = (y - cy) / 7.0f;
-
-                    if (y >= 1 && (dx * dx + dy * dy <= 1.0f))
-                    {
-                        pixels[y * size + x] = slimeBody;
-                        if (dx * dx + dy * dy >= 0.75f || y <= 3) pixels[y * size + x] = slimeDark;
-                        if (y >= 13 && y <= 16 && x >= cx - 5 && x <= cx - 2) pixels[y * size + x] = slimeShine;
-                        if ((y >= 7 && y <= 10) && (x == cx - 3 || x == cx + 3)) pixels[y * size + x] = eyeWhite;
-                        if ((y >= 8 && y <= 9) && (x == cx - 3 || x == cx + 3)) pixels[y * size + x] = eyePupil;
-                    }
-                }
-            }
-
-            tex.SetPixels(pixels);
-            tex.Apply();
-            _slimeSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.3f), size);
-            return _slimeSprite;
-        }
+        public static Sprite GetOrCreateSlimeSprite(int size = 28) => MonsterSpriteHelper.GetOrCreateSlimeSprite(size);
 
         /// <summary>
         /// 16x16 Faceted Shimmering Crystal Experience Gem.
         /// </summary>
         public static Sprite GetOrCreateGemSprite(int size = 16)
         {
+            var custom = CustomResourceSpriteLoader.TryGetExp1Sprite();
+            if (custom != null) return custom;
             if (_gemSprite != null) return _gemSprite;
 
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);

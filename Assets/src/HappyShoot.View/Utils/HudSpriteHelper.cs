@@ -363,6 +363,8 @@ namespace HappyShoot.View.Utils
         /// </summary>
         public static Sprite GetOrCreateCoinIcon(int size = 24)
         {
+            var custom = CustomResourceSpriteLoader.TryGetGoldCoinSprite();
+            if (custom != null) return custom;
             const string key = "hud_coin_icon_24";
             if (_cache.TryGetValue(key, out var cached) && cached != null) return cached;
 

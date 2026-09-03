@@ -228,6 +228,7 @@ namespace HappyShoot.View.Utils
         public static Sprite GetOrCreateLichKingSprite()
         {
             if (_cachedLichKingSprite != null) return _cachedLichKingSprite;
+            if (CustomMonsterSpriteLoader.TryGetCustomMonsterSprite(HappyShoot.Domain.Entities.MonsterType.Boss3) is { } cl) return _cachedLichKingSprite = cl;
 
             const int w = 24, h = 24;
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };

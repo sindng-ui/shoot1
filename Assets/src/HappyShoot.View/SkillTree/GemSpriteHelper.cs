@@ -16,6 +16,8 @@ namespace HappyShoot.View.SkillTree
 
         public static Sprite GetGemSprite(GemType type)
         {
+            var custom = Utils.CustomResourceSpriteLoader.TryGetGemSprite(type);
+            if (custom != null) return custom;
             switch (type)
             {
                 case GemType.Ruby: return GetOrCreateRubySprite();
@@ -27,6 +29,8 @@ namespace HappyShoot.View.SkillTree
 
         public static Sprite GetOrCreateRubySprite(int size = 32)
         {
+            var custom = Utils.CustomResourceSpriteLoader.TryGetRubySprite();
+            if (custom != null) return custom;
             if (_rubySprite != null) return _rubySprite;
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Point;
@@ -90,6 +94,8 @@ namespace HappyShoot.View.SkillTree
 
         public static Sprite GetOrCreateEmeraldSprite(int size = 32)
         {
+            var custom = Utils.CustomResourceSpriteLoader.TryGetEmeraldSprite();
+            if (custom != null) return custom;
             if (_emeraldSprite != null) return _emeraldSprite;
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Point;
@@ -178,6 +184,8 @@ namespace HappyShoot.View.SkillTree
 
         public static Sprite GetOrCreateAmethystSprite(int size = 32)
         {
+            var custom = Utils.CustomResourceSpriteLoader.TryGetAmethystSprite();
+            if (custom != null) return custom;
             if (_amethystSprite != null) return _amethystSprite;
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Point;

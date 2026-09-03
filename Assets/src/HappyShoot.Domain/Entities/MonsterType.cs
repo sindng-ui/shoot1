@@ -14,7 +14,8 @@ namespace HappyShoot.Domain.Entities
         Necromancer = 9, // Phase 3 wave 2: death mage (shoots cursed soul orbs)
         Abomination = 10,// Phase 3 wave 3: flesh colossus (colossal HP & high damage)
         Reaper = 11,     // Phase 3 wave 4: scythe reaper (high speed dash & lethal damage)
-        Boss3 = 12       // Final Boss: Arch-Lich King
+        Boss3 = 12,      // Final Boss: Arch-Lich King
+        Boss2 = 13       // Phase 2 Boss: Venom Queen Arachne
     }
 
     /// <summary>
@@ -108,6 +109,11 @@ namespace HappyShoot.Domain.Entities
         public static MonsterDefinition CreateBoss3(string name, float hp, float speed, float damage, int exp, int gold)
         {
             return new MonsterDefinition(MonsterType.Boss3, name, hp, speed, damage, radius: 1.2f, exp, gold, isRanged: true, preferredDistance: 4.5f, attackInterval: 1.0f);
+        }
+
+        public static MonsterDefinition CreateBoss2(string name, float hp, float speed, float damage, int exp, int gold)
+        {
+            return new MonsterDefinition(MonsterType.Boss2, name, hp, speed, damage, radius: 1.1f, exp, gold, isRanged: true, preferredDistance: 3.5f, attackInterval: 1.0f);
         }
 
         public static MonsterDefinition FromConfig(MonsterType type, MonsterTuningConfigData cfg)

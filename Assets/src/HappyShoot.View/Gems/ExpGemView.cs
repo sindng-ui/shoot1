@@ -35,20 +35,17 @@ namespace HappyShoot.View.Gems
                 _spriteRenderer.sprite = Utils.SpriteHelper.GetOrCreateGemSprite();
             }
 
-            // Gem color tint based on value
-            if (entity.ExpValue >= 20)
+            // High-res visual assignment based on exp value
+            if (entity.ExpValue >= 10)
             {
-                _spriteRenderer.color = new Color(1.0f, 0.35f, 0.35f); // Red high-value gem
-                _transform.localScale = Vector3.one * 0.95f;
-            }
-            else if (entity.ExpValue >= 5)
-            {
-                _spriteRenderer.color = new Color(0.35f, 0.85f, 1.0f); // Blue medium gem
-                _transform.localScale = Vector3.one * 0.80f;
+                _spriteRenderer.sprite = Utils.CustomResourceSpriteLoader.TryGetExp2Sprite() ?? Utils.SpriteHelper.GetOrCreateGemSprite();
+                _spriteRenderer.color = Color.white;
+                _transform.localScale = Vector3.one * 0.85f;
             }
             else
             {
-                _spriteRenderer.color = Color.white; // Standard green/white gem
+                _spriteRenderer.sprite = Utils.CustomResourceSpriteLoader.TryGetExp1Sprite() ?? Utils.SpriteHelper.GetOrCreateGemSprite();
+                _spriteRenderer.color = Color.white;
                 _transform.localScale = Vector3.one * 0.70f;
             }
 
@@ -94,7 +91,7 @@ namespace HappyShoot.View.Gems
         {
             if (_viewPool.Count > 0) return;
 
-            var gemSprite = Utils.SpriteHelper.GetOrCreateGemSprite();
+            var gemSprite = Utils.CustomResourceSpriteLoader.TryGetExp1Sprite() ?? Utils.SpriteHelper.GetOrCreateGemSprite();
 
             for (int i = 0; i < count; i++)
             {
@@ -155,7 +152,7 @@ namespace HappyShoot.View.Gems
             }
 
             // 2. Dynamic expansion fallback: Never drop a gem visually!
-            var gemSprite = Utils.SpriteHelper.GetOrCreateGemSprite();
+            var gemSprite = Utils.CustomResourceSpriteLoader.TryGetExp1Sprite() ?? Utils.SpriteHelper.GetOrCreateGemSprite();
             var newView = CreateNewGemView(_viewPool.Count + 1, gemSprite);
             newView.Bind(entity);
         }

@@ -321,7 +321,7 @@ namespace HappyShoot.View.Monsters
             {
                 _spawnedBoss2 = true;
                 var boss = _domainSpawner.SpawnBoss(playerPos, "Dragon Fiend",
-                    hp: 7500f * hpScale, speed: 2.6f, damage: 50f, exp: 200, gold: 800);
+                    hp: 7500f * hpScale, speed: 2.6f, damage: 50f, exp: 200, gold: 800, type: MonsterType.Boss2);
                 GetOrCreateView(boss);
                 _activeBoss = boss;
                 _laserManager.SetActiveBoss(boss);

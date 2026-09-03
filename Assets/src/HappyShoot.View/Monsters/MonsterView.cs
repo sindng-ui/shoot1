@@ -32,6 +32,7 @@ namespace HappyShoot.View.Monsters
 
         private float _animTimer;
         private float _baseScale = 1.4f;
+        private float _lastX;
 
         private void Awake()
         {
@@ -60,6 +61,8 @@ namespace HappyShoot.View.Monsters
             _entity = entity;
             _transform.position = new Vector3(entity.Position.X, entity.Position.Y, 0f);
             _hurtJoltTimer = 0f;
+            _lastX = entity.Position.X;
+            if (_spriteRenderer != null) _spriteRenderer.flipX = false;
 
             if (_spriteRenderer != null)
             {
@@ -93,7 +96,16 @@ namespace HappyShoot.View.Monsters
                         }
                         break;
                     case MonsterType.Boss:
-                        _spriteRenderer.sprite = SpriteHelper.GetOrCreateBossSprite();
+                        _spriteRenderer.sprite = BossSpriteHelper.GetOrCreateBoss1Sprite();
+                        _baseScale = 3.2f;
+                        if (_shadowGo != null)
+                        {
+                            _shadowGo.transform.localPosition = new Vector3(0f, -0.85f, 0f);
+                            _shadowGo.transform.localScale = new Vector3(3.2f, 1.4f, 1f);
+                        }
+                        break;
+                                        case MonsterType.Boss2:
+                        _spriteRenderer.sprite = BossSpriteHelper.GetOrCreateBoss2Sprite();
                         _baseScale = 3.2f;
                         if (_shadowGo != null)
                         {
@@ -165,7 +177,7 @@ namespace HappyShoot.View.Monsters
                         }
                         break;
                     case MonsterType.Boss3:
-                        _spriteRenderer.sprite = Phase3MonsterSpriteHelper.GetOrCreateLichKingSprite();
+                        _spriteRenderer.sprite = BossSpriteHelper.GetOrCreateBoss3Sprite();
                         _baseScale = 3.6f;
                         if (_shadowGo != null)
                         {
@@ -201,6 +213,22 @@ namespace HappyShoot.View.Monsters
             }
 
             _transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, 0f);
+
+            // Handle horizontal direction flip based on each monster's native art orientation
+            float deltaX = _entity.Position.X - _lastX;
+            _lastX = _entity.Position.X;
+            bool origRight = IsOriginalArtFacingRight();
+
+            if (deltaX > 0.005f)
+            {
+                // Moving Right: face right
+                if (_spriteRenderer != null) _spriteRenderer.flipX = !origRight;
+            }
+            else if (deltaX < -0.005f)
+            {
+                // Moving Left: face left
+                if (_spriteRenderer != null) _spriteRenderer.flipX = origRight;
+            }
 
             // Brotato-style Squash/Stretch Jelly Physics per Monster Type
             float dt = Time.deltaTime;
@@ -249,36 +277,44 @@ namespace HappyShoot.View.Monsters
                         break;
 
                     case MonsterType.Skeleton:
+                        // Skeleton trot: light jaunty bone swagger
+                        float waddle = Mathf.Sin(_animTimer * 1.1f);
+                        tiltZ = waddle * 4.0f;
+                        squashY = Mathf.Abs(waddle) * 0.05f;
+                        squashX = -squashY * 0.4f;
+                        break;
+
                     case MonsterType.Golem:
-                        // Waddling trot
-                        float waddle = Mathf.Sin(_animTimer);
-                        tiltZ = waddle * 5.5f;
-                        squashY = Mathf.Abs(waddle) * 0.08f;
-                        squashX = -squashY * 0.5f;
+                        // Heavy rock stomp: slow, massive step impact (no waddling!)
+                        float golemStep = Mathf.Sin(_animTimer * 0.65f);
+                        tiltZ = golemStep * 2.0f;
+                        float stompImpact = Mathf.Max(0f, Mathf.Sin(_animTimer * 1.3f));
+                        squashY = -stompImpact * 0.05f;
+                        squashX = stompImpact * 0.04f;
                         break;
 
                     case MonsterType.Boss:
+                    case MonsterType.Boss2:
                     case MonsterType.Boss3:
                         // Heavy breathing pulsation
                         float pulse = Mathf.Sin(_animTimer * 0.75f);
                         squashY = pulse * 0.09f;
                         squashX = -pulse * 0.06f;
                         break;
-
                     case MonsterType.FireImp:
-                        // Frantic dart - fast erratic tilt
-                        float impDart = Mathf.Sin(_animTimer * 3.5f);
-                        tiltZ = impDart * 12f;
-                        squashY = impDart * 0.10f;
-                        squashX = -squashY * 0.8f;
+                        // Fiery hovering float: smooth floating bobbing with gentle flame sway (no frantic shaking!)
+                        float impBob = Mathf.Sin(_animTimer * 1.2f);
+                        squashY = impBob * 0.06f;
+                        squashX = -squashY * 0.5f;
+                        tiltZ = Mathf.Sin(_animTimer * 0.9f) * 3.5f;
                         break;
 
                     case MonsterType.ToxicSpider:
-                        // Creepy crawl - multi-leg scuttle
-                        float scuttle = Mathf.Sin(_animTimer * 2.8f);
-                        squashY = Mathf.Abs(scuttle) * 0.12f;
-                        squashX = -scuttle * 0.18f;
-                        tiltZ = scuttle * 4f;
+                        // Ground-creeping crawl: subtle, firm low-stance scuttle without weird jelly stretching
+                        float crawl = Mathf.Sin(_animTimer * 1.6f);
+                        squashY = Mathf.Abs(crawl) * 0.03f;
+                        squashX = -squashY * 0.3f;
+                        tiltZ = crawl * 1.5f;
                         break;
 
                     case MonsterType.DarkKnight:
@@ -291,7 +327,9 @@ namespace HappyShoot.View.Monsters
                 }
             }
 
-            _transform.localScale = new Vector3(_baseScale * (1f + squashX), _baseScale * (1f + squashY), 1f);
+                        float visualScale = GetTuningVisualScale(_entity.Type);
+            float finalScale = _baseScale * visualScale;
+            _transform.localScale = new Vector3(finalScale * (1f + squashX), finalScale * (1f + squashY), 1f);
             _transform.localRotation = Quaternion.Euler(0f, 0f, tiltZ);
 
             if (_flashTimer > 0f)
@@ -306,6 +344,25 @@ namespace HappyShoot.View.Monsters
             {
                 UpdateStatusTint();
             }
+        }
+
+                /// <summary>
+        /// Returns true if the native monster sprite art is facing Right.
+        /// Right: Skeleton, Golem, FireImp.
+        /// Left: DarkKnight, LichKing, ToxicSpider, VampireBat, Slime.
+        /// </summary>
+                private float GetTuningVisualScale(MonsterType type)
+        {
+            var cfg = Config.SkillConfigRepository.Instance?.GetConfig()?.Monsters;
+            return cfg != null ? cfg.GetVisualScale(type) : 1.0f;
+        }
+
+        private bool IsOriginalArtFacingRight()
+        {
+            if (_entity == null) return false;
+            return _entity.Type == MonsterType.Skeleton
+                || _entity.Type == MonsterType.Golem
+                || _entity.Type == MonsterType.FireImp;
         }
 
         private bool _isCritHit = false;

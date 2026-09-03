@@ -460,6 +460,7 @@ namespace HappyShoot.View.UI
             addRow($"💥 {prefix} 접촉 공격력 (Damage)", stat.ContactDamage, 1f, 150f, 1f, v => stat.ContactDamage = v, false);
             addRow($"💎 {prefix} 처치 경험치 (Exp)", stat.ExpValue, 1f, 100f, 1f, v => stat.ExpValue = (int)v, true);
             addRow($"💰 {prefix} 처치 골드 (Gold)", stat.GoldValue, 1f, 200f, 1f, v => stat.GoldValue = (int)v, true);
+            addRow($"🔍 {prefix} 크기 배율 (Visual Scale)", stat.VisualScale, 0.2f, 3.0f, 0.05f, v => stat.VisualScale = v, false);
         }
     }
 }

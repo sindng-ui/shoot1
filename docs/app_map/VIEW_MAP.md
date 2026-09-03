@@ -53,6 +53,7 @@
 | | `MonsterSpawnerView.cs` | `MonsterSpawnerView` | 몬스터 스폰 & 페이즈 관리, 도망 방향 120° 스폰 억제(후방/측면 90% 스폰), 몹 수 완만 스케일링, 경험치 증가분 대비 몹 체력 제곱근 감쇠 공식 및 상한선 클램핑, Phase 점프 |
 | | `MonsterDeathFxManagerView.cs` | `MonsterDeathFxManagerView` | 암석 파편/형광 독즙/화염 불씨/영혼 가루/골드 룬 처치 미니 파티클 무할당 풀링(64개) |
 | | `MonsterSpriteHelper.cs` | `MonsterSpriteHelper` | 7종 일반 몬스터 + 보스 2종 고해상도 셀 셰이딩/글레어/발광 코어/룬 픽셀아트 생성기 |
+| | `CustomMonsterSpriteLoader.cs` | `CustomMonsterSpriteLoader` | 8종 몬스터(슬라임/박쥐/스켈레톤/임프/거미/다크나이트/골렘/리치왕) 고해상도 커스텀 스프라이트 4단계 안전 로더 (타입별 최적 PPU 600~750f, 피벗 자동 보정, FilterMode.Point, 100% 절차적 Fallback) |
 | **Phases & Bosses** | `WavePhaseController.cs` | `WavePhaseController` | 보스 격퇴 후 웨이브 페이즈 진화 컨트롤러 (Phase1/Phase2Wave1~3/Boss2Spawned/Phase3) |
 | | `WaveTimelineView.cs` | `WaveTimelineView` | 웨이브 진행 타임라인 시각화 |
 | | `BossHealthBarView.cs` | `BossHealthBarView` | 화면 상단 슬림 보스 HP 바 (1920x1080 반응형 앵커) |
@@ -170,3 +171,6 @@
 ---
 
 [🔙 메인 APP_MAP으로 돌아가기](../../APP_MAP.md)
+
+- [BossSpriteHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/BossSpriteHelper.cs): Phase 1~3 삼대 보스(Boss1 마그마 로드, Boss2 거미/비룡, Boss3 리치킹) 스프라이트 로딩 전담 헬퍼
+- [CustomResourceSpriteLoader.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/CustomResourceSpriteLoader.cs): 보석류(루비/에메랄드/자수정), 경험치 구슬(Exp1/Exp2), 황금 코인 고화질 스프라이트 로딩 전담 헬퍼
