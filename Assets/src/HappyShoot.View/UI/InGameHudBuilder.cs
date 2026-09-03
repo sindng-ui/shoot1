@@ -72,9 +72,9 @@ namespace HappyShoot.View.UI
 
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.referenceResolution = new Vector2(1440, 810);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0.5f;
+            scaler.matchWidthOrHeight = 1.0f;
             res.Scaler = scaler;
 
             canvasGo.AddComponent<GraphicRaycaster>();
@@ -82,8 +82,8 @@ namespace HappyShoot.View.UI
             // =========================================================================
             // LAYER 1 (Bottom): 10-Segmented EXP Progress Bar + Diamond Level Badge
             // =========================================================================
-            float expBarWidth = 1200f;
-            float expBarHeight = 18f;
+            float expBarWidth = 1080f;
+            float expBarHeight = 24f;
 
             var expRootGo = new GameObject("ExpBarRoot");
             expRootGo.transform.SetParent(canvasGo.transform, false);
@@ -135,16 +135,16 @@ namespace HappyShoot.View.UI
             badgeRt.anchorMax = new Vector2(0f, 0.5f);
             badgeRt.pivot = new Vector2(1f, 0.5f);
             badgeRt.anchoredPosition = new Vector2(-8f, 0f);
-            badgeRt.sizeDelta = new Vector2(38f, 38f);
+            badgeRt.sizeDelta = new Vector2(46f, 46f);
 
             var badgeImg = badgeGo.AddComponent<Image>();
             badgeImg.sprite = HudSpriteHelper.GetOrCreateLevelBadgeSprite();
 
-            var levelText = CreateText(badgeGo.transform, "LvText", "1", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(1f, 0.95f, 0.70f, 1f));
+            var levelText = CreateText(badgeGo.transform, "LvText", "1", 20, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(1f, 0.95f, 0.70f, 1f));
             res.LevelText = levelText;
 
             // Exp Progress Text (Center of Exp Bar)
-            var expText = CreateText(expRootGo.transform, "ExpText", "EXP 0 / 12 (0%)", 11, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            var expText = CreateText(expRootGo.transform, "ExpText", "EXP 0 / 12 (0%)", 14, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
             var expTextOutline = expText.gameObject.AddComponent<Outline>();
             expTextOutline.effectColor = Color.black;
             expTextOutline.effectDistance = new Vector2(1f, -1f);
@@ -159,15 +159,15 @@ namespace HappyShoot.View.UI
             skillRowRt.anchorMin = new Vector2(0.5f, 0f);
             skillRowRt.anchorMax = new Vector2(0.5f, 0f);
             skillRowRt.pivot = new Vector2(0.5f, 0f);
-            skillRowRt.anchoredPosition = new Vector2(0f, 32f);
-            skillRowRt.sizeDelta = new Vector2(460f, 54f);
+            skillRowRt.anchoredPosition = new Vector2(0f, 42f);
+            skillRowRt.sizeDelta = new Vector2(560f, 66f);
 
             // Dash Slot (Leftmost, with Space badge)
-            float slotSize = 48f;
-            float spacing = 54f;
+            float slotSize = 58f;
+            float spacing = 66f;
             float startX = -((MaxSkillSlots * spacing) * 0.5f) + 27f;
 
-            var dashSlotGo = InGameSlotBuilder.CreateSlotElement(skillRowGo.transform, "Slot_Dash", new Vector2(startX - 62f, 0f), slotSize, isDash: true, out var dashIcon, out var dashMask, out _, out _);
+            var dashSlotGo = InGameSlotBuilder.CreateSlotElement(skillRowGo.transform, "Slot_Dash", new Vector2(startX - 76f, 0f), slotSize, isDash: true, out var dashIcon, out var dashMask, out _, out _);
             dashIcon.sprite = RewardIconHelper.GetOrCreateRewardIcon("passive_feather");
             res.DashIcon = dashIcon;
             res.DashCooldownMask = dashMask;
@@ -187,8 +187,8 @@ namespace HappyShoot.View.UI
             // =========================================================================
             // LAYER 3 (Top): Helmet Emblem Frame + Wide Health Bar
             // =========================================================================
-            float hpWidth = 480f;
-            float hpHeight = 22f;
+            float hpWidth = 460f;
+            float hpHeight = 28f;
 
             var hpRootGo = new GameObject("HealthBarRoot");
             hpRootGo.transform.SetParent(canvasGo.transform, false);
@@ -196,7 +196,7 @@ namespace HappyShoot.View.UI
             hpRootRt.anchorMin = new Vector2(0.5f, 0f);
             hpRootRt.anchorMax = new Vector2(0.5f, 0f);
             hpRootRt.pivot = new Vector2(0.5f, 0f);
-            hpRootRt.anchoredPosition = new Vector2(0f, 92f);
+            hpRootRt.anchoredPosition = new Vector2(0f, 118f);
             hpRootRt.sizeDelta = new Vector2(hpWidth, hpHeight);
 
             // Health Bar Background Track
@@ -248,14 +248,14 @@ namespace HappyShoot.View.UI
             emblemRt.anchorMax = new Vector2(0.5f, 1f);
             emblemRt.pivot = new Vector2(0.5f, 0.5f);
             emblemRt.anchoredPosition = new Vector2(0f, 6f);
-            emblemRt.sizeDelta = new Vector2(52f, 40f);
+            emblemRt.sizeDelta = new Vector2(60f, 46f);
 
             var emblemImg = emblemGo.AddComponent<Image>();
             emblemImg.sprite = HudSpriteHelper.GetOrCreateHelmetEmblemSprite();
             emblemImg.raycastTarget = false;
 
             // HP Text
-            var healthText = CreateText(hpRootGo.transform, "HpText", "100 / 100", 12, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
+            var healthText = CreateText(hpRootGo.transform, "HpText", "100 / 100", 16, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, Color.white);
             var hpTextOutline = healthText.gameObject.AddComponent<Outline>();
             hpTextOutline.effectColor = Color.black;
             hpTextOutline.effectDistance = new Vector2(1f, -1f);
@@ -264,7 +264,7 @@ namespace HappyShoot.View.UI
             // =========================================================================
             // TOP STATUS: Center Timer & Top-Left Unified 5-Resource Capsule (Gems + Gold + Kills)
             // =========================================================================
-            res.TimerText = CreateText(canvasGo.transform, "TimerText", "00:00", 28, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(160f, 40f), new Color(1f, 0.95f, 0.7f, 1f));
+            res.TimerText = CreateText(canvasGo.transform, "TimerText", "00:00", 34, TextAnchor.MiddleCenter, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(180f, 46f), new Color(1f, 0.95f, 0.7f, 1f));
             var timerOutline = res.TimerText.gameObject.AddComponent<Outline>();
             timerOutline.effectColor = new Color(0f, 0f, 0f, 0.8f);
 
@@ -276,7 +276,7 @@ namespace HappyShoot.View.UI
             statsRt.anchorMax = new Vector2(0f, 1f);
             statsRt.pivot = new Vector2(0f, 1f);
             statsRt.anchoredPosition = new Vector2(20f, -16f);
-            statsRt.sizeDelta = new Vector2(365f, 36f);
+            statsRt.sizeDelta = new Vector2(430f, 42f);
 
             var statsBg = statsCapsuleGo.AddComponent<Image>();
             statsBg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
@@ -287,9 +287,9 @@ namespace HappyShoot.View.UI
             statsOutline.effectDistance = new Vector2(1f, -1f);
 
             // 1. 3 Gem Slots (🔴 Ruby, 🟢 Emerald, 🟣 Amethyst)
-            CreateResourceBadge(statsCapsuleGo.transform, "RubyBadge", 28f, GemSpriteHelper.GetOrCreateRubySprite(32), new Color(1.0f, 0.85f, 0.88f), 48f, out res.RubyIconRt, out res.RubyText);
-            CreateResourceBadge(statsCapsuleGo.transform, "EmeraldBadge", 80f, GemSpriteHelper.GetOrCreateEmeraldSprite(32), new Color(0.85f, 1.0f, 0.90f), 48f, out res.EmeraldIconRt, out res.EmeraldText);
-            CreateResourceBadge(statsCapsuleGo.transform, "AmethystBadge", 132f, GemSpriteHelper.GetOrCreateAmethystSprite(32), new Color(0.94f, 0.85f, 1.0f), 48f, out res.AmethystIconRt, out res.AmethystText);
+            CreateResourceBadge(statsCapsuleGo.transform, "RubyBadge", 32f, GemSpriteHelper.GetOrCreateRubySprite(32), new Color(1.0f, 0.85f, 0.88f), 56f, out res.RubyIconRt, out res.RubyText);
+            CreateResourceBadge(statsCapsuleGo.transform, "EmeraldBadge", 96f, GemSpriteHelper.GetOrCreateEmeraldSprite(32), new Color(0.85f, 1.0f, 0.90f), 56f, out res.EmeraldIconRt, out res.EmeraldText);
+            CreateResourceBadge(statsCapsuleGo.transform, "AmethystBadge", 160f, GemSpriteHelper.GetOrCreateAmethystSprite(32), new Color(0.94f, 0.85f, 1.0f), 56f, out res.AmethystIconRt, out res.AmethystText);
 
             // Divider Line
             var divGo = new GameObject("ResourceDivider");
@@ -298,16 +298,16 @@ namespace HappyShoot.View.UI
             divRt.anchorMin = new Vector2(0f, 0.5f);
             divRt.anchorMax = new Vector2(0f, 0.5f);
             divRt.pivot = new Vector2(0.5f, 0.5f);
-            divRt.anchoredPosition = new Vector2(162f, 0f);
-            divRt.sizeDelta = new Vector2(1.5f, 20f);
+            divRt.anchoredPosition = new Vector2(196f, 0f);
+            divRt.sizeDelta = new Vector2(2.0f, 24f);
             var divImg = divGo.AddComponent<Image>();
             divImg.sprite = SpriteHelper.GetOrCreateWhiteSprite();
             divImg.color = new Color(0.85f, 0.70f, 0.30f, 0.35f);
             divImg.raycastTarget = false;
 
             // 2. Gold & Kills Slots (💰 Gold, 💀 Kills)
-            CreateResourceBadge(statsCapsuleGo.transform, "GoldBadge", 218f, HudSpriteHelper.GetOrCreateCoinIcon(24), new Color(1.0f, 0.88f, 0.30f), 80f, out _, out res.GoldText);
-            CreateResourceBadge(statsCapsuleGo.transform, "KillsBadge", 305f, HudSpriteHelper.GetOrCreateSkullIcon(24), new Color(1.0f, 0.65f, 0.65f), 65f, out _, out res.KillCountText);
+            CreateResourceBadge(statsCapsuleGo.transform, "GoldBadge", 262f, HudSpriteHelper.GetOrCreateCoinIcon(24), new Color(1.0f, 0.88f, 0.30f), 92f, out _, out res.GoldText);
+            CreateResourceBadge(statsCapsuleGo.transform, "KillsBadge", 362f, HudSpriteHelper.GetOrCreateSkullIcon(24), new Color(1.0f, 0.65f, 0.65f), 76f, out _, out res.KillCountText);
 
             // =========================================================================
             // LAYER 4 (Left Column): 9 Passive Buff Slots with Level & Value Display
@@ -321,8 +321,8 @@ namespace HappyShoot.View.UI
             passiveColRt.anchoredPosition = new Vector2(24f, 20f);
             passiveColRt.sizeDelta = new Vector2(160f, 420f);
 
-            float pSlotSize = 34f;
-            float pSpacing = 42f;
+            float pSlotSize = 42f;
+            float pSpacing = 50f;
             float pStartY = ((MaxPassiveSlots * pSpacing) * 0.5f) - 21f;
 
             for (int i = 0; i < MaxPassiveSlots; i++)

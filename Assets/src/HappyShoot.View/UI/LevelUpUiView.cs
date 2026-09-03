@@ -185,7 +185,7 @@ namespace HappyShoot.View.UI
             titleRt.sizeDelta = new Vector2(-24f, 36f);
             var titleTxt = titleGo.AddComponent<Text>();
             titleTxt.text = option.Title;
-            titleTxt.fontSize = 20;
+            titleTxt.fontSize = 22;
             titleTxt.fontStyle = FontStyle.Bold;
             titleTxt.alignment = TextAnchor.MiddleCenter;
             titleTxt.color = Color.white;
@@ -202,7 +202,7 @@ namespace HappyShoot.View.UI
             descRt.sizeDelta = new Vector2(-36f, -260f);
             var descTxt = descGo.AddComponent<Text>();
             descTxt.text = option.Description;
-            descTxt.fontSize = 15;
+            descTxt.fontSize = 16;
             descTxt.alignment = TextAnchor.MiddleCenter;
             descTxt.color = new Color(0.92f, 0.95f, 1.0f, 1f);
             descTxt.font = koreanFont;
@@ -305,8 +305,8 @@ namespace HappyShoot.View.UI
             canvas.sortingOrder = 20; // Above HUD
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            scaler.matchWidthOrHeight = 0.5f;
+            scaler.referenceResolution = new Vector2(1440, 810);
+            scaler.matchWidthOrHeight = 1.0f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
             _panelRoot = new GameObject("LevelUpPanelRoot");

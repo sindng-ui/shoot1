@@ -361,15 +361,18 @@ namespace HappyShoot.View.Config
         {
             try
             {
-                // Unity Editor or Runtime: Assets/Resources/Config/skill_configs.json
-                if (!string.IsNullOrEmpty(Application.dataPath))
+                if (Application.isEditor && !string.IsNullOrEmpty(Application.dataPath))
                 {
                     return Path.Combine(Application.dataPath, "Resources", "Config", "skill_configs.json");
                 }
             }
-            catch
+            catch { }
+
+            // Direct fallback to project workspace for Standalone PC builds on dev machine
+            string devProjectCandidate = @"k:\unityprojects\shoot1\shoot1\Assets\Resources\Config\skill_configs.json";
+            if (File.Exists(devProjectCandidate) || Directory.Exists(@"k:\unityprojects\shoot1\shoot1\Assets\Resources\Config"))
             {
-                // Fallback for tests or headless runners
+                return devProjectCandidate;
             }
 
             string currentDir = Directory.GetCurrentDirectory();
@@ -386,15 +389,17 @@ namespace HappyShoot.View.Config
         {
             try
             {
-                // Unity Editor or Runtime: Assets/Config/skill_configs.json
-                if (!string.IsNullOrEmpty(Application.dataPath))
+                if (Application.isEditor && !string.IsNullOrEmpty(Application.dataPath))
                 {
                     return Path.Combine(Application.dataPath, "Config", "skill_configs.json");
                 }
             }
-            catch
+            catch { }
+
+            string devProjectCandidate = @"k:\unityprojects\shoot1\shoot1\Assets\Config\skill_configs.json";
+            if (File.Exists(devProjectCandidate) || Directory.Exists(@"k:\unityprojects\shoot1\shoot1\Assets\Config"))
             {
-                // Fallback for tests or headless runners
+                return devProjectCandidate;
             }
 
             string currentDir = Directory.GetCurrentDirectory();

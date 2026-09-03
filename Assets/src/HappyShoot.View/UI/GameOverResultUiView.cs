@@ -229,8 +229,8 @@ namespace HappyShoot.View.UI
             canvas.sortingOrder = 100;
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            scaler.matchWidthOrHeight = 0.5f;
+            scaler.referenceResolution = new Vector2(1440, 810);
+            scaler.matchWidthOrHeight = 1.0f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
             // Dark red-tinted backdrop

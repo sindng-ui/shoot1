@@ -99,7 +99,7 @@ namespace HappyShoot.View.UI
             if (_scaler != null)
             {
                 float scale = Domain.Settings.GameSettings.UiScale;
-                _scaler.referenceResolution = new Vector2(1920f / scale, 1080f / scale);
+                _scaler.referenceResolution = new Vector2(1440f / scale, 810f / scale);
             }
         }
 

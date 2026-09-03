@@ -48,13 +48,13 @@ namespace HappyShoot.View.UI
             icon.raycastTarget = false;
 
             // Level Badge (Inside Icon bottom-right)
-            lvlTxt = InGameHudBuilder.CreateText(frameGo.transform, "LvBadge", "1", 10, TextAnchor.LowerRight, Vector2.zero, Vector2.one, new Vector2(1f, 0f), new Vector2(-2f, 2f), Vector2.zero, new Color(1f, 0.90f, 0.30f, 1f));
+            lvlTxt = InGameHudBuilder.CreateText(frameGo.transform, "LvBadge", "1", 13, TextAnchor.LowerRight, Vector2.zero, Vector2.one, new Vector2(1f, 0f), new Vector2(-2f, 2f), Vector2.zero, new Color(1f, 0.90f, 0.30f, 1f));
             var lvOutline = lvlTxt.gameObject.AddComponent<Outline>();
             lvOutline.effectColor = Color.black;
             lvOutline.effectDistance = new Vector2(1f, -1f);
 
             // Value / Stat Label (Right of icon)
-            valTxt = InGameHudBuilder.CreateText(root.transform, "ValueText", "+15% ATK", 11, TextAnchor.MiddleLeft, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(size + 6f, 0f), new Vector2(100f, 20f), new Color(0.9f, 0.95f, 1f, 1f));
+            valTxt = InGameHudBuilder.CreateText(root.transform, "ValueText", "+15% ATK", 14, TextAnchor.MiddleLeft, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(size + 6f, 0f), new Vector2(100f, 20f), new Color(0.9f, 0.95f, 1f, 1f));
             var valOutline = valTxt.gameObject.AddComponent<Outline>();
             valOutline.effectColor = Color.black;
             valOutline.effectDistance = new Vector2(1f, -1f);
@@ -112,23 +112,23 @@ namespace HappyShoot.View.UI
             // Badge / Key Label
             if (isDash)
             {
-                lvlTxt = InGameHudBuilder.CreateText(root.transform, "DashCdText", "", 13, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(1f, 1f, 0.6f, 1f));
+                lvlTxt = InGameHudBuilder.CreateText(root.transform, "DashCdText", "", 18, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(1f, 1f, 0.6f, 1f));
                 var cdOutline = lvlTxt.gameObject.AddComponent<Outline>();
                 cdOutline.effectColor = Color.black;
                 cdOutline.effectDistance = new Vector2(1f, -1f);
 
                 countTxt = null;
-                var keyTxt = InGameHudBuilder.CreateText(root.transform, "KeyBadge", "Space", 10, TextAnchor.LowerCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, -6f), new Vector2(42f, 16f), new Color(0.4f, 0.9f, 1f, 1f));
+                var keyTxt = InGameHudBuilder.CreateText(root.transform, "KeyBadge", "Space", 13, TextAnchor.LowerCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, -6f), new Vector2(42f, 16f), new Color(0.4f, 0.9f, 1f, 1f));
                 var keyOutline = keyTxt.gameObject.AddComponent<Outline>();
                 keyOutline.effectColor = Color.black;
             }
             else
             {
-                lvlTxt = InGameHudBuilder.CreateText(root.transform, "LvBadge", "Lv.1", 11, TextAnchor.MiddleCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, -6f), new Vector2(36f, 16f), new Color(1f, 0.90f, 0.30f, 1f));
+                lvlTxt = InGameHudBuilder.CreateText(root.transform, "LvBadge", "Lv.1", 14, TextAnchor.MiddleCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, -6f), new Vector2(36f, 16f), new Color(1f, 0.90f, 0.30f, 1f));
                 var lvOutline = lvlTxt.gameObject.AddComponent<Outline>();
                 lvOutline.effectColor = Color.black;
 
-                countTxt = InGameHudBuilder.CreateText(root.transform, "CountBadge", "", 12, TextAnchor.UpperRight, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-4f, -4f), new Vector2(24f, 16f), new Color(0.35f, 0.95f, 1f, 1f));
+                countTxt = InGameHudBuilder.CreateText(root.transform, "CountBadge", "", 15, TextAnchor.UpperRight, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-4f, -4f), new Vector2(24f, 16f), new Color(0.35f, 0.95f, 1f, 1f));
                 var countOutline = countTxt.gameObject.AddComponent<Outline>();
                 countOutline.effectColor = Color.black;
                 countOutline.effectDistance = new Vector2(1f, -1f);
