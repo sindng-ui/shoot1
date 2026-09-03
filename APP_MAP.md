@@ -25,6 +25,9 @@ graph TD
         GB --> PAH[ProceduralAudioHelper]
         GB --> PV[PlayerView]
         PV --> PHF[PlayerHitFeedbackView]
+        PV --> PDC[PlayerDashController & GhostTrail]
+        PV --> DCI[PlayerDashChargeIndicatorView]
+        HUD --> MDTZ[MobileDashTouchZoneView]
         GB --> MV[MonsterSpawnerView]
         MV --> SVU
         GB --> PJV[ProjectileManagerView]

@@ -58,7 +58,10 @@ namespace HappyShoot.View.UI
         private Text[] _passiveSlotLevelTexts;
         private Text[] _passiveSlotValueTexts;
         private GameObject[] _passiveSlotRoots;
+        private Image _dashIcon;
         private Image _dashCooldownMask;
+        private Text _dashCooldownText;
+        private Player.PlayerDashController _dashController;
         private SettingsDialogUiView _settingsDialog;
         private CanvasScaler _scaler;
 
@@ -135,6 +138,7 @@ namespace HappyShoot.View.UI
 
             // Sync skills display & radial cooldown progress
             UpdateSkillsDisplay();
+            UpdateDashCooldownDisplay();
         }
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
@@ -437,7 +441,37 @@ namespace HappyShoot.View.UI
             _passiveSlotLevelTexts = hud.PassiveSlotLevelTexts;
             _passiveSlotValueTexts = hud.PassiveSlotValueTexts;
             _passiveSlotRoots = hud.PassiveSlotRoots;
+            _dashIcon = hud.DashIcon;
             _dashCooldownMask = hud.DashCooldownMask;
+            _dashCooldownText = hud.DashCooldownText;
+            if (_dashIcon != null)
+            {
+                _dashIcon.sprite = Utils.HudSpriteHelper.GetOrCreateDashSkillIcon();
+            }
+        }
+
+        private void UpdateDashCooldownDisplay()
+        {
+            if (_dashController == null && _playerView != null)
+            {
+                _dashController = _playerView.GetComponent<Player.PlayerDashController>();
+            }
+
+            if (_dashController != null)
+            {
+                float ratio = _dashController.CooldownRatio;
+                float rem = _dashController.CooldownRemaining;
+
+                if (_dashCooldownMask != null)
+                {
+                    _dashCooldownMask.fillAmount = _dashController.CurrentCharges == 0 ? ratio : 0f;
+                }
+
+                if (_dashCooldownText != null)
+                {
+                    _dashCooldownText.text = (_dashController.CurrentCharges == 0 && rem > 0.05f) ? rem.ToString("0.0") : "";
+                }
+            }
         }
     }
 }

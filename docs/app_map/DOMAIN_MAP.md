@@ -124,3 +124,4 @@
 ---
 
 [🔙 메인 APP_MAP으로 돌아가기](../../APP_MAP.md)
+- [DashConfigData.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.Domain/Entities/DashConfigData.cs): 플레이어 대시 스킬 설정 데이터 모델 (쿨타임, 이동거리, 지속시간, 감속곡선 계수 등)

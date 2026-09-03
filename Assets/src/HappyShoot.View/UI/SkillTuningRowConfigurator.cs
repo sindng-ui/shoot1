@@ -109,6 +109,16 @@ namespace HappyShoot.View.UI
                     if (cStat != null) { cStat.CooldownReduction = v / 100f; cStat.IsCustom = true; }
                 }, isInt: true);
 
+                // Player Dash Tuning
+                if (config != null && config.Dash != null)
+                {
+                    var dash = config.Dash;
+                    AddRow("💨 대시 쿨타임 (Dash Cooldown: s)", dash.Cooldown, 0.5f, 10.0f, 0.5f, v => dash.Cooldown = v);
+                    AddRow("📏 대시 이동 거리 (Dash Distance: m)", dash.Distance, 1.0f, 12.0f, 0.5f, v => dash.Distance = v);
+                    AddRow("⚡ 대시 지속 시간 (Dash Duration: s)", dash.Duration, 0.10f, 0.60f, 0.02f, v => dash.Duration = v);
+                    AddRow("🎢 대시 감속/가속도 계수 (Decel Exponent)", dash.DecelExponent, 1.0f, 4.0f, 0.1f, v => dash.DecelExponent = v);
+                }
+
                 return;
             }
 

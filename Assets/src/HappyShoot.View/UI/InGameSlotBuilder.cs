@@ -112,7 +112,11 @@ namespace HappyShoot.View.UI
             // Badge / Key Label
             if (isDash)
             {
-                lvlTxt = null;
+                lvlTxt = InGameHudBuilder.CreateText(root.transform, "DashCdText", "", 13, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero, new Color(1f, 1f, 0.6f, 1f));
+                var cdOutline = lvlTxt.gameObject.AddComponent<Outline>();
+                cdOutline.effectColor = Color.black;
+                cdOutline.effectDistance = new Vector2(1f, -1f);
+
                 countTxt = null;
                 var keyTxt = InGameHudBuilder.CreateText(root.transform, "KeyBadge", "Space", 10, TextAnchor.LowerCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, -6f), new Vector2(42f, 16f), new Color(0.4f, 0.9f, 1f, 1f));
                 var keyOutline = keyTxt.gameObject.AddComponent<Outline>();

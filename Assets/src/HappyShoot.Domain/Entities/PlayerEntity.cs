@@ -69,6 +69,16 @@ namespace HappyShoot.Domain.Entities
             }
         }
 
+        /// <summary>
+        /// Sets the player to an explicit position (e.g. Dash, Teleport, Spawn).
+        /// </summary>
+        public void SetPosition(Vector2D newPosition)
+        {
+            Position = newPosition;
+            _skillContext.CasterPosition = Position;
+            _eventBus?.Publish(new PlayerMovedEvent(Id, Position));
+        }
+
         public bool IsGodMode { get; set; }
         public Progression.PlayerProgressionFlags ProgressionFlags { get; set; } = Progression.PlayerProgressionFlags.Empty;
 

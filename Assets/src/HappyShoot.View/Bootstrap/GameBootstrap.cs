@@ -126,16 +126,23 @@ namespace HappyShoot.View.Bootstrap
             playerGo.transform.localScale = Vector3.one * 0.9f;
 
             var playerView = playerGo.AddComponent<PlayerView>();
-            playerGo.AddComponent<PlayerInputHandler>();
+            var dashController = playerGo.AddComponent<PlayerDashController>();
+            dashController.Initialize(playerView, SkillConfigRepository.Instance.GetConfig()?.Dash);
+            var playerInputHandler = playerGo.AddComponent<PlayerInputHandler>();
+            playerInputHandler.SetDashController(dashController);
+
+            // Overhead Dash Charge Indicator Dot(s)
+            var dashIndicatorGo = new GameObject("PlayerDashChargeIndicator");
+            var dashIndicator = dashIndicatorGo.AddComponent<Player.PlayerDashChargeIndicatorView>();
+            dashIndicator.Initialize(playerGo.transform, dashController.MaxCharges, dashController.CurrentCharges);
+            dashController.SetIndicatorView(dashIndicator);
+
             Debug.Log($"[GameBootstrap] Spawned Hero Class: {_selectedClass}");
 
             var camFollow = mainCam.GetComponent<CameraFollowView>() ?? mainCam.gameObject.AddComponent<CameraFollowView>();
             camFollow.SetTarget(playerGo.transform);
 
-            // Overhead Health Bar
-            var overheadHpGo = new GameObject("PlayerOverheadHealth");
-            var overheadHpView = overheadHpGo.AddComponent<PlayerHealthBarView>();
-            overheadHpView.Initialize(playerView);
+            // (Removed cluttered overhead HP bar - player HP is already clearly visible on bottom HUD)
 
             // Hit-Stop Juice Manager
             var hitStopGo = new GameObject("HitStopManager");
@@ -315,6 +322,9 @@ namespace HappyShoot.View.Bootstrap
                     inputHandler.SetTouchJoystick(joystick);
                     Debug.Log("[GameBootstrap] Touch Joystick bound to PlayerInputHandler successfully!");
                 }
+                // Mobile Right-Half Touch Dash Zone (Left 55% Joystick, Right 45% Dash)
+                UI.MobileDashTouchZoneView.Create(hudCanvas.transform, hudCanvas, dashController, joystick);
+
                 UI.MobilePauseButtonView.Create(hudCanvas.transform, _gameSession, playerView.EventBus);
 
                 // 6.0.1. Screen-Edge Hit Damage Vignette UI (0-GC Procedural Feedback)

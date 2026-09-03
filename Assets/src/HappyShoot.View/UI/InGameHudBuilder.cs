@@ -43,6 +43,7 @@ namespace HappyShoot.View.UI
             public GameObject[] PassiveSlotRoots;
             public Image DashIcon;
             public Image DashCooldownMask;
+            public Text DashCooldownText;
         }
 
         public static HudComponents BuildHud(Transform rootParent)

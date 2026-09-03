@@ -174,3 +174,7 @@
 
 - [BossSpriteHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/BossSpriteHelper.cs): Phase 1~3 삼대 보스(Boss1 마그마 로드, Boss2 거미/비룡, Boss3 리치킹) 스프라이트 로딩 전담 헬퍼
 - [CustomResourceSpriteLoader.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Utils/CustomResourceSpriteLoader.cs): 보석류(루비/에메랄드/자수정), 경험치 구슬(Exp1/Exp2), 황금 코인 고화질 스프라이트 로딩 전담 헬퍼
+- [PlayerDashController.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Player/PlayerDashController.cs): 플레이어 대시 물리(Ease-Out 감속 곡선), 쿨타임 제어, 고스트 트레일 잔상 스폰 전담 컨트롤러
+- [PlayerDashGhostTrail.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Player/PlayerDashGhostTrail.cs): 대시 이동 시 생성되는 반투명 고스트 트레일 잔상 페이드아웃 뷰 컴포넌트
+- [PlayerDashChargeIndicatorView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Player/PlayerDashChargeIndicatorView.cs): 캐릭터 머리 위 대시 충전 점(살짝 푸른빛 하얀 점 1~3개) 부유 인디케이터
+- [MobileDashTouchZoneView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/MobileDashTouchZoneView.cs): 모바일 화면 우측 45% 전역 터치/탭 시 대시 발동 터치존

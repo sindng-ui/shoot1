@@ -68,6 +68,9 @@ namespace HappyShoot.Domain.Skills
 
         // 11. Companion AI & Balance Tuning
         public CompanionTuningConfig Companion = new CompanionTuningConfig();
+
+        // 12. Player Dash Tuning
+        public HappyShoot.Domain.Entities.DashConfigData Dash = new HappyShoot.Domain.Entities.DashConfigData();
     }
 
     [Serializable]

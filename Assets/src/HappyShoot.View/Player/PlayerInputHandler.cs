@@ -5,24 +5,32 @@ using HappyShoot.Domain.Spatial;
 namespace HappyShoot.View.Player
 {
     /// <summary>
-    /// Captures player input using Unity's modern Input System package
-    /// and relays movement commands to the PlayerView's domain entity.
-    /// Supports Mobile Floating Touch Joystick, Hardware Keyboard, and Gamepad.
+    /// Captures player input using Unity modern Input System package
+    /// and relays movement and dash commands to PlayerView and PlayerDashController.
+    /// Supports Mobile Floating Touch Joystick, Hardware Keyboard (Space to Dash), and Gamepad.
+    /// Strictly modular and under 500 lines.
     /// </summary>
     [RequireComponent(typeof(PlayerView))]
     public class PlayerInputHandler : MonoBehaviour
     {
         private PlayerView _playerView;
+        private PlayerDashController _dashController;
         private UI.TouchJoystickView _touchJoystick;
 
         private void Awake()
         {
             _playerView = GetComponent<PlayerView>();
+            _dashController = GetComponent<PlayerDashController>();
         }
 
         public void SetTouchJoystick(UI.TouchJoystickView joystick)
         {
             _touchJoystick = joystick;
+        }
+
+        public void SetDashController(PlayerDashController dashController)
+        {
+            _dashController = dashController;
         }
 
         private void Update()
@@ -62,6 +70,21 @@ namespace HappyShoot.View.Player
                 }
             }
 
+            // 4. Spacebar / Gamepad Dash Trigger
+            bool dashTriggered = (keyboard != null && keyboard.spaceKey.wasPressedThisFrame)
+                || (gamepad != null && (gamepad.buttonSouth.wasPressedThisFrame || gamepad.rightTrigger.wasPressedThisFrame));
+
+            if (dashTriggered && _dashController != null)
+            {
+                Vector2 inputDir = new Vector2(horizontal, vertical);
+                _dashController.TryDash(inputDir);
+            }
+
+            // 5. While dashing, physics overrides standard walking movement
+            if (_dashController != null && _dashController.IsDashing)
+                return;
+
+            // Standard walk movement
             if (Mathf.Abs(horizontal) > 0.01f || Mathf.Abs(vertical) > 0.01f)
             {
                 Vector2D direction = new Vector2D(horizontal, vertical);

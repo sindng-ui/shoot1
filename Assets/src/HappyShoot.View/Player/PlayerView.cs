@@ -29,6 +29,7 @@ namespace HappyShoot.View.Player
         private float _flashTimer;
 
         public PlayerEntity Entity => _entity;
+        public SpriteRenderer BodyRenderer => _bodySr;
         public EventBus EventBus => _eventBus;
         public Vector2 CurrentMoveDirection { get; private set; } = Vector2.zero;
         public bool IsGameStarted { get; set; } = false;

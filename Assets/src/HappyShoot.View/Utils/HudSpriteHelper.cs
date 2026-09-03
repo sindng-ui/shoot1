@@ -428,5 +428,66 @@ namespace HappyShoot.View.Utils
             _cache[key] = sprite;
             return sprite;
         }
+ 
+        /// <summary>
+        /// 32x32 Luminous Wind Wing Dash Skill Icon with cyan breeze trails.
+        /// </summary>
+        public static Sprite GetOrCreateDashSkillIcon(int size = 32)
+        {
+            const string key = "hud_dash_skill_icon_32";
+            if (_cache.TryGetValue(key, out var cached) && cached != null) return cached;
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            var p = new Color[size * size];
+            for (int i = 0; i < p.Length; i++) p[i] = Color.clear;
+
+            Color wingCore = new Color(0.95f, 0.98f, 1.0f, 1f);
+            Color wingGlow = new Color(0.25f, 0.85f, 1.0f, 1f);
+            Color windTrail = new Color(0.10f, 0.55f, 0.95f, 0.75f);
+            Color rim = new Color(0.05f, 0.15f, 0.35f, 0.95f);
+
+            int cx = size / 2;
+            int cy = size / 2;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    // Swift wing / boot shape pointing right
+                    int dx = x - cx;
+                    int dy = y - cy;
+
+                    // Forward wing blade
+                    if (dx >= -6 && dx <= 11 && dy >= -4 && dy <= 6)
+                    {
+                        int slant = dx - (dy / 2);
+                        if (slant >= -3 && slant <= 8)
+                        {
+                            if (slant == 8 || dy == -4 || dy == 6 || slant == -3)
+                                p[y * size + x] = rim;
+                            else if (slant >= 4)
+                                p[y * size + x] = wingCore;
+                            else
+                                p[y * size + x] = wingGlow;
+                        }
+                    }
+
+                    // Dynamic wind trails behind
+                    if (dx <= -4 && dx >= -12)
+                    {
+                        if ((dy == -2 || dy == 1 || dy == 4) && (x % 2 == 0))
+                        {
+                            p[y * size + x] = windTrail;
+                        }
+                    }
+                }
+            }
+
+            tex.SetPixels(p);
+            tex.Apply();
+            var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16);
+            _cache[key] = sprite;
+            return sprite;
+        }
     }
 }
