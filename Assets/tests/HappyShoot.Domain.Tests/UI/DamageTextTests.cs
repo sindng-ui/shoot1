@@ -43,5 +43,26 @@ namespace HappyShoot.Domain.Tests.UI
             Assert.That(_manager.ActiveCount, Is.EqualTo(0));
             Assert.That(text.IsActive, Is.False);
         }
+
+        [Test]
+        public void MonsterDamagedEvent_WithElementalDamageTypes_PropagatesToEntity()
+        {
+            // Fire damage
+            _eventBus.Publish(new MonsterDamagedEvent(102, damage: 50f, remainingHealth: 50f, maxHealth: 100f,
+                position: new Vector2D(1f, 1f), isCritical: false, damageType: DamageType.Fireball));
+            Assert.That(_manager.ActiveTexts[0].DamageType, Is.EqualTo(DamageType.Fireball));
+            Assert.That(_manager.ActiveTexts[0].IsCritical, Is.False);
+
+            // Ice damage
+            _eventBus.Publish(new MonsterDamagedEvent(103, damage: 30f, remainingHealth: 20f, maxHealth: 100f,
+                position: new Vector2D(2f, 2f), isCritical: true, damageType: DamageType.Ice));
+            Assert.That(_manager.ActiveTexts[1].DamageType, Is.EqualTo(DamageType.Ice));
+            Assert.That(_manager.ActiveTexts[1].IsCritical, Is.True);
+
+            // Lightning damage
+            _eventBus.Publish(new MonsterDamagedEvent(104, damage: 75f, remainingHealth: 0f, maxHealth: 100f,
+                position: new Vector2D(3f, 3f), isCritical: false, damageType: DamageType.Lightning));
+            Assert.That(_manager.ActiveTexts[2].DamageType, Is.EqualTo(DamageType.Lightning));
+        }
     }
 }

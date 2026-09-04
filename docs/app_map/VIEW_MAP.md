@@ -116,7 +116,11 @@
 | | `TreasureChestManagerView.cs`| `TreasureChestManagerView`| 보물상자 매니저 업데이트 및 뷰 풀링 |
 | | `TreasureChestPopupView.cs` | `TreasureChestPopupView` | 보물상자 개봉 시 대형 카드 다이얼로그 (Space/Enter/1/2/3 키보드 수령) |
 | | `EvolutionPopupView.cs` | `EvolutionPopupView` | 스킬 진화 성공 시 상단 등장 축하 배너 팝업 |
-| | `DamageTextView.cs` | `DamageTextManagerView`, `DamageTextView` | 이벤트 기반 무할당 32개 풀링 대미지 텍스트 |
+| | `DamageTextView.cs` | `DamageTextManagerView`, `DamageTextView` | 이벤트 기반 무할당 64개 풀링 대미지 텍스트, 크리티컬 대각선 틸트(-12°) 및 1.45x 펀치 바운스 |
+| | `DamageColorPalette.cs` | `DamageColorPalette` | 일반(순백색), 불(화염주황), 얼음(빙결시안), 전기(네온옐로우), 크리티컬(골드) 고대비 색상 정의 |
+| | `DamageFontHelper.cs` | `DamageFontHelper` | Impact, Arial Black, Segoe UI Black, Malgun Gothic Bold 등 게이밍 볼드 서체 동적 로더 |
+| | `DamageNumberCache.cs` | `DamageNumberCache` | 0~3000 정수 문자열("1,428", "1,428!") 사전 캐싱으로 GC Alloc 0 달성 메모이제이션 캐시 |
+| | `DamageTextOutline.shader` | `HappyShoot/DamageTextOutline` | 폰트 텍스처 8방향 팽창 1-Pass 블랙 아웃라인 셰이더 (배경 무관 극강의 시인성 보장) |
 | | `PauseMenuUiView.cs` | `PauseMenuUiView` | ESC 일시정지 다이얼로그 (계속하기, 환경설정, 다시시작, 종료) |
 | | `SettingsDialogUiView.cs` | `SettingsDialogUiView` | 3개 탭 환경설정 다이얼로그 (자동/수동조준, 볼륨, UI스케일) |
 | | `GameOverResultUiView.cs` | `GameOverResultUiView` | 사망(Game Over) 시 영구 상점 차단, 재도전 및 3보스 클리어 룰 안내 |

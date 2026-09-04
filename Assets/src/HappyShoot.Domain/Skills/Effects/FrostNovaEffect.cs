@@ -67,7 +67,7 @@ namespace HappyShoot.Domain.Skills.Effects
                 {
                     monster.ApplyChill(duration: ChillDuration, slowFactor: 0.45f);
                     var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
-                    monster.TakeDamage(hitDmg, isCrit);
+                    monster.TakeDamage(hitDmg, isCrit, DamageType.Ice);
                     totalDamageDealt += hitDmg;
                 }
             }

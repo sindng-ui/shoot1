@@ -35,13 +35,13 @@ namespace HappyShoot.Domain.UI
             float offsetY = ((evt.MonsterId % 3)) * 0.15f;
             Vector2D spawnPos = evt.Position + new Vector2D(offsetX, offsetY);
 
-            SpawnText(spawnPos, evt.Damage, isCritical: evt.IsCritical);
+            SpawnText(spawnPos, evt.Damage, isCritical: evt.IsCritical, damageType: evt.DamageType);
         }
 
-        public DamageTextEntity SpawnText(Vector2D position, float damage, bool isCritical = false)
+        public DamageTextEntity SpawnText(Vector2D position, float damage, bool isCritical = false, DamageType damageType = DamageType.Default)
         {
             var textEntity = _pool.Spawn();
-            textEntity.Initialize(++_idCounter, position, damage, isCritical);
+            textEntity.Initialize(++_idCounter, position, damage, isCritical, damageType);
             _activeTexts.Add(textEntity);
             OnTextSpawned?.Invoke(textEntity);
             return textEntity;

@@ -13,7 +13,9 @@ namespace HappyShoot.Domain.Events
         StellarRain,  // Stellar Rain, Arrow Rain (ethereal crystal drops)
         Fireball,     // Fireball, Inferno Fireball (fiery boom)
         BurnDot,      // Fire burn tick (sizzling crackle)
-        ShockDot      // Lightning shock tick (zapping electric spark)
+        ShockDot,     // Lightning shock tick (zapping electric spark)
+        Ice,          // Frost Nova, Blizzard Nova (crisp ice shatter)
+        Lightning     // Chain Lightning, Gigastorm direct strike (electric zap)
     }
 
     public readonly struct MonsterDamagedEvent : IDomainEvent

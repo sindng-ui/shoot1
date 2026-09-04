@@ -45,7 +45,7 @@ namespace HappyShoot.Domain.Skills.Effects
                     // Apply 60% chill slowdown and damage
                     monster.ApplyChill(duration: 5.0f, slowFactor: 0.40f);
                     var (hitDmg, isCrit) = context.RollDamage(effectiveDamage);
-                    monster.TakeDamage(hitDmg, isCrit);
+                    monster.TakeDamage(hitDmg, isCrit, DamageType.Ice);
                 }
             }
         }

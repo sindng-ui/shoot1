@@ -6,58 +6,104 @@ using HappyShoot.Domain.UI;
 namespace HappyShoot.View.UI
 {
     /// <summary>
-    /// Lightweight 3D/2D TextMesh view for floating damage numbers.
+    /// Lightweight, high-impact 3D TextMesh view for floating damage numbers.
+    /// Features heavy black stroke outline shader, vibrant elemental color palettes (Fire, Ice, Lightning, White),
+    /// zero-allocation string formatting, and a dynamic -12° diagonal tilt on critical strikes.
     /// </summary>
     [RequireComponent(typeof(TextMesh))]
     public class DamageTextView : MonoBehaviour
     {
         private DamageTextEntity _entity;
         private TextMesh _textMesh;
+        private MeshRenderer _meshRenderer;
+        private static Material _sharedOutlineMaterial;
+        private static Font _sharedFont;
+
+        private float _spawnTimer = 0f;
+        private float _targetBaseScale = 0.115f;
+        private Color _baseColor = Color.white;
 
         private void Awake()
         {
             _textMesh = GetComponent<TextMesh>();
+            _meshRenderer = GetComponent<MeshRenderer>();
+
             _textMesh.alignment = TextAlignment.Center;
             _textMesh.anchor = TextAnchor.MiddleCenter;
             _textMesh.characterSize = 1f;
 
-            var font = Utils.FontHelper.GetKoreanFont();
-            if (font != null)
+            if (_meshRenderer != null)
             {
-                _textMesh.font = font;
-                var mr = GetComponent<MeshRenderer>();
-                if (mr != null && font.material != null)
+                // Ensure floating numbers render in front of monsters, projectiles, and ground
+                _meshRenderer.sortingOrder = 350;
+            }
+
+            InitMaterialAndFont();
+        }
+
+        private void InitMaterialAndFont()
+        {
+            if (_sharedFont == null)
+            {
+                _sharedFont = DamageFontHelper.GetDamageFont();
+            }
+
+            if (_sharedFont != null)
+            {
+                _textMesh.font = _sharedFont;
+
+                if (_sharedOutlineMaterial == null)
                 {
-                    mr.material = font.material;
+                    Shader outlineShader = Shader.Find("HappyShoot/DamageTextOutline");
+                    if (outlineShader != null)
+                    {
+                        _sharedOutlineMaterial = new Material(outlineShader);
+                        if (_sharedFont.material != null)
+                        {
+                            _sharedOutlineMaterial.mainTexture = _sharedFont.material.mainTexture;
+                        }
+                    }
+                    else if (_sharedFont.material != null)
+                    {
+                        _sharedOutlineMaterial = _sharedFont.material;
+                    }
+                }
+
+                if (_meshRenderer != null && _sharedOutlineMaterial != null)
+                {
+                    _meshRenderer.sharedMaterial = _sharedOutlineMaterial;
                 }
             }
         }
-
-        private float _spawnTimer = 0f;
-        private float _targetBaseScale = 0.075f;
 
         public void Bind(DamageTextEntity entity)
         {
             _entity = entity;
             _spawnTimer = 0f;
-            transform.position = new Vector3(entity.Position.X, entity.Position.Y, -1f);
+            transform.position = new Vector3(entity.Position.X, entity.Position.Y, -2.5f);
+
+            // Zero-allocation formatted text retrieval
+            _textMesh.text = DamageNumberCache.GetString(entity.DamageValue, entity.IsCritical);
+            _baseColor = DamageColorPalette.GetColor(entity.DamageType, entity.IsCritical);
+            _textMesh.color = _baseColor;
+            _textMesh.fontStyle = FontStyle.Bold;
 
             if (entity.IsCritical)
             {
-                _textMesh.text = entity.DamageValue.ToString("0") + "!";
-                _textMesh.fontSize = 44;
-                _textMesh.color = new Color(1.0f, 0.88f, 0.15f, 1f);
-                _textMesh.fontStyle = FontStyle.Bold;
-                _targetBaseScale = 0.105f; // Slightly larger for critical
-                transform.localScale = Vector3.one * (_targetBaseScale * 1.35f);
+                _textMesh.fontSize = 48;
+                _targetBaseScale = 0.165f; // Extra large for critical strikes
+
+                // Diagonal tilt: -12 degrees for dynamic comic/RPG feel (0% runtime per-frame overhead!)
+                transform.localRotation = Quaternion.Euler(0f, 0f, -12f);
+                transform.localScale = Vector3.one * (_targetBaseScale * 1.45f);
             }
             else
             {
-                _textMesh.text = entity.DamageValue.ToString("0");
-                _textMesh.fontSize = 32;
-                _textMesh.color = Color.white;
-                _textMesh.fontStyle = FontStyle.Normal;
-                _targetBaseScale = 0.075f;
+                _textMesh.fontSize = 38;
+                _targetBaseScale = 0.115f; // Highly visible on mobile screens
+
+                // Upright for standard strikes
+                transform.localRotation = Quaternion.identity;
                 transform.localScale = Vector3.one * _targetBaseScale;
             }
 
@@ -76,8 +122,8 @@ namespace HappyShoot.View.UI
 
             if (_entity.IsCritical)
             {
-                // Dynamic punch bounce scale: 1.35x -> 1.0x
-                float pop = Mathf.Lerp(1.35f, 1.0f, Mathf.Clamp01(_spawnTimer * 10f));
+                // Dynamic punch bounce: 1.45x -> 1.0x within 0.1s
+                float pop = Mathf.Lerp(1.45f, 1.0f, Mathf.Clamp01(_spawnTimer * 10f));
                 transform.localScale = Vector3.one * (_targetBaseScale * pop);
             }
             else
@@ -85,21 +131,24 @@ namespace HappyShoot.View.UI
                 transform.localScale = Vector3.one * _targetBaseScale;
             }
 
-            transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, -1f);
+            transform.position = new Vector3(_entity.Position.X, _entity.Position.Y, -2.5f);
 
-            Color c = _textMesh.color;
-            c.a = _entity.Alpha;
+            // Fade out in synchronization with domain entity lifetime
+            Color c = _baseColor;
+            c.a = _baseColor.a * _entity.Alpha;
             _textMesh.color = c;
         }
     }
 
     /// <summary>
     /// Synchronizes DamageTextManager with Unity scene view pool.
+    /// Manages an expanded pool of 64 zero-allocation views with LRU recycling.
     /// </summary>
     public class DamageTextManagerView : MonoBehaviour
     {
+        private const int MaxPoolSize = 64;
         private DamageTextManager _domainManager;
-        private readonly List<DamageTextView> _viewPool = new List<DamageTextView>(64);
+        private readonly List<DamageTextView> _viewPool = new List<DamageTextView>(MaxPoolSize);
 
         public DamageTextManager DomainManager => _domainManager;
 
@@ -118,7 +167,7 @@ namespace HappyShoot.View.UI
             for (int i = 0; i < _viewPool.Count; i++)
             {
                 var view = _viewPool[i];
-                if (view.gameObject.activeSelf)
+                if (view != null && view.gameObject.activeSelf)
                 {
                     view.UpdateView();
                 }
@@ -129,6 +178,7 @@ namespace HappyShoot.View.UI
         {
             if (!HappyShoot.Domain.Settings.GameSettings.ShowDamageText) return;
 
+            // 1. Find inactive view in pool
             for (int i = 0; i < _viewPool.Count; i++)
             {
                 if (!_viewPool[i].gameObject.activeSelf)
@@ -138,15 +188,25 @@ namespace HappyShoot.View.UI
                 }
             }
 
-            if (_viewPool.Count < 32)
+            // 2. Expand pool up to MaxPoolSize
+            if (_viewPool.Count < MaxPoolSize)
             {
                 var go = new GameObject($"DamageText_{_viewPool.Count + 1}");
                 go.transform.SetParent(transform);
-                go.transform.localScale = Vector3.one * 0.1f;
 
                 var view = go.AddComponent<DamageTextView>();
                 view.Bind(entity);
                 _viewPool.Add(view);
+                return;
+            }
+
+            // 3. Fallback: Recycle the oldest active view (index 0) so no hit numbers are lost
+            if (_viewPool.Count > 0)
+            {
+                var recycled = _viewPool[0];
+                _viewPool.RemoveAt(0);
+                recycled.Bind(entity);
+                _viewPool.Add(recycled);
             }
         }
     }

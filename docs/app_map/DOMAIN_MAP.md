@@ -48,7 +48,9 @@
 | `AudioEvents.cs` | `PlaySoundEvent`, `PlayBgmEvent`, `StopBgmEvent`, `SoundEffectType` | 16종 SFX 및 BGM 재생 요청 도메인 이벤트 |
 | `MagicEvents.cs` | `FrostNovaExecutedEvent`, `ChainLightningExecutedEvent`, `FireballExplodedEvent`, `MeteorStrikeExecutedEvent`, `MonsterShatteredEvent` | 마법사 마법 발동 및 폭발/빙결 파쇄 도메인 이벤트 집합 |
 | `PlayerEvents.cs` | `PlayerDamagedEvent`, `PlayerMovedEvent`, `PlayerSlashExecutedEvent` | 플레이어 이동, 피격 및 칼 휘두르기 궤적/각도/사거리 실행 이벤트 |
-| `MonsterEvents.cs` | `MonsterDamagedEvent` (크리티컬 플래그 포함), `MonsterSpawnedEvent`, `MonsterDiedEvent` | 몬스터 피격/스폰/사망 이벤트 집합 |
+| `MonsterEvents.cs` | `MonsterDamagedEvent`, `DamageType` (Default, Arrow, WindGlaive, StellarRain, Fireball, BurnDot, ShockDot, Ice, Lightning), `MonsterSpawnedEvent`, `MonsterDiedEvent` | 몬스터 피격/스폰/사망 이벤트 및 속성별 대미지 타입 열거형 |
+| `DamageTextEntity.cs` | `DamageTextEntity` | Pure C# 부유 대미지 숫자 엔티티 (데미지 수치, 크리티컬 여부, DamageType 속성, 수명, 알파 페이드) |
+| `DamageTextManager.cs` | `DamageTextManager` | 0-Alloc 오브젝트 풀링 기반 부유 대미지 텍스트 스폰, 위치 오프셋, 수명 수명주기 관리자 |
 | `BossEvents.cs` | `BossSpawnedEvent`, `BossHealthUpdatedEvent`, `BossDiedEvent` | 보스 스폰/체력 갱신/처치 이벤트 |
 | `ChestEvents.cs` | `TreasureChestSpawnedEvent`, `TreasureChestOpenedEvent` | 보물상자 스폰 및 보상 지급 이벤트 |
 | `EvolutionEvents.cs`| `SkillEvolvedEvent` | 9대 스킬 진화 발생 알림 이벤트 |

@@ -1,4 +1,5 @@
 using System;
+using HappyShoot.Domain.Events;
 using HappyShoot.Domain.Pool;
 using HappyShoot.Domain.Spatial;
 
@@ -13,6 +14,7 @@ namespace HappyShoot.Domain.UI
         public Vector2D Position { get; private set; }
         public float DamageValue { get; private set; }
         public bool IsCritical { get; private set; }
+        public DamageType DamageType { get; private set; }
         public bool IsActive { get; private set; }
         public float RemainingLifetime { get; private set; }
         public float Alpha { get; private set; }
@@ -25,12 +27,13 @@ namespace HappyShoot.Domain.UI
             IsActive = false;
         }
 
-        public void Initialize(int id, Vector2D startPosition, float damage, bool isCritical = false)
+        public void Initialize(int id, Vector2D startPosition, float damage, bool isCritical = false, DamageType damageType = DamageType.Default)
         {
             Id = id;
             Position = startPosition;
             DamageValue = (float)Math.Round(damage, 0);
             IsCritical = isCritical;
+            DamageType = damageType;
             RemainingLifetime = DefaultLifetime;
             Alpha = 1.0f;
             IsActive = true;
