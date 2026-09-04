@@ -77,7 +77,7 @@ namespace HappyShoot.View.Companion
 
             _bodySr = _bodyVisualGo.AddComponent<SpriteRenderer>();
             _bodySr.sprite = HeroSpriteHelper.GetHeroSprite(charClass, HeroSpriteHelper.ViewDirection.Front, 32);
-            _bodySr.sortingOrder = 15;
+            _bodySr.sortingOrder = 12;
 
             // 2. 2.5D Blob Shadow (Identical to PlayerView)
             _shadowGo = new GameObject("BlobShadow");
@@ -100,7 +100,7 @@ namespace HappyShoot.View.Companion
 
             _weaponSr = weaponGo.AddComponent<SpriteRenderer>();
             _weaponSr.sprite = HeroSpriteHelper.GetWeaponSprite(charClass, 32);
-            _weaponSr.sortingOrder = 16;
+            _weaponSr.sortingOrder = 13;
 
             // 4. Slash Visualizer for Warrior
             if (Entity.Type == CompanionType.Warrior)
@@ -118,7 +118,7 @@ namespace HappyShoot.View.Companion
                 _slashVisualSr = slashSpriteGo.AddComponent<SpriteRenderer>();
                 _slashVisualSr.sprite = WarriorSkillSpriteHelper.GetOrCreateSlashArcSprite(128);
                 _slashVisualSr.color = new Color(1.0f, 0.95f, 0.4f, 0f);
-                _slashVisualSr.sortingOrder = 25;
+                _slashVisualSr.sortingOrder = 14;
                 _slashPivotGo.SetActive(false);
             }
 
@@ -309,7 +309,7 @@ namespace HappyShoot.View.Companion
                 {
                     _weaponSr.flipX = faceLeft;
                     bool isBack = (_currentViewDir == HeroSpriteHelper.ViewDirection.Back || _currentViewDir == HeroSpriteHelper.ViewDirection.BackDiagonal);
-                    _weaponSr.sortingOrder = isBack ? 14 : 16;
+                    _weaponSr.sortingOrder = isBack ? 11 : 13;
                 }
             }
         }
@@ -382,7 +382,7 @@ namespace HappyShoot.View.Companion
         {
             _slashBaseAngle = baseAngle;
             _slashVisualTimer = _slashDuration;
-            if (_weaponSr != null) _weaponSr.sortingOrder = 30;
+            if (_weaponSr != null) _weaponSr.sortingOrder = 14;
             if (_slashPivotGo != null)
             {
                 _slashPivotGo.SetActive(true);
@@ -416,7 +416,7 @@ namespace HappyShoot.View.Companion
             if (_slashVisualTimer <= 0f)
             {
                 if (_slashPivotGo != null) _slashPivotGo.SetActive(false);
-                if (_weaponSr != null) _weaponSr.sortingOrder = 16;
+                if (_weaponSr != null) _weaponSr.sortingOrder = 13;
                 if (_weaponPivotGo != null)
                 {
                     bool isFlipped = _bodySr != null && _bodySr.flipX;

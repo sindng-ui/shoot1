@@ -362,10 +362,14 @@ namespace HappyShoot.View.Bootstrap
             var gameOverView = gameOverGo.AddComponent<GameOverResultUiView>();
             gameOverView.Initialize(_gameSession, playerView.EventBus, null, null, skillTreeManager, skillTreeUiView, gemCounterView);
 
-            // 6.5. Exclusive Stage Victory UI (Unlocks Skill Tree & Meta Growth ONLY on Boss 3 defeat)
+            // 6.5. Exclusive Stage Victory UI & Celebratory Companion Unlock Popup
+            var unlockPopupGo = new GameObject("CompanionUnlockUI");
+            var unlockPopupView = unlockPopupGo.AddComponent<UI.CompanionUnlockPopupView>();
+            unlockPopupView.Initialize(playerView.EventBus, hudGo.transform);
+
             var victoryGo = new GameObject("StageVictoryUI");
             var victoryView = victoryGo.AddComponent<UI.StageVictoryUiView>();
-            victoryView.Initialize(_gameSession, null, skillTreeManager, skillTreeUiView, gemCounterView, hudGo.transform);
+            victoryView.Initialize(_gameSession, null, skillTreeManager, skillTreeUiView, gemCounterView, hudGo.transform, unlockPopupView);
             spawnerView.SetVictoryUiView(victoryView);
 
             // 6.8. AI Companion Manager (Escort & Combat Support)

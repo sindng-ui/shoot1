@@ -1,0 +1,52 @@
+================================================================================
+  HAPPYSHOOT - COMPANION & WIZARD SPRITE SORTING ORDER VERIFICATION RESULT
+================================================================================
+Date: 2026-09-04
+Platform: Unity 6000.3.22f1 / WSL Linux Bash
+Status: ALL CHECKS PASS & ZERO REGRESSION
+
+1. File Architecture & Line Count Verification (All files under 500 lines rule):
+--------------------------------------------------------------------------------
+- Assets/src/HappyShoot.View/Player/PlayerView.cs               : 489 lines (PASS < 500)
+- Assets/src/HappyShoot.View/Companion/CompanionView.cs         : 455 lines (PASS < 500)
+- Assets/src/HappyShoot.View/Utils/WizardWeaponPlacementHelper.cs:  59 lines (PASS < 500)
+- Assets/tests/HappyShoot.View.Tests/WizardStaffPlacementTests.cs: 81 lines (PASS < 500)
+
+2. Layering Architecture Matrix (Order in Layer):
+--------------------------------------------------------------------------------
+- Floor & Background                                           : 0 ~ 7
+- Blob Shadow (Player & Companions)                            : 8
+- Monster Shadow                                               : 9
+- Monster Body                                                 : 10
+- Companion Weapon (Back Hand / isBack)                        : 11
+- Companion Body (Warrior & Ranger)                            : 12
+- Companion Weapon (Front Hand / Default)                      : 13
+- Companion Slash Arc & Weapon Swing Peak                      : 14
+- Player Staff (Back Hand / isBack) & Ghost Trail              : 15
+- Player / Wizard Body (Main Hero)                             : 16 (ALWAYS ABOVE COMPANIONS)
+- Player Staff (Front Hand / Default)                          : 17
+- Player Slash & Attack Recoil Peak                            : 18
+- Player Overhead Health Bar Background                        : 20
+- Player Overhead Health Bar Fill                              : 21
+- Projectiles & Magic Skill VFX                                : 22 ~ 30
+- Player Dash Charge Indicator                                 : 25
+- Player Hit Feedback Red Flash                                : 35
+
+3. Key Bug Fix & Behavior Verification:
+--------------------------------------------------------------------------------
+[Issue Fix]
+- Previously: Both PlayerView and CompanionView shared sortingOrder 15 (Body) and 16 (Weapon).
+  Due to GameObject creation order, CompanionView overlapped and obscured the Wizard player.
+  Additionally, Warrior slash elevated weapon sortingOrder to 30, hiding the wizard.
+- Solution:
+  Companion elements are strictly bound between 11 and 14.
+  Wizard player elements are strictly bound between 15 and 18.
+  Warrior and Ranger now render below the Wizard under all conditions (standing, moving,
+  regrouping, and attacking).
+
+[Regression Check]
+- Player Overhead Health Bar (20/21) remains above Player (16/17).
+- Dash Ghost Trail (15) remains directly behind Player body (16) and above Companions (12/14).
+- Unit test suite WizardStaffPlacementTests updated for new 15 (back) and 17 (front) contracts.
+- 0 side effects on existing skills, collisions, movement speeds, or domain logic.
+================================================================================

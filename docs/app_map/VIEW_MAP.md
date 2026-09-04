@@ -31,13 +31,13 @@
 ### 2. Player, Companions & Control
 | 카테고리 | 파일명 | 주요 컴포넌트 / 헬퍼 | 설명 |
 | :--- | :--- | :--- | :--- |
-| **Player** | `PlayerView.cs` | `PlayerView` | 플레이어 외형 3단 분기, 스마트 하이브리드 시선 질주/조준, 대검 스윙 동적 궤적(-halfArc ~ +halfArc, sortingOrder=30), 피격 위임 분리 |
+| **Player** | `PlayerView.cs` | `PlayerView` | 플레이어 외형 3단 분기, 스마트 하이브리드 시선 질주/조준, 대검 스윙 동적 궤적(-halfArc ~ +halfArc), 동료(11~14) 상위 레이어링(몸체 sortingOrder=16, 무기 15/17, 공격 피크 18), 피격 위임 분리 |
 | | `PlayerHitFeedbackView.cs` | `PlayerHitFeedbackView` | 💥 피격 피드백(Juice): 화이트$\rightarrow$크림슨 레드 2단계 플래시, 스쿼시&바운스 찌그러짐, 펀치 미세 카메라 셰이크, 0-GC 2.5D 도트 피격 스파크 |
 | | `PlayerDamageVignetteView.cs` | `PlayerDamageVignetteView` | 🩸 외곽 피격 비네트 UI: 피격 시 붉은 펄스 페이드아웃, HP 30% 이하 시 심장 박동 경고, Blur 배제 0-GC 절차적 Radial Gradient 1 DrawCall |
 | | `PlayerHealthBarView.cs` | `PlayerHealthBarView` | 머리 위 오버헤드 미니 체력바 (SpriteRenderer 기반 0-할당, sortingOrder 20/21) |
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 WASD/터치 이동 입력 수신 및 도메인 전달 |
-| | `WizardWeaponPlacementHelper.cs` | `WizardWeaponPlacementHelper` | 🧙‍♂️ 마법사 8방향+정면/후면 지팡이 오른손 1:1 결합 스냅, 캐스팅 펄스 리프트, flipX 및 소팅오더 완전 제어 |
-| **Companions** | `CompanionView.cs` | `CompanionView` | AI 동료 시각화 및 전투 AI: 완전 독립 캐릭터, 샌드박스 쿨다운/데미지 실시간 연동, 다중 스킬 순차 발동, 6m 정속 재합류, 젤리 보빙, 대검 스윙 모션 |
+| | `WizardWeaponPlacementHelper.cs` | `WizardWeaponPlacementHelper` | 🧙‍♂️ 마법사 8방향+정면/후면 지팡이 오른손 1:1 결합 스냅, 캐스팅 펄스 리프트, flipX 및 소팅오더(등 뒤 15 / 앞손 17) 완전 제어 |
+| **Companions** | `CompanionView.cs` | `CompanionView` | AI 동료 시각화 및 전투 AI: 마법사 하위/몬스터 상위 레이어링(몸체 sortingOrder=12, 무기 11/13, 슬래시 14), 샌드박스 쿨다운/데미지 실시간 연동, 다중 스킬 순차 발동, 6m 정속 재합류, 젤리 보빙, 대검 스윙 모션 |
 | | `CompanionManagerView.cs` | `CompanionManagerView` | AI 동료 생명주기 관리: CompanionRewardSyncEvent 구독, 마법사 레벨업 시 동료 스킬 해금/레벨업/패시브 자동 동기화, 클리어 회차 기반 스폰 |
 | | `CompanionSkillExecutor.cs` | `CompanionSkillExecutor` | 동료 스킬 실행 및 VFX 전담: 글레이브, 화살비, 지면강타, 휠윈드 전용 비주얼 연동 |
 | | `CompanionSelectPreviewHelper.cs` | `CompanionSelectPreviewHelper` | 메인 메뉴 3인 원정대 프리뷰: 마법사 좌우 호위 전사/궁수 카드 렌더링, 미해금 시 실루엣 + 락 뱃지 |
@@ -110,6 +110,7 @@
 | | `SettingsDialogUiView.cs` | `SettingsDialogUiView` | 3개 탭 환경설정 다이얼로그 (자동/수동조준, 볼륨, UI스케일) |
 | | `GameOverResultUiView.cs` | `GameOverResultUiView` | 사망(Game Over) 시 영구 상점 차단, 재도전 및 3보스 클리어 룰 안내 |
 | | `StageVictoryUiView.cs` | `StageVictoryUiView` | 🏆 최종 스테이지 승리 전용 UI (Canvas Overlay sortingOrder 120), 영구 성장 & 스킬 트리 개방 |
+| | `CompanionUnlockPopupView.cs` | `CompanionUnlockPopupView` | 🎉 1·2회차 보스 격파 시 신규 동료(전사/궁수) 영입 축하 전용 '짜잔!' 모달 팝업 (대형 도트 아바타 & 팡파레) |
 | **Icons & Sprites**| `RewardIconHelper.cs` | `RewardIconHelper` | 인게임 보상 및 스킬 슬롯용 프로시저럴 픽셀아트 아이콘 마스터 캐시 및 디스패처 |
 | | `WarriorRewardIconHelper.cs` | `WarriorRewardIconHelper` | 전사 스킬 전용 아이콘 생성기 (대검베기, 휠윈드, 지면강타, 블러드이터 등) |
 | | `RangerRewardIconHelper.cs` | `RangerRewardIconHelper` | 궁수 스킬 전용 아이콘 생성기 (관통화살, 화살비, 풍인, 스텔라레인 등) |

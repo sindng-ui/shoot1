@@ -43,7 +43,7 @@ namespace HappyShoot.View.Utils
 
             float baseAngle = isSide ? (isFacingLeft ? 25f : -25f) : (isFacingLeft ? -25f : 25f);
             bool weaponFlip = isSide ? isFacingLeft : !isFacingLeft;
-            int sortingOrder = isBack ? 14 : 16;
+            int sortingOrder = isBack ? 15 : 17;
 
             return new StaffPlacement
             {

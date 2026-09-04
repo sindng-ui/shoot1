@@ -21,6 +21,8 @@ graph TD
         GB --> PM[PauseMenuUiView]
         GB --> GOR[GameOverResultUiView]
         GB --> SVU[StageVictoryUiView]
+        GB --> CUP[CompanionUnlockPopupView]
+        SVU --> CUP
         GB --> SV[SoundManagerView & 32-Ch Pool]
         GB --> PAH[ProceduralAudioHelper]
         GB --> PV[PlayerView]

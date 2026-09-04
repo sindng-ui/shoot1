@@ -51,11 +51,11 @@ namespace HappyShoot.View.Tests
         }
 
         [Test]
-        [TestCase(HeroSpriteHelper.ViewDirection.Back, true, 14, Description = "후면에서는 지팡이가 캐릭터 몸통 뒤에 렌더링")]
-        [TestCase(HeroSpriteHelper.ViewDirection.BackDiagonal, false, 14, Description = "후면 대각선에서는 지팡이가 캐릭터 뒤에 렌더링")]
-        [TestCase(HeroSpriteHelper.ViewDirection.Front, false, 16, Description = "정면에서는 지팡이가 캐릭터 손 앞에 렌더링")]
-        [TestCase(HeroSpriteHelper.ViewDirection.FrontDiagonal, false, 16, Description = "앞 대각선에서는 지팡이가 손 앞에 렌더링")]
-        [TestCase(HeroSpriteHelper.ViewDirection.Side, false, 16, Description = "측면에서는 지팡이가 손 앞에 렌더링")]
+        [TestCase(HeroSpriteHelper.ViewDirection.Back, true, 15, Description = "후면에서는 지팡이가 캐릭터 몸통 뒤에 렌더링")]
+        [TestCase(HeroSpriteHelper.ViewDirection.BackDiagonal, false, 15, Description = "후면 대각선에서는 지팡이가 캐릭터 뒤에 렌더링")]
+        [TestCase(HeroSpriteHelper.ViewDirection.Front, false, 17, Description = "정면에서는 지팡이가 캐릭터 손 앞에 렌더링")]
+        [TestCase(HeroSpriteHelper.ViewDirection.FrontDiagonal, false, 17, Description = "앞 대각선에서는 지팡이가 손 앞에 렌더링")]
+        [TestCase(HeroSpriteHelper.ViewDirection.Side, false, 17, Description = "측면에서는 지팡이가 손 앞에 렌더링")]
         public void CalculatePlacement_SortingOrder_RendersCorrectLayer(
             HeroSpriteHelper.ViewDirection viewDir,
             bool isFacingLeft,

@@ -2,17 +2,20 @@ using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using HappyShoot.Domain.Entities;
 using HappyShoot.Domain.Meta;
 using HappyShoot.Domain.Progression;
 using HappyShoot.Domain.Session;
 using HappyShoot.View.Shop;
 using HappyShoot.View.SkillTree;
+using HappyShoot.View.Utils;
 
 namespace HappyShoot.View.UI
 {
     /// <summary>
     /// Exclusive Stage Victory popup displayed ONLY when the final Boss 3 (Arch-Lich King) is defeated.
-    /// Settles earned gold and gems into permanent storage, and unlocks the Skill Tree & Meta Shop.
+    /// Settles earned gold and gems into permanent storage, unlocks the Skill Tree & Meta Shop,
+    /// and sequences the celebratory Companion Unlock popup upon 1st and 2nd clears.
     /// Strictly modular and under 500 lines.
     /// </summary>
     public class StageVictoryUiView : MonoBehaviour
@@ -33,6 +36,7 @@ namespace HappyShoot.View.UI
         private SkillTreeManager _skillTreeManager;
         private SkillTreeUiView _skillTreeUiView;
         private InGameGemCounterHudView _gemCounter;
+        private CompanionUnlockPopupView _unlockPopupView;
 
         public void Initialize(
             GameSessionEntity gameSession,
@@ -40,13 +44,15 @@ namespace HappyShoot.View.UI
             SkillTreeManager skillTreeManager,
             SkillTreeUiView skillTreeUiView,
             InGameGemCounterHudView gemCounter,
-            Transform parentCanvasTf)
+            Transform parentCanvasTf,
+            CompanionUnlockPopupView unlockPopupView = null)
         {
             _gameSession = gameSession;
             _shopManager = shopManager;
             _skillTreeManager = skillTreeManager;
             _skillTreeUiView = skillTreeUiView;
             _gemCounter = gemCounter;
+            _unlockPopupView = unlockPopupView;
 
             if (parentCanvasTf != null)
             {
@@ -57,14 +63,14 @@ namespace HappyShoot.View.UI
             if (_panelRoot != null) _panelRoot.SetActive(false);
         }
 
+        public void SetUnlockPopupView(CompanionUnlockPopupView unlockPopupView)
+        {
+            _unlockPopupView = unlockPopupView;
+        }
+
         public void ShowVictoryPopup()
         {
-            Debug.Log("[StageVictoryUiView] ShowVictoryPopup called! Displaying Victory UI!");
-            if (_panelRoot != null)
-            {
-                _panelRoot.SetActive(true);
-                _panelRoot.transform.SetAsLastSibling();
-            }
+            Debug.Log("[StageVictoryUiView] ShowVictoryPopup called! Calculating rewards and checking companion unlocks!");
 
             // 1. Settle rewards ONLY on Stage Victory!
             if (_gameSession != null)
@@ -102,24 +108,50 @@ namespace HappyShoot.View.UI
                     }
                 }
 
-                // Increment clear count and show companion unlock reward!
+                // Increment clear count and evaluate companion unlock sequence
+                int previousClears = _skillTreeManager != null ? _skillTreeManager.ClearCount : 0;
                 if (_skillTreeManager != null)
                 {
                     _skillTreeManager.IncrementClearCount();
-                    int clears = _skillTreeManager.ClearCount;
-                    if (_companionRewardText != null)
-                    {
-                        if (clears == 1)
-                            _companionRewardText.text = "🎉 1회차 클리어 특전: [전사 동료 (Warrior)] 영구 해금!";
-                        else if (clears == 2)
-                            _companionRewardText.text = "🎉 2회차 클리어 특전: [궁수 동료 (Ranger)] 영구 해금!";
-                        else
-                            _companionRewardText.text = $"🏆 {clears}회차 정복 완료! (3인 마법 원정대 출격)";
-                    }
+                }
+                int currentClears = _skillTreeManager != null ? _skillTreeManager.ClearCount : 0;
+
+                if (_companionRewardText != null)
+                {
+                    if (currentClears == 1)
+                        _companionRewardText.text = "🎉 [1회차 클리어 특전]: 호위 전사(Warrior) 영구 합류 완료!";
+                    else if (currentClears == 2)
+                        _companionRewardText.text = "🎉 [2회차 클리어 특전]: 지원 궁수(Ranger) 영구 합류 완료!";
+                    else
+                        _companionRewardText.text = $"🏆 {currentClears}회차 정복 완료! (3인 마법 원정대 출격 준비 완료)";
+                }
+
+                Utils.HitStopManager.Instance?.CancelHitStop();
+                Time.timeScale = 0f;
+
+                // Check celebratory companion popup (1st clear -> Warrior, 2nd clear -> Ranger)
+                if (currentClears == 1 && _unlockPopupView != null)
+                {
+                    _unlockPopupView.Show(CompanionType.Warrior, OpenVictoryPanel);
+                    return;
+                }
+                else if (currentClears == 2 && _unlockPopupView != null)
+                {
+                    _unlockPopupView.Show(CompanionType.Ranger, OpenVictoryPanel);
+                    return;
                 }
             }
 
-            Utils.HitStopManager.Instance?.CancelHitStop();
+            OpenVictoryPanel();
+        }
+
+        private void OpenVictoryPanel()
+        {
+            if (_panelRoot != null)
+            {
+                _panelRoot.SetActive(true);
+                _panelRoot.transform.SetAsLastSibling();
+            }
             Time.timeScale = 0f;
         }
 
@@ -129,7 +161,7 @@ namespace HappyShoot.View.UI
             canvasGo.transform.SetParent(transform, false);
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 120; // Highest UI priority above all HUDs!
+            canvas.sortingOrder = 120; // High UI priority
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1440, 810);
@@ -152,18 +184,18 @@ namespace HappyShoot.View.UI
             var dialogGo = new GameObject("DialogFrame");
             dialogGo.transform.SetParent(_panelRoot.transform, false);
             var dialogRt = dialogGo.AddComponent<RectTransform>();
-            dialogRt.sizeDelta = new Vector2(580f, 490f);
+            dialogRt.sizeDelta = new Vector2(600f, 500f);
             var dialogImg = dialogGo.AddComponent<Image>();
             dialogImg.color = new Color(0.10f, 0.14f, 0.22f, 0.98f);
 
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+            var font = FontHelper.GetKoreanFont();
 
             // Crown / Title Text
             var titleGo = new GameObject("TitleText");
             titleGo.transform.SetParent(dialogGo.transform, false);
             var titleRt = titleGo.AddComponent<RectTransform>();
-            titleRt.anchoredPosition = new Vector2(0f, 175f);
-            titleRt.sizeDelta = new Vector2(520f, 60f);
+            titleRt.anchoredPosition = new Vector2(0f, 180f);
+            titleRt.sizeDelta = new Vector2(540f, 60f);
             _titleText = titleGo.AddComponent<Text>();
             _titleText.font = font;
             _titleText.text = "🏆 STAGE CLEAR - VICTORY!";
@@ -173,18 +205,18 @@ namespace HappyShoot.View.UI
             _titleText.color = new Color(1.0f, 0.85f, 0.25f, 1.0f); // Bright Gold
 
             // Stats lines
-            _survivalTimeText = CreateStatText(dialogGo.transform, new Vector2(0f, 110f), font);
-            _killCountText = CreateStatText(dialogGo.transform, new Vector2(0f, 77f), font);
-            _goldEarnedText = CreateStatText(dialogGo.transform, new Vector2(0f, 44f), font, new Color(1.0f, 0.85f, 0.2f));
-            _gemsEarnedText = CreateStatText(dialogGo.transform, new Vector2(0f, 11f), font, new Color(0.3f, 0.95f, 1.0f));
-            _companionRewardText = CreateStatText(dialogGo.transform, new Vector2(0f, -24f), font, new Color(0.4f, 1.0f, 0.6f));
+            _survivalTimeText = CreateStatText(dialogGo.transform, new Vector2(0f, 115f), font);
+            _killCountText = CreateStatText(dialogGo.transform, new Vector2(0f, 80f), font);
+            _goldEarnedText = CreateStatText(dialogGo.transform, new Vector2(0f, 45f), font, new Color(1.0f, 0.85f, 0.2f));
+            _gemsEarnedText = CreateStatText(dialogGo.transform, new Vector2(0f, 10f), font, new Color(0.3f, 0.95f, 1.0f));
+            _companionRewardText = CreateStatText(dialogGo.transform, new Vector2(0f, -25f), font, new Color(0.4f, 1.0f, 0.6f));
 
             // Exclusive Unlocked Button: Skill Tree
             var skillTreeBtnGo = new GameObject("BtnOpenSkillTree");
             skillTreeBtnGo.transform.SetParent(dialogGo.transform, false);
             var stRt = skillTreeBtnGo.AddComponent<RectTransform>();
             stRt.anchoredPosition = new Vector2(0f, -95f);
-            stRt.sizeDelta = new Vector2(460f, 56f);
+            stRt.sizeDelta = new Vector2(480f, 56f);
             var stImg = skillTreeBtnGo.AddComponent<Image>();
             stImg.color = new Color(0.85f, 0.65f, 0.10f, 1.0f); // Gold highlight
             _openSkillTreeButton = skillTreeBtnGo.AddComponent<Button>();
@@ -207,7 +239,7 @@ namespace HappyShoot.View.UI
             retryBtnGo.transform.SetParent(dialogGo.transform, false);
             var reRt = retryBtnGo.AddComponent<RectTransform>();
             reRt.anchoredPosition = new Vector2(0f, -170f);
-            reRt.sizeDelta = new Vector2(300f, 44f);
+            reRt.sizeDelta = new Vector2(320f, 44f);
             var reImg = retryBtnGo.AddComponent<Image>();
             reImg.color = new Color(0.25f, 0.35f, 0.45f, 1.0f);
             _retryButton = retryBtnGo.AddComponent<Button>();
@@ -231,7 +263,7 @@ namespace HappyShoot.View.UI
             go.transform.SetParent(parent, false);
             var rt = go.AddComponent<RectTransform>();
             rt.anchoredPosition = pos;
-            rt.sizeDelta = new Vector2(480f, 32f);
+            rt.sizeDelta = new Vector2(520f, 32f);
             var text = go.AddComponent<Text>();
             text.font = font;
             text.fontSize = 18;

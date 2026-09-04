@@ -71,7 +71,7 @@ namespace HappyShoot.View.Player
             _bodyVisualGo = new GameObject("BodyVisual");
             _bodyVisualGo.transform.SetParent(transform, false);
             _bodySr = _bodyVisualGo.AddComponent<SpriteRenderer>();
-            _bodySr.sortingOrder = 15;
+            _bodySr.sortingOrder = 16;
             _originalColor = _bodySr.color;
             _bodyVisualGo.transform.localScale = Vector3.one * 1.5f;
 
@@ -93,7 +93,7 @@ namespace HappyShoot.View.Player
             _weaponGo.transform.localPosition = Vector3.zero;
             _weaponGo.transform.localScale = Vector3.one * 1.3f;
             _weaponSr = _weaponGo.AddComponent<SpriteRenderer>();
-            _weaponSr.sortingOrder = 16;
+            _weaponSr.sortingOrder = 17;
 
             // 4. Slash Effect Pivot & Visual
             _slashPivotGo = new GameObject("SlashPivot");
@@ -104,7 +104,7 @@ namespace HappyShoot.View.Player
             _slashVisualGo.transform.localPosition = Vector3.zero;
             _slashVisualSr = _slashVisualGo.AddComponent<SpriteRenderer>();
             _slashVisualSr.sprite = SpriteHelper.GetOrCreateSlashArcSprite();
-            _slashVisualSr.sortingOrder = 20;
+            _slashVisualSr.sortingOrder = 18;
             _slashPivotGo.SetActive(false);
 
             // 5. Orbiting Blades Visual
@@ -379,7 +379,7 @@ namespace HappyShoot.View.Player
                 if (_classType != CharacterClassType.Wizard)
                 {
                     if (_classType == CharacterClassType.Warrior) _weaponSr.flipX = false;
-                    _weaponSr.sortingOrder = (newDir == HeroSpriteHelper.ViewDirection.Back || newDir == HeroSpriteHelper.ViewDirection.BackDiagonal) ? 14 : 16;
+                    _weaponSr.sortingOrder = (newDir == HeroSpriteHelper.ViewDirection.Back || newDir == HeroSpriteHelper.ViewDirection.BackDiagonal) ? 15 : 17;
                 }
             }
         }
@@ -405,7 +405,7 @@ namespace HappyShoot.View.Player
             if (_slashVisualTimer <= 0f)
             {
                 if (_slashPivotGo != null) _slashPivotGo.SetActive(false);
-                if (_weaponSr != null) _weaponSr.sortingOrder = 16;
+                if (_weaponSr != null) _weaponSr.sortingOrder = 17;
                 if (_weaponPivotGo != null)
                 {
                     bool isFlipped = _bodySr != null && _bodySr.flipX;
@@ -453,7 +453,7 @@ namespace HappyShoot.View.Player
             _slashVisualTimer = SlashDuration;
             CameraFollowView.Instance?.TriggerShake("slash", 0.12f, 0.18f);
             if (_slashVisualSr != null) _slashVisualSr.sprite = SpriteHelper.GetOrCreateSlashArcSprite();
-            if (_weaponSr != null) { _weaponSr.color = Color.white; _weaponSr.sortingOrder = 30; }
+            if (_weaponSr != null) { _weaponSr.color = Color.white; _weaponSr.sortingOrder = 18; }
             TriggerSlashPivot(evt.Radius);
         }
 
@@ -463,7 +463,7 @@ namespace HappyShoot.View.Player
             _slashHalfArc = Mathf.Max(15f, evt.ArcAngleDegrees * 0.5f);
             _slashVisualTimer = SlashDuration;
             if (_slashVisualSr != null) _slashVisualSr.sprite = SpriteHelper.GetOrCreateBloodSlashArcSprite();
-            if (_weaponSr != null) { _weaponSr.color = new Color(1.0f, 0.35f, 0.45f, 1f); _weaponSr.sortingOrder = 30; }
+            if (_weaponSr != null) { _weaponSr.color = new Color(1.0f, 0.35f, 0.45f, 1f); _weaponSr.sortingOrder = 18; }
             TriggerSlashPivot(evt.Radius);
         }
 
