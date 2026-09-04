@@ -28,7 +28,7 @@
 | **Factory** | `PlayerClassFactory.cs` | `PlayerClassFactory`, `CharacterClassType` | 마법사 생성 시 `startSkillId`(화염구/서리폭발/연쇄번개)에 따른 시작 스킬 분기 및 영웅별 기본 크리율(전사/마법사 10%, 궁수 20%) 설정 |
 | **Companions** | `CompanionEntity.cs` | `CompanionEntity`, `CompanionType` | AI 동료 순수 도메인 엔티티. 마법사 성장 동기화, 클래스 고유 스킬 풀(전사 3종, 궁수 3종), 패시브 1/3 효과 적용, 샌드박스 연동 최종 1/3 데미지 산출 |
 | | `CompanionSkillInstance.cs` | `CompanionSkillInstance` | 컴패니언 개별 스킬 인스턴스 (Lv.1~5 레벨 및 독립 쿨다운 타이머 관리) |
-| **Monsters** | `MonsterEntity.cs` | `MonsterEntity` | 몬스터 순수 도메인 엔티티. 이동 AI, 피격(`TakeDamage`), 상태이상(오한, 화상, 감전) 타이머 |
+| **Monsters** | `MonsterEntity.cs` | `MonsterEntity` | 몬스터 순수 도메인 엔티티. 이동 AI, 피격(`TakeDamage`), 상태이상(오한, 화상, 감전) 타이머, 횡스크롤 차원 모드 전용 수평 전진 및 파동 비행(`IsSideScrollMode`, `SideScrollBaseY`, `SideScrollWaveAmplitude`) 지원 |
 | | `MonsterType.cs` | `MonsterType`, `MonsterDefinition` | 7종 일반 몬스터(Slime, Bat, Skeleton, Golem, FireImp, ToxicSpider, DarkKnight) + 4종 Phase 3 몬스터(망령, 사령술사, 어보미네이션, 사신) + 3대 보스(골렘 킹, 대악마, 사령왕 리치) 정의 |
 | | `MonsterSpawner.cs` | `MonsterSpawner` | 도메인 몬스터 스포너. 1,280 오브젝트 풀링 및 SpatialGrid2D 공간분할 쿼리 |
 | **Gems** | `GemStoneEntity.cs` | `GemStoneEntity` | 보석 3종(루비/에메랄드/아메시스트) 필드 드랍 엔티티 (0-GC 풀링, 자석 흡수) |

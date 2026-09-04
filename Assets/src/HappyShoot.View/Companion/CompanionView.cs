@@ -32,13 +32,9 @@ namespace HappyShoot.View.Companion
         private SpriteRenderer _shadowSr;
         private GameObject _weaponPivotGo;
         private SpriteRenderer _weaponSr;
-        private GameObject _slashPivotGo;
-        private SpriteRenderer _slashVisualSr;
+        private CompanionSlashEffect _slashEffect;
 
         private Vector2 _formationOffset;
-        private float _slashVisualTimer;
-        private float _slashDuration = 0.18f;
-        private float _slashBaseAngle;
         private Vector3 _lastPos;
         private float _walkBobTimer;
         private MonsterEntity _currentTarget;
@@ -105,21 +101,8 @@ namespace HappyShoot.View.Companion
             // 4. Slash Visualizer for Warrior
             if (Entity.Type == CompanionType.Warrior)
             {
-                _slashPivotGo = new GameObject("SlashPivot");
-                _slashPivotGo.transform.SetParent(transform, false);
-                _slashPivotGo.transform.localPosition = Vector3.zero;
-
-                var slashSpriteGo = new GameObject("SlashArc");
-                slashSpriteGo.transform.SetParent(_slashPivotGo.transform, false);
-                slashSpriteGo.transform.localPosition = new Vector3(1.35f, 0f, 0f);
-                slashSpriteGo.transform.localRotation = Quaternion.Euler(0f, 0f, -90f);
-                slashSpriteGo.transform.localScale = new Vector3(1.5f, 1.5f, 1.0f);
-
-                _slashVisualSr = slashSpriteGo.AddComponent<SpriteRenderer>();
-                _slashVisualSr.sprite = WarriorSkillSpriteHelper.GetOrCreateSlashArcSprite(128);
-                _slashVisualSr.color = new Color(1.0f, 0.95f, 0.4f, 0f);
-                _slashVisualSr.sortingOrder = 14;
-                _slashPivotGo.SetActive(false);
+                _slashEffect = gameObject.AddComponent<CompanionSlashEffect>();
+                _slashEffect.Initialize(_weaponPivotGo, _weaponSr, _bodySr);
             }
 
             _lastPos = transform.position;
@@ -142,12 +125,67 @@ namespace HappyShoot.View.Companion
 
             UpdateCombat(dt, compCfg);
             UpdatePositionAndAnimation(dt, compCfg);
-            UpdateSlashVisuals(dt);
+            _slashEffect?.UpdateSlash(dt);
         }
+
+        public bool IsSideScrollMode { get; set; }
 
         private void UpdatePositionAndAnimation(float dt, CompanionTuningConfig compCfg)
         {
             Vector3 playerPos = _playerView.transform.position;
+
+            if (IsSideScrollMode)
+            {
+                // Free-Roam AI: Never glued to Wizard, roams freely within 4.5m of Wizard
+                float distToWizardX = Mathf.Abs(playerPos.x - transform.position.x);
+                float sideSpeed = ((_playerView.Entity != null) ? _playerView.Entity.Stats.MoveSpeed : 5.0f);
+                float moveX = transform.position.x;
+                bool isWalking = false;
+
+                if (distToWizardX > 4.5f) _isRegrouping = true;
+                else if (distToWizardX < 2.0f) _isRegrouping = false;
+
+                if (_isRegrouping)
+                {
+                    float targetX = playerPos.x + (Entity.Type == CompanionType.Warrior ? 1.5f : -1.5f);
+                    moveX = Mathf.MoveTowards(transform.position.x, targetX, sideSpeed * dt);
+                    isWalking = true;
+                }
+                else if (_currentTarget != null && !_currentTarget.IsDead)
+                {
+                    float monsterX = (float)_currentTarget.Position.X;
+                    if (Mathf.Abs(monsterX - playerPos.x) <= 5.0f)
+                    {
+                        float targetX = Entity.Type == CompanionType.Warrior ? monsterX : (transform.position.x < monsterX ? monsterX - 2.5f : monsterX + 2.5f);
+                        moveX = Mathf.MoveTowards(transform.position.x, targetX, sideSpeed * dt);
+                        isWalking = true;
+                    }
+                }
+
+                // Dynamic variable platform surface detection
+                float targetGroundY = SideScroll.SideScrollPlatformManager.Instance != null
+                    ? SideScroll.SideScrollPlatformManager.Instance.GetHighestSurfaceYAt(moveX)
+                    : -1.8f;
+
+                float sideHop = 0f;
+                if (isWalking)
+                {
+                    _walkBobTimer += dt * 14f;
+                    sideHop = Mathf.Abs(Mathf.Sin(_walkBobTimer)) * 0.12f;
+                }
+
+                float currentBaseY = Mathf.MoveTowards(transform.position.y - sideHop, targetGroundY, 12.0f * dt);
+                float finalY = currentBaseY + sideHop;
+
+                float prevX = transform.position.x;
+                transform.position = new Vector3(moveX, finalY, 0f);
+                Entity.Position = new Vector2D(moveX, currentBaseY);
+
+                if (_bodySr != null && Mathf.Abs(moveX - prevX) > 0.001f)
+                    _bodySr.flipX = (moveX < prevX);
+                return;
+            }
+
             float distToPlayer = Vector3.Distance(playerPos, transform.position);
 
             // 1. 긴급 워프 (너무 멀리 화면 밖으로 벗어난 경우에만)
@@ -293,7 +331,7 @@ namespace HappyShoot.View.Companion
             if (_bodySr != null) _bodySr.flipX = faceLeft;
 
             // 7. 무기 포즈 (무기도 몸통 hop에 맞춰 통통 튐!)
-            if (_slashVisualTimer <= 0f)
+            if (_slashEffect == null || !_slashEffect.IsSlashing)
             {
                 if (_weaponPivotGo != null)
                 {
@@ -357,73 +395,23 @@ namespace HappyShoot.View.Companion
                     _spawnerView,
                     _projManager,
                     _eventBus,
-                    onSlashTriggered: TriggerSlashVisual,
+                    onSlashTriggered: (angle) => _slashEffect?.TriggerSlash(angle),
                     companionTransform: transform);
 
                 break;
             }
         }
 
-        private float GetSkillBaseCooldown(string skillId, SkillConfigData cfg)
+        private float GetSkillBaseCooldown(string skillId, SkillConfigData cfg) => skillId switch
         {
-            switch (skillId)
-            {
-                case "slash": return cfg.Slash.Cooldown;
-                case "ground_stomp": return cfg.GroundStomp.Cooldown;
-                case "whirlwind": return cfg.Whirlwind.Cooldown;
-                case "bow": return cfg.Bow.Cooldown;
-                case "glaive": return cfg.Glaive.Cooldown;
-                case "arrow_rain": return cfg.ArrowRain.Cooldown;
-                default: return 1.0f;
-            }
-        }
-
-        private void TriggerSlashVisual(float baseAngle)
-        {
-            _slashBaseAngle = baseAngle;
-            _slashVisualTimer = _slashDuration;
-            if (_weaponSr != null) _weaponSr.sortingOrder = 14;
-            if (_slashPivotGo != null)
-            {
-                _slashPivotGo.SetActive(true);
-                float initialAngle = _slashBaseAngle - 60f;
-                _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
-                if (_weaponPivotGo != null) _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, initialAngle);
-                if (_slashVisualSr != null) _slashVisualSr.color = Color.white;
-            }
-        }
-
-        private void UpdateSlashVisuals(float dt)
-        {
-            if (_slashVisualTimer <= 0f) return;
-            _slashVisualTimer -= dt;
-            float p = Mathf.Clamp01(1.0f - (_slashVisualTimer / _slashDuration));
-            float currentAngle = _slashBaseAngle + Mathf.Lerp(-60f, 60f, Mathf.SmoothStep(0f, 1f, p));
-
-            if (_slashPivotGo != null)
-                _slashPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, currentAngle);
-
-            if (_weaponPivotGo != null)
-                _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, currentAngle);
-
-            if (_slashVisualSr != null)
-            {
-                Color c = _slashVisualSr.color;
-                c.a = Mathf.Sin(p * Mathf.PI) * 0.95f;
-                _slashVisualSr.color = c;
-            }
-
-            if (_slashVisualTimer <= 0f)
-            {
-                if (_slashPivotGo != null) _slashPivotGo.SetActive(false);
-                if (_weaponSr != null) _weaponSr.sortingOrder = 13;
-                if (_weaponPivotGo != null)
-                {
-                    bool isFlipped = _bodySr != null && _bodySr.flipX;
-                    _weaponPivotGo.transform.rotation = Quaternion.Euler(0f, 0f, isFlipped ? 135f : -45f);
-                }
-            }
-        }
+            "slash" => cfg.Slash.Cooldown,
+            "ground_stomp" => cfg.GroundStomp.Cooldown,
+            "whirlwind" => cfg.Whirlwind.Cooldown,
+            "bow" => cfg.Bow.Cooldown,
+            "glaive" => cfg.Glaive.Cooldown,
+            "arrow_rain" => cfg.ArrowRain.Cooldown,
+            _ => 1.0f
+        };
 
         private MonsterEntity FindClosestMonster(float maxRange, bool prioritizeProtectWizard)
         {

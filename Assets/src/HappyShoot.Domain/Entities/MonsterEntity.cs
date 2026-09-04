@@ -46,7 +46,14 @@ namespace HappyShoot.Domain.Entities
         public float PreferredDistance { get; private set; }
         public float AttackInterval { get; private set; }
         public float AttackTimer { get; private set; }
-        public bool HasPendingRangedAttack { get; private set; }
+        public bool HasPendingRangedAttack { get; set; }
+
+        // Side-Scrolling Dimension Mode attributes
+        public bool IsSideScrollMode { get; set; }
+        public float SideScrollBaseY { get; set; } = -1.8f;
+        public float SideScrollWaveAmplitude { get; set; } = 0f;
+        public float SideScrollWaveSpeed { get; set; } = 3.0f;
+        private float _sideScrollTimer;
 
         private EventBus _eventBus;
 
@@ -153,6 +160,9 @@ namespace HappyShoot.Domain.Entities
         public void OnDespawn()
         {
             IsActive = false;
+            IsSideScrollMode = false;
+            SideScrollWaveAmplitude = 0f;
+            _sideScrollTimer = 0f;
             _eventBus = null;
         }
 
@@ -266,6 +276,20 @@ namespace HappyShoot.Domain.Entities
             if (IsDead) return;
 
             float effectiveMoveSpeed = MoveSpeed * (IsChilled ? Math.Max(0.1f, 1f - ChillSlowFactor) : 1f);
+
+            // In Side-Scrolling Dimension mode: march horizontally from right to left with optional wave flight
+            if (IsSideScrollMode)
+            {
+                _sideScrollTimer += deltaTime;
+                float newX = Position.X - effectiveMoveSpeed * deltaTime;
+                float newY = SideScrollBaseY;
+                if (SideScrollWaveAmplitude > 0.001f)
+                {
+                    newY = SideScrollBaseY + (float)Math.Sin(_sideScrollTimer * SideScrollWaveSpeed) * SideScrollWaveAmplitude;
+                }
+                Position = new Vector2D(newX, newY);
+                return;
+            }
 
             Vector2D diff = targetPosition - Position;
             float distSqr = diff.SqrMagnitude;

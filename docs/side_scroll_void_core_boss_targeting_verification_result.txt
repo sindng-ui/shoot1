@@ -1,0 +1,31 @@
+================================================================================
+횡스크롤 차원 모드 (SideScroll) - 차원의 핵(Dimensional Void Core) 보스전 개선 검증 결과
+================================================================================
+작업 일시: 2026-09-05
+작업자: Antigravity (Linux Developer Persona)
+
+1. 발생 문제 및 원인 분석:
+   - 증상: 300m 지점에서 등장하는 차원의 핵이 플레이어가 전진할 때마다 계속 오른쪽으로 도망쳐서(targetX = Mathf.Max(pos.x, playerX + 8.5f)) 타격하기 어려웠음.
+   - 근본 원인 2가지:
+     1) DimensionalVoidCoreView.cs 내부의 플레이어 추종 회피 로직으로 인해 계속 오른쪽으로 밀려남.
+     2) 보스가 단순 GameObject로 생성되어 SpatialGrid2D<MonsterEntity>에 등록되지 않았음. 이로 인해 플레이어의 자동 타겟팅 투사체(화살, 마법구, 연쇄 번개 등)와 동료(전사/궁수)의 공격 대상에 잡히지 않음.
+
+2. 해결 및 구현 내용:
+   [A] DimensionalVoidCoreView.cs 개선:
+       - 회피 이동 코드 전면 제거: 300m 발판 위 지정 좌표에 완전히 고정(Stationary Boss Arena)되어 자리를 지킴.
+       - MonsterEntity 연동: 도메인 보스 엔티티의 HP, 사망 상태와 View를 1:1 양방향 동기화.
+       - 피격 시각 피드백: 피격 시 플래시(White -> Magenta Flash) 및 실시간 체력바(BossHpBar) 게이지 연동.
+       - 근접 비비기 피해: 플레이어가 반경 3.8m 내로 접근 시 지속적인 근접 대미지(350/s)를 입혀 빠른 격파 가능.
+       - 격파 시 연출: 35개 이상의 황금 코인 분수 폭발 연출 후 최종 승리 시퀀스로 깔끔하게 연결.
+
+   [B] SideScrollMonsterSpawner.cs 개선:
+       - SpawnVoidCore(float bossX) 호출 시 발판 높이(GetHighestSurfaceYAt)를 측정하여 안정적인 착지 Y좌표 확보.
+       - 도메인 스포너(_mainSpawner.DomainSpawner.SpawnMonster)를 통해 Type: Boss, Name: "차원의 핵", MaxHealth: 3000f, MoveSpeed: 0f, Radius: 1.8f 엔티티 소환.
+       - SpatialGrid2D에 등록되어 모든 자동 공격 스킬(투사체, 회전검, 번개 체인, 동료 참격)이 정상 타겟팅되고 피해를 누적시킴.
+       - Cleanup 시 잔여 보스 엔티티를 완벽히 역소환(Despawn)하여 메모리 누수 방지.
+
+3. 코드 및 파일 규격 검증:
+   - DimensionalVoidCoreView.cs: 239 lines (500줄 제한 엄격 준수)
+   - SideScrollMonsterSpawner.cs: 294 lines (500줄 제한 엄격 준수)
+   - 문서 동기화: docs/app_map/VIEW_MAP.md 갱신 완료
+================================================================================

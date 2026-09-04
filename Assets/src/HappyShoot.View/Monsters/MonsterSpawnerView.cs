@@ -45,6 +45,7 @@ namespace HappyShoot.View.Monsters
         private BossHazardZoneManagerView _hazardManager;
         private ArchLichPatternController _lichPatternCtrl;
         private UI.StageVictoryUiView _victoryUiView;
+        private HappyShoot.Domain.Progression.SkillTreeManager _skillTreeManager;
         private readonly WavePhaseController _phaseCtrl = new WavePhaseController();
 
         public MonsterSpawner DomainSpawner => _domainSpawner;
@@ -54,6 +55,7 @@ namespace HappyShoot.View.Monsters
         public void SetEnemyProjectileManager(EnemyProjectileManagerView mgr) => _enemyProjManager = mgr;
         public void SetLevelSystem(HappyShoot.Domain.Leveling.LevelSystem levelSystem) => _levelSystem = levelSystem;
         public void SetVictoryUiView(UI.StageVictoryUiView victoryUiView) => _victoryUiView = victoryUiView;
+        public void SetSkillTreeManager(HappyShoot.Domain.Progression.SkillTreeManager mgr) => _skillTreeManager = mgr;
 
         public void JumpToPhase(int phaseNumber)
         {
@@ -104,34 +106,12 @@ namespace HappyShoot.View.Monsters
 
         public void SpawnTrainingDummies(Vector2D center, int count = 5)
         {
-            _domainSpawner.DespawnAll();
-            _activeViewMap.Clear();
-            for (int v = 0; v < _viewPool.Count; v++) _viewPool[v].gameObject.SetActive(false);
-
-            float radius = 3.0f;
-            float step = (Mathf.PI * 2f) / count;
-            for (int i = 0; i < count; i++)
-            {
-                float angle = i * step;
-                Vector2D pos = center + new Vector2D(
-                    (float)System.Math.Cos(angle) * radius,
-                    (float)System.Math.Sin(angle) * radius);
-                var monster = _domainSpawner.SpawnMonster("훈련용 허수아비", 999999f, 0f, 0f, 1, 0, pos, MonsterType.Golem);
-                GetOrCreateView(monster);
-            }
-            SpawnBatDummies(center, 12);
+            MonsterTrainingDummyHelper.SpawnTrainingDummies(center, count, _domainSpawner, _activeViewMap, _viewPool, GetOrCreateView);
         }
 
         public void SpawnBatDummies(Vector2D center, int batCount = 10)
         {
-            for (int i = 0; i < batCount; i++)
-            {
-                float angle = Random.Range(0f, Mathf.PI * 2f);
-                float dist = Random.Range(3.5f, 6.5f);
-                Vector2D pos = center + new Vector2D(Mathf.Cos(angle) * dist, Mathf.Sin(angle) * dist);
-                var bat = _domainSpawner.SpawnMonster("박쥐 허수아비", 999999f, 0f, 0f, 1, 0, pos, MonsterType.Bat);
-                GetOrCreateView(bat);
-            }
+            MonsterTrainingDummyHelper.SpawnBatDummies(center, batCount, _domainSpawner, GetOrCreateView);
         }
 
         public void Initialize(PlayerView playerView, HappyShoot.Domain.Leveling.LevelSystem levelSystem = null)
@@ -164,14 +144,23 @@ namespace HappyShoot.View.Monsters
 
             if (isThirdBoss)
             {
-                Debug.Log("[MonsterSpawnerView] Boss 3 (Arch-Lich) Defeated! Invoking Stage Victory sequence!");
+                Debug.Log("[MonsterSpawnerView] Boss 3 (Arch-Lich) Defeated!");
                 _phaseCtrl.OnBossDefeated(3);
                 _lichPatternCtrl?.Clear();
-                // Clear all active monsters and trigger Victory popup!
                 _domainSpawner.DespawnAll();
                 _activeViewMap.Clear();
                 for (int v = 0; v < _viewPool.Count; v++) _viewPool[v].gameObject.SetActive(false);
-                _victoryUiView?.ShowVictoryPopup();
+
+                bool isThirdClearOrMore = _skillTreeManager != null && _skillTreeManager.ClearCount >= 2;
+                if (isThirdClearOrMore)
+                {
+                    Vector3 spawnPos = _playerView != null ? _playerView.transform.position + new Vector3(2.5f, 0f, 0f) : Vector3.zero;
+                    SpawnDimensionPortal(spawnPos);
+                }
+                else
+                {
+                    _victoryUiView?.ShowVictoryPopup();
+                }
             }
             else if (isSecondBoss)
             {
@@ -474,6 +463,24 @@ namespace HappyShoot.View.Monsters
             _viewPool.Add(view);
             _activeViewMap[entity.Id] = view;
             return view;
+        }
+
+        public void SpawnDimensionPortal(Vector3 pos)
+        {
+            var go = new GameObject("DimensionPortal");
+            go.transform.position = pos;
+            var portal = go.AddComponent<SideScroll.DimensionPortalView>();
+            portal.Initialize(_playerView, () => SideScroll.SideScrollModeController.Instance?.EnterSideScrollMode());
+        }
+
+        /// <summary>
+        /// Creates (or recycles) a MonsterView for a domain entity spawned externally (e.g. SideScrollMonsterSpawner).
+        /// The view is immediately positioned at the entity's current position and activated.
+        /// </summary>
+        public void EnsureViewForEntity(MonsterEntity entity)
+        {
+            if (entity == null) return;
+            GetOrCreateView(entity);
         }
     }
 }

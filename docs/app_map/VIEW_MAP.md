@@ -37,7 +37,8 @@
 | | `PlayerHealthBarView.cs` | `PlayerHealthBarView` | 머리 위 오버헤드 미니 체력바 (SpriteRenderer 기반 0-할당, sortingOrder 20/21) |
 | | `PlayerInputHandler.cs` | `PlayerInputHandler` | New Input System 기반 WASD/터치 이동 입력 수신 및 도메인 전달 |
 | | `WizardWeaponPlacementHelper.cs` | `WizardWeaponPlacementHelper` | 🧙‍♂️ 마법사 8방향+정면/후면 지팡이 오른손 1:1 결합 스냅, 캐스팅 펄스 리프트, flipX 및 소팅오더(등 뒤 15 / 앞손 17) 완전 제어 |
-| **Companions** | `CompanionView.cs` | `CompanionView` | AI 동료 시각화 및 전투 AI: 마법사 하위/몬스터 상위 레이어링(몸체 sortingOrder=12, 무기 11/13, 슬래시 14), 샌드박스 쿨다운/데미지 실시간 연동, 다중 스킬 순차 발동, 6m 정속 재합류, 젤리 보빙, 대검 스윙 모션 |
+| **Companions** | `CompanionView.cs` | `CompanionView` | AI 동료 시각화 및 전투 AI: 마법사 하위/몬스터 상위 레이어링(몸체 sortingOrder=12, 무기 11/13), 샌드박스 쿨다운/데미지 실시간 연동, 다중 스킬 순차 발동, 6m 정속 재합류, 젤리 보빙, 횡스크롤 독립 보행 및 동적 발판 높이 추적 |
+| | `CompanionSlashEffect.cs` | `CompanionSlashEffect` | ⚔️ 전사 동료 대검 스윙 회전 및 절차적 슬래시 궤적 호(SlashArc) 비주얼 이펙트 전담 컴포넌트 |
 | | `CompanionManagerView.cs` | `CompanionManagerView` | AI 동료 생명주기 관리: CompanionRewardSyncEvent 구독, 마법사 레벨업 시 동료 스킬 해금/레벨업/패시브 자동 동기화, 클리어 회차 기반 스폰 |
 | | `CompanionSkillExecutor.cs` | `CompanionSkillExecutor` | 동료 스킬 실행 및 VFX 전담: 글레이브, 화살비, 지면강타, 휠윈드 전용 비주얼 연동 |
 | | `CompanionSelectPreviewHelper.cs` | `CompanionSelectPreviewHelper` | 메인 메뉴 3인 원정대 프리뷰: 마법사 좌우 호위 전사/궁수 카드 렌더링, 미해금 시 실루엣 + 락 뱃지 |
@@ -60,6 +61,16 @@
 | | `BossHazardZoneManagerView.cs`| `BossHazardZoneManagerView` | 💥 보스 광역 장판 0-할당 풀링: 1.2s 전조 경고 링 $\rightarrow$ 2.0s 마그마 지옥불 장판(직경 5.6m) |
 | | `ArchLichPatternController.cs` | `ArchLichPatternController` | 💀 최종 보스 3(사령왕 리치) 전용 3대 맹공 패턴: 8방향 나선 회전 영혼 탄막, 3연속 쐐기 암흑 참격파, 언데드 군단 소환 |
 | | `Phase3MonsterSpriteHelper.cs` | `Phase3MonsterSpriteHelper` | 망령, 사령술사, 어보미네이션, 사신, 사령왕 리치, 저주 영혼탄 프로시저럴 스프라이트 생성기 |
+
+---
+
+### 4. Side-Scrolling Dimension Trial (New!)
+| 카테고리 | 파일명 | 컴포넌트 / 헬퍼 | 설명 |
+| :--- | :--- | :--- | :--- |
+| **Dimension Mode** | `DimensionPortalView.cs` | `DimensionPortalView` | 🌀 3회차(궁수 해금) 보스3 격파 시 출현하는 시공간 균열 차원 포탈: 보라/시안 성운 회전 펄스, 근접 플레이어 흡수 스핀 & 화이트 플래시 전환 |
+| | `SideScrollModeController.cs` | `SideScrollModeController` | 🚀 횡스크롤 모드 총괄 마스터: 카메라 Y축 고정, 수평 좌우 1D 이동, 300m 돌파 거리 HUD 게이지, 마법 오버드라이브(-50% CDR) 및 최종 승리 연계 |
+| | `SideScrollBackgroundView.cs` | `SideScrollBackgroundView` | 🌌 3중 패럴랙스 차원 회랑 배경: 원경 네온 성운(0.15x), 중경 고대 룬 모놀리스(0.40x), 근경 빛나는 바닥 레일 무한 루프 |
+| | `SideScrollMonsterSpawner.cs` | `SideScrollMonsterSpawner` | 👾 횡스크롤 우측 웨이브 스포너: 차원 슬라임/임프/가고일, 가속 링(Speed Ring), 보석 폭풍(Gem Storm), 300m 거대 차원 핵(Void Core) 보스전 |
 
 ---
 
@@ -169,6 +180,20 @@
 | | `TouchJoystickSpriteHelper.cs` | `TouchJoystickSpriteHelper` | 조이스틱 베이스 링(160x160) & 노브(64x64) 절차적 생성 헬퍼 |
 | | `MobilePauseButtonView.cs` | `MobilePauseButtonView` | 모바일 우측 상단 인게임 터치 전용 일시정지 [⏸] 버튼 |
 
+### 9. Side-Scrolling Dimension Corridor Mode (3rd Clear Secret Mode)
+| 파일명 | 주요 컴포넌트 / 헬퍼 | 설명 |
+| :--- | :--- | :--- |
+| `DimensionPortalView.cs` | `DimensionPortalView` | 🌀 3회차 보스3(사령왕 리치) 격파 시 스폰되는 차원 포탈. 2중 역회전 펄스 링 & 마법사 흡수 트윈 연출 |
+| `SideScrollModeController.cs`| `SideScrollModeController` | 🚀 횡스크롤 모드 마스터 컨트롤러: 징검다리 낙하/2회 목숨(❤️❤️) 연동, 마법사 단독 질주(동료 일시 은닉), 탑다운 배경/스포너 100% 은폐, 300m 게이지 HUD, 탈락/승리 연계 |
+| `SideScrollPlatformManager.cs`| `SideScrollPlatformManager`| 🌉 입체 징검다리 플랫폼(3.3m 발판, 1.7m 틈새 심연, -1.8f~+0.6f 5단 높낮이) 및 낙하 감지: 1회 추락 시 발판 정중앙 안전 장소 리스폰(❤️💔), 2회 추락 시 탈락 룰 전담 관리자 |
+| `SideScrollBackgroundView.cs`| `SideScrollBackgroundView` | 🌌 횡스크롤 전용 100% 불투명 솔리드 우주 백드롭(-60), 3중 패럴랙스(성운 0.15x, 부유 모놀리스 0.45x, 솔리드 차원 그리드) |
+| `SideScrollMonsterSpawner.cs`| `SideScrollMonsterSpawner`| 👾 횡스크롤 대량 몬스터 떼스폰: 0.5초마다 지상 슬라임 5~8마리 팩 + 골렘 및 공중 박쥐 편대 쇄도 스케줄러 |
+| `UnstableVoidCrystalView.cs` | `UnstableVoidCrystalView` | 💥 차원 불안정 폭발 수정: 타격 시 반경 6m 내 모든 적을 일망타진하는 연쇄 폭발 기믹 |
+| `SpeedBoostRingView.cs` | `SpeedBoostRingView` | ⚡ 피버 초가속 링: 통과 시 3.5초간 이동속도 1.7배 상승 + 적 100뎀 로드킬 충격파 버프 |
+| `DimensionalVoidCoreView.cs` | `DimensionalVoidCoreView` | 🔮 300m 도달 시 출현하는 거대 차원 핵 보스 뷰: 도망치지 않는 고정형 아레나 보스, 도메인 MonsterEntity 연동으로 모든 스킬/동료 자동 타겟팅 피격, 머리 위 전용 체력바, 근접 전투 피해, 보석/골드 대폭발 격파 연출 |
+| `PlayerInputHandler.cs` | `PlayerInputHandler` | 🕹️ 횡스크롤 점프(W/Up/Dpad Up 속도 9.0f, 중력 -26f, 바닥 착지) & 수평 순간이동 대시(Space) 지원 & 발판 중심 안전 리스폰 좌표 등록 |
+| `CompanionView.cs` | `CompanionView` | 👥 횡스크롤 모드 진입 시 마법사 단독 질주를 위해 자동 은닉, 일반 탑다운 복귀 시 정상 복구 |
+
 ---
 
 [🔙 메인 APP_MAP으로 돌아가기](../../APP_MAP.md)
@@ -179,3 +204,21 @@
 - [PlayerDashGhostTrail.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Player/PlayerDashGhostTrail.cs): 대시 이동 시 생성되는 반투명 고스트 트레일 잔상 페이드아웃 뷰 컴포넌트
 - [PlayerDashChargeIndicatorView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Player/PlayerDashChargeIndicatorView.cs): 캐릭터 머리 위 대시 충전 점(살짝 푸른빛 하얀 점 1~3개) 부유 인디케이터
 - [MobileDashTouchZoneView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/UI/MobileDashTouchZoneView.cs): 모바일 화면 우측 45% 전역 터치/탭 시 대시 발동 터치존
+
+---
+
+## 🌀 8. 횡스크롤 차원 모드 시스템 (HappyShoot.View.SideScroll)
+
+- [SideScrollModeController.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/SideScroll/SideScrollModeController.cs): 3페이즈 클리어 포탈 진입 시 활성화되는 횡스크롤 차원 모드 마스터 컨트롤러. 마법사 단독 진행(동료 은닉), 300m 질주, 카메라 Y축 고정 및 뷰포트 확대, 카메라 우측 편향(+4.5m 오프셋)을 통한 플레이어 좌측 35% 배치 & 우측 전방 시야 65% 확보, 차원의 핵 보스전, 탈락/승리 트랜지션 총괄.
+- [SideScrollPlatformManager.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/SideScroll/SideScrollPlatformManager.cs): 5단계 가변 높이(-1.8f~+0.6f) 플랫폼, 3.3m 발판 너비 & 1.7m 틈새 심연, 넉넉한 착지 스윕 판정, 1회 추락 시 발판 정중앙 안전 장소 리스폰(❤️💔), 2회 추락 탈락 규칙, 심연(-10.5f) 완전 추락 소멸 연출 총괄.
+- [SideScrollMonsterSpawner.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/SideScroll/SideScrollMonsterSpawner.cs): 화면 우측 화면 밖(20m+ 전방)에서 대규모 몬스터 군단(슬라임 러셔, 골렘 선봉, 박쥐 파동), 불안정한 공허 수정, 가속 링, 보석 소나기를 스폰하고 뷰를 즉시 동기화. 300m 보스전 시 고정형 MonsterEntity와 DimensionalVoidCoreView를 결합하여 자동 타겟팅 연동.
+- [DimensionPortalView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/SideScroll/DimensionPortalView.cs): 사령왕 리치 처치 시 바닥에 등장하는 차원 균열 포탈 뷰. 플레이어 진입 감지 및 횡스크롤 모드 전환 트리거.
+- [SideScrollBackgroundView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/SideScroll/SideScrollBackgroundView.cs): 성운, 심연 산맥, 시공간 왜곡 별무리로 구성된 3중 패럴랙스 횡스크롤 배경 뷰.
+- [UnstableVoidCrystalView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/SideScroll/UnstableVoidCrystalView.cs): 타격 시 0.6초 후 대폭발(반경 5.5m, 350 데미지)을 일으켜 몬스터 무리를 일망타진하는 전략 오브젝트.
+- [SpeedBoostRingView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/SideScroll/SpeedBoostRingView.cs): 통과 시 3.5초간 이속 +70% 폭풍 질주, 로드킬 충격파, 0.05초 간격의 찬란한 비전 고스트 트레일 잔상(Afterimage Ghost Trail) 연출.
+- [SideScrollGoldCoinView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/SideScroll/SideScrollGoldCoinView.cs): 횡스크롤 모드 전용 필드 골드 코인 뷰. 몬스터 사망 시 통통 튀며 스폰, 플레이어 자석 흡수, 경험치 3지선다 팝업 방해 없이 대량의 골드 누적.
+- [FallingGemShowerView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/SideScroll/FallingGemShowerView.cs): 차원 질주 중 하늘에서 비처럼 쏟아지는 고화질 황금 코인 소나기 뷰 (접촉 시 회당 +15G 획득).
+- [DimensionalVoidCoreView.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/SideScroll/DimensionalVoidCoreView.cs): 300m 도달 시 등장하는 차원의 핵 최종 보스. 고정형 배치로 도망 방지, MonsterEntity 연동으로 플레이어/동료 스킬 자동 타겟팅, 머리 위 전용 체력바, 근접 타격 판정, 파괴 시 최종 승리 트리거.
+- [MonsterTrainingDummyHelper.cs](file:///k:/unityprojects/shoot1/shoot1/Assets/src/HappyShoot.View/Monsters/MonsterTrainingDummyHelper.cs): 테스트/샌드박스용 훈련 허수아비 및 박쥐 스폰 전담 분리 헬퍼.
+
+

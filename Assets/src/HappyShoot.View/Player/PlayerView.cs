@@ -58,6 +58,7 @@ namespace HappyShoot.View.Player
         private HeroSpriteHelper.ViewDirection _currentViewDir = HeroSpriteHelper.ViewDirection.Front;
 
         public CharacterClassType ClassType => _classType;
+        public Vector2 LastAimDirection => _entity != null ? new Vector2((float)_entity.AimDirection.X, (float)_entity.AimDirection.Y) : Vector2.right;
 
         public void SetExternalSystems(Monsters.MonsterSpawnerView spawnerView, Projectiles.ProjectileManagerView projectileManagerView)
         {

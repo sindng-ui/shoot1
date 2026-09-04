@@ -49,6 +49,12 @@ graph TD
         MFV --> RTV[RuneInscriptionTabView]
         GB --> CM[CompanionManagerView]
         CM --> CV[CompanionView (Warrior & Ranger)]
+        CV --> CSE[CompanionSlashEffect]
+        GB --> SSM[SideScrollModeController & Parallax View]
+        SSM --> SPM[SideScrollPlatformManager (Variable Heights & Chasm)]
+        MV --> DPV[DimensionPortalView (3rd Clear Portal)]
+        DPV --> SSM
+        SSM --> SVU
         GB --> STV[SkillTreeUiView (360° Arcane Dial)]
         GB --> IGC[InGameGemCounterHudView (Gold & 3-Gems)]
         GB --> TJV[TouchJoystickView (Mobile Floating)]

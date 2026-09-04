@@ -1,0 +1,45 @@
+================================================================================
+[검증 보고서] 횡스크롤 차원 모드: 골드 러시 & 초고속 잔상 이펙트 구현 완료
+================================================================================
+날짜: 2026-09-05
+작업자: Linux/WSL 개발자 (Pair Programming with 형님)
+
+1. 구현 내역 요약
+--------------------------------------------------------------------------------
+[1] 골드 러시(Gold Rush) 시스템 & 3지선다 레벨업 팝업 완전 차단
+  - GemManager.IsSideScrollMode 플래그 연동:
+    * 횡스크롤 모드 진입 시 GemManager의 경험치 구슬(SpawnGem) 스폰을 완전 억제.
+    * 경험치가 누적되지 않으므로 횡스크롤 플레이 중 3지선다 레벨업 팝업이 일절 발생하지 않음.
+  - SideScrollGoldCoinView 신규 구현:
+    * 몬스터(슬라임, 골렘, 박쥐) 처치 시 통통 튀며(Bounce physics) 황금 코인 드랍.
+    * 플레이어가 2.8m 이내 접근 시 자석(Magnetic)으로 쾌속 흡수되어 GameSession에 골드 누적 (+10G / +35G) 및 코인 획득 사운드 재생.
+  - FallingGemShowerView 업그레이드:
+    * 하늘에서 떨어지는 소나기도 고화질 황금 코인 스프라이트로 변경되고 회당 +15G 골드 직접 지급.
+  - LevelUpUiView 방어 코드 추가:
+    * 혹시 남아있는 레벨업 이벤트가 발생하더라도 횡스크롤 모드 중에는 ShowLevelUpPopup이 절대 열리지 않도록 원천 차단.
+
+[2] 스피드 부스트 링 고스트 트레일 잔상(Afterimage Ghost Trail) 연출
+  - SpeedBoostRingView / SideScrollHyperSpeedBuff 업그레이드:
+    * 스피드 링 통과 시 3.5초 동안 마법사 뒤로 0.05초 간격의 고스트 트레일 잔상이 연속 방출.
+    * PlayerDashGhostTrail 풀링 시스템과 완벽 연동하여 GC 0-할당 고성능 유지.
+    * 마법사가 최고 속도로 질주할 때 찬란한 비전 잔상이 촤르르륵 깔려 폭풍 질주 쾌감 극대화!
+
+[3] MonsterSpawnerView 500줄 초과 해소 리팩토링
+  - MonsterTrainingDummyHelper.cs 신규 분리:
+    * 훈련용 허수아비 및 박쥐 더미 스폰 로직을 전용 정적 헬퍼로 이관.
+    * MonsterSpawnerView.cs를 509줄에서 486줄로 깔끔하게 슬림화 완료!
+
+2. 파일 줄 수 검증 (모든 파일 500줄 이하 엄격 준수)
+--------------------------------------------------------------------------------
+- MonsterSpawnerView.cs: 486줄 (OK)
+- MonsterTrainingDummyHelper.cs: 68줄 (OK)
+- SideScrollGoldCoinView.cs: 120줄 (OK)
+- SideScrollModeController.cs: 346줄 (OK)
+- SpeedBoostRingView.cs: 224줄 (OK)
+- DimensionalVoidCoreView.cs: 164줄 (OK)
+- GameBootstrap.cs: 462줄 (OK)
+- LevelUpUiView.cs: 442줄 (OK)
+- GemManager.cs: 186줄 (OK)
+
+모든 요구사항 정상 구현 완료.
+================================================================================

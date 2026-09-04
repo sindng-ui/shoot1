@@ -1,0 +1,30 @@
+================================================================================
+횡스크롤 차원 모드 (SideScroll) - 안전 리스폰, 마법사 솔로 질주, 징검다리 갭 조정 검증 결과
+================================================================================
+작업 일시: 2026-09-05
+작업자: Antigravity (Linux Developer Persona)
+
+1. 요청 사항 및 해결 내용
+   [1] 낙하 후 안전한 장소 리스폰
+       - 문제: 플레이어가 발판 끝자락 낭떠러지 직전 좌표에 있을 때 해당 위치가 안전 위치로 등록되어, 추락 후 리스폰 시 발판 모서리에서 바로 다시 추락하던 문제.
+       - 해결: SideScrollPlatformManager의 TryGetPlatformAtX에서 발판 중심 X(platformCenterX)를 반환하도록 확장하고, PlayerInputHandler에서 착지 및 보행 시 해당 발판의 "정중앙 X좌표"를 RegisterSafePlatform에 전달하도록 구현.
+       - 결과: 낭떠러지 추락 시 이전 발판의 정중앙에 완벽하게 안착하여 안전하게 플레이 재개 가능.
+
+   [2] 횡스크롤 모드 마법사 단독 진행 (동료 일시 은닉)
+       - 구현: SideScrollModeController.EnterSideScrollMode() 진입 시 모든 CompanionView를 gameObject.SetActive(false)로 비활성화.
+       - 결과: 횡스크롤 차원 질주 중에는 동료 없이 오직 마법사 혼자서 쾌적하게 점프와 대시를 조작하며 온전히 몰입.
+       - 복구: 차원 모드 종료 및 탑다운 복귀 시 원래 해금된 동료들을 SetActive(true)로 자동 복구하여 모드 간 리그레션 차단.
+
+   [3] 징검다리 너비 & 틈새(Chasm Gap) 황금 밸런스 조정
+       - 기존: PlatformWidth = 4.2f, 간격 = 0.8f (발판이 너무 길고 틈새가 너무 좁음)
+       - 변경: PlatformWidth = 3.3f, Spacing = 5.0f (틈새 간격 = 1.7m)
+       - 결과: 발판 너비가 너무 좁지 않으면서도, 1.7m의 틈새가 확보되어 점프로 뛰어넘는 징검다리 특유의 긴장감과 액션 손맛 극대화.
+
+2. 소스 코드 라인 수 검증 (WSL Bash wc -l):
+   - SideScrollPlatformManager.cs: 367 lines (500줄 제한 엄격 준수)
+   - SideScrollModeController.cs: 366 lines (500줄 제한 엄격 준수)
+   - PlayerInputHandler.cs: 207 lines (500줄 제한 엄격 준수)
+
+3. 문서 업데이트:
+   - docs/app_map/VIEW_MAP.md 갱신 완료
+================================================================================

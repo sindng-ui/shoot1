@@ -19,9 +19,21 @@ namespace HappyShoot.View.Cameras
 
         public static CameraFollowView Instance { get; private set; }
 
+        public bool LockYAxis { get; set; }
+        public float LockedY { get; set; }
+        public float TargetOrthoSize { get; set; }
+        public float OffsetX
+        {
+            get => _offset.x;
+            set => _offset.x = value;
+        }
+        private UnityEngine.Camera _cam;
+
         private void Awake()
         {
             Instance = this;
+            _cam = GetComponent<UnityEngine.Camera>();
+            if (_cam != null) TargetOrthoSize = _cam.orthographicSize;
         }
 
         public void SetTarget(Transform target)
@@ -111,7 +123,14 @@ namespace HappyShoot.View.Cameras
             if (_target == null) return;
 
             Vector3 desiredPosition = _target.position + _offset;
+            if (LockYAxis) desiredPosition.y = LockedY + _offset.y;
+
             transform.position = Vector3.Lerp(transform.position, desiredPosition, _smoothSpeed * Time.deltaTime);
+
+            if (_cam != null && TargetOrthoSize > 0f && Mathf.Abs(_cam.orthographicSize - TargetOrthoSize) > 0.01f)
+            {
+                _cam.orthographicSize = Mathf.Lerp(_cam.orthographicSize, TargetOrthoSize, 3.5f * Time.deltaTime);
+            }
 
             if (_shakeTimer > 0f)
             {

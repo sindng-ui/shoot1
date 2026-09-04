@@ -98,6 +98,17 @@ namespace HappyShoot.View.UI
                 new Color(0.7f, 0.3f, 0.2f, 1f), () => ToggleWarriorComp(ctx.CompanionManager), out _warriorCompBtnText);
             CreateSmallButton(contentBox.transform, "BtnRngComp", "🏹 궁수 동료: OFF", new Vector2(85f, currentY), new Vector2(160f, 26f),
                 new Color(0.2f, 0.6f, 0.4f, 1f), () => ToggleRangerComp(ctx.CompanionManager), out _rangerCompBtnText);
+            currentY -= 30f;
+
+            // Row 8: Dimension Portal & Side-Scroll Instant Trigger
+            CreateSmallButton(contentBox.transform, "BtnPortal", "🌀 차원 포탈 소환", new Vector2(-85f, currentY), new Vector2(160f, 26f),
+                new Color(0.5f, 0.2f, 0.8f, 1f), () =>
+                {
+                    Vector3 spawnPos = ctx.PlayerView != null ? ctx.PlayerView.transform.position + new Vector3(2.5f, 0f, 0f) : Vector3.zero;
+                    ctx.SpawnerView?.SpawnDimensionPortal(spawnPos);
+                }, out _);
+            CreateSmallButton(contentBox.transform, "BtnSideScroll", "🚀 횡스크롤 즉시 진입", new Vector2(85f, currentY), new Vector2(160f, 26f),
+                new Color(0.2f, 0.7f, 0.85f, 1f), () => SideScroll.SideScrollModeController.Instance?.EnterSideScrollMode(), out _);
             currentY -= 32f;
         }
 

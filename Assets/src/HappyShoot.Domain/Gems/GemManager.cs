@@ -56,8 +56,16 @@ namespace HappyShoot.Domain.Gems
             _eventBus?.Subscribe<MonsterDiedEvent>(OnMonsterDied);
         }
 
+        public bool IsSideScrollMode { get; set; }
+
         private void OnMonsterDied(MonsterDiedEvent evt)
         {
+            if (IsSideScrollMode)
+            {
+                // In side-scrolling dimension mode: all exp gems are suppressed so player is never interrupted by level-up popups!
+                return;
+            }
+
             if (evt.ExpValue > 0)
             {
                 SpawnGem(evt.Position, evt.ExpValue);

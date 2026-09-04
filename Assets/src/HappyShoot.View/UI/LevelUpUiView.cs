@@ -54,6 +54,10 @@ namespace HappyShoot.View.UI
             if (_rewardManager == null || _playerView == null || _playerView.Entity == null)
                 return;
 
+            // In Side-Scrolling Dimension Mode: suppress 3-choice popup entirely!
+            if (SideScroll.SideScrollModeController.Instance != null && SideScroll.SideScrollModeController.Instance.IsActive)
+                return;
+
             _currentOptions = _rewardManager.RollRewards(_playerView.Entity, count: 3);
             if (_currentOptions == null || _currentOptions.Count == 0)
                 return;

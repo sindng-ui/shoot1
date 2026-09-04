@@ -187,6 +187,16 @@ namespace HappyShoot.Domain.Entities
             _monsterPool.Despawn(monster);
         }
 
+        public void Despawn(MonsterEntity monster)
+        {
+            if (monster == null) return;
+            int idx = _activeMonsters.IndexOf(monster);
+            if (idx >= 0)
+            {
+                DespawnMonster(monster, idx);
+            }
+        }
+
         public void DespawnAll()
         {
             for (int i = _activeMonsters.Count - 1; i >= 0; i--)

@@ -1,0 +1,43 @@
+[검증 결과 보고서] 횡스크롤 징검다리 오르락내리락 입체 발판 및 가라앉는 버그 해결 검증
+작성 일시: 2026-09-04
+작성자: Antigravity AI
+
+1. 컴포넌트 파일 라인 수 검증 (500줄 이하 엄수)
+- Assets/src/HappyShoot.View/SideScroll/SideScrollPlatformManager.cs: 293줄 (통과, 발판 스폰 및 높낮이 단일화)
+- Assets/src/HappyShoot.View/SideScroll/SideScrollBackgroundView.cs: 228줄 (통과, 중복 레일 제거 및 배경 전담)
+- Assets/src/HappyShoot.View/SideScroll/SideScrollModeController.cs: 303줄 (통과)
+- Assets/src/HappyShoot.View/SideScroll/SideScrollMonsterSpawner.cs: 225줄 (통과)
+- Assets/src/HappyShoot.View/SideScroll/DimensionPortalView.cs: 216줄 (통과)
+- Assets/src/HappyShoot.View/SideScroll/DimensionalVoidCoreView.cs: 153줄 (통과)
+- Assets/src/HappyShoot.View/SideScroll/SpeedBoostRingView.cs: 161줄 (통과)
+- Assets/src/HappyShoot.View/SideScroll/UnstableVoidCrystalView.cs: 134줄 (통과)
+- Assets/src/HappyShoot.View/Player/PlayerInputHandler.cs: 198줄 (통과, 발판 착지 Y 고정 및 ResetGroundedState)
+- Assets/src/HappyShoot.View/Player/PlayerView.cs: 490줄 (통과)
+- Assets/src/HappyShoot.View/Companion/CompanionView.cs: 443줄 (통과, 500줄 제한 준수를 위해 SlashEffect 분리)
+- Assets/src/HappyShoot.View/Companion/CompanionSlashEffect.cs: 93줄 (통과, 신규 생성)
+
+2. 주요 문제 해결 및 기능 개선 검증
+1) 캐릭터가 서서히 가라앉던 버그 및 제자리 점프 시 뚝 떨어지던 버그 근본 원인 해결:
+   - 이전: TryGetPlatformSurface 판정에서 `currentY <= p.SurfaceY + 1.5f`로 1.5m 범위의 조기 착지 오차가 허용되어 있어, 점프 정점 부근(공중 1.5m 높이)에서 내려오기 시작하자마자 "착지했다"고 오판하여 바닥으로 순간이동(뚝 떨어짐) 발생.
+   - 수정: 연속 수직 스위프 판정(`TryGetPlatformLanding`) 도입. 이전 프레임(prevY)과 현재 프레임(currentY) 사이에서 발판 표면을 위에서 아래로 통과했을 때(`currentY <= surfaceY + 0.1f && prevY >= surfaceY - 0.35f`)에만 정확히 착지하도록 개편. 이제 최고점에서 끝까지 부드러운 포물선으로 자연스럽게 하강하여 발판 표면에 사뿐히 안착함.
+   - 바닥에 서 있을 때는 `TryGetPlatformAtX`로 발판 표면에 1mm 오차 없이 밀착 유지.
+
+2) 오르락내리락 입체 높낮이 징검다리 시스템:
+   - 4단 높낮이 패턴: 지면(-1.8f) -> 중간 발판(-1.0f) -> 높은 공중 발판(-0.2f) -> 중간 발판(-1.0f).
+   - 발판 위에서 W / 위쪽 화살표 / 패드 D-pad Up / 터치 조이스틱 상단 스와이프로 점프(속도 9.0f, 중력 -26f)하여 높은 발판으로 뛰어오르고, 낮은 발판으로 뛰어내리는 플랫포머 손맛 완성.
+   - 각 발판마다 룬 기둥 받침대와 상단 네온 광원 라인이 높이에 맞춰 실시간 생성되어 시각적 입체감 극대화.
+
+3) 2회 추락 탈락 룰 & 안전 발판 되감기 부활:
+   - 1.7m 낭떠러지 틈새로 발을 헛디디거나 점프 실패 시 Y <= -4.8f까지 낙하.
+   - 1회차 낙하: 직전 착지했던 발판 중앙 상공으로 즉시 순간이동 복귀, 리셋(ResetGroundedState), HUD [생명: ❤️ 💔] 갱신, 카메라 셰이크 및 충격파 SFX.
+   - 2회차 낙하: "차원 추락 탈락!" 알림 발생 및 횡스크롤 모드 종료 후 원래 세계로 페이드 귀환.
+
+4) 동료(전사/궁수) 발판 높이 실시간 적응:
+   - CompanionView가 moveX 위치에서의 발판 표면 높이(GetHighestSurfaceYAt)를 실시간 추적하여, 높은 발판으로 이동 시 부드럽게 발판 위로 올라서도록 보정.
+   - 전사 슬래시 비주얼을 CompanionSlashEffect로 분리하여 CompanionView 443줄로 슬림화 달성.
+
+5) 횡스크롤 적 스폰 위치 원거리 시야각 밖 보장:
+   - 이전: 플레이어 기준 15m 지점에 고정 스폰되어, 모바일 및 와이드 뷰포트(반폭 13.5m~17.5m) 환경에서 화면 우측 테두리 바로 안쪽/근처에 뿅 나타나자마자 0.3초 만에 충돌 데미지 발생.
+   - 수정: 카메라의 뷰포트 가로 반폭(halfWidth = orthographicSize * aspect)을 동적으로 계산하여, 화면 오른쪽 끝에서 최소 +8m ~ 12m 더 바깥의 깊은 심연에서 스폰되도록 개선 (플레이어 기준 약 23m~28m 거리).
+   - 적들이 저 멀리 화면 밖에서부터 대열을 갖추고 달려오므로, 플레이어가 2.5~3.5초의 넉넉한 시야와 시간을 확보하여 마법으로 격추하거나 점프로 회피할 수 있음.
+   - 지상 몬스터 및 차원 수정/가속링의 Y 위치도 스폰 위치의 실제 발판 표면 높이(GetHighestSurfaceYAt)에 100% 동기화.

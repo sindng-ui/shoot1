@@ -371,11 +371,17 @@ namespace HappyShoot.View.Bootstrap
             var victoryView = victoryGo.AddComponent<UI.StageVictoryUiView>();
             victoryView.Initialize(_gameSession, null, skillTreeManager, skillTreeUiView, gemCounterView, hudGo.transform, unlockPopupView);
             spawnerView.SetVictoryUiView(victoryView);
+            spawnerView.SetSkillTreeManager(skillTreeManager);
 
             // 6.8. AI Companion Manager (Escort & Combat Support)
             var companionGo = new GameObject("CompanionManager");
             var companionManager = companionGo.AddComponent<CompanionManagerView>();
             companionManager.Initialize(playerView, spawnerView, projManagerView, playerView.EventBus, skillTreeManager);
+
+            // 6.9. Side-Scrolling Dimension Mode Controller
+            var sideScrollGo = new GameObject("SideScrollModeController");
+            var sideScrollCtrl = sideScrollGo.AddComponent<SideScroll.SideScrollModeController>();
+            sideScrollCtrl.Initialize(playerView, companionManager, spawnerView, victoryView, camFollow, _gameSession, gemManagerView.DomainManager);
 
             // 7. Developer Skill Selector & Cheat Console UI
             var devConsoleGo = new GameObject("DevSkillSelectorUI");

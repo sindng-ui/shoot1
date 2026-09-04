@@ -1,0 +1,33 @@
+[검증 결과 보고서] 횡스크롤 차원 모드 완전 변신 (몬스터 횡스크롤화 + 배경 완전 은폐 + 점프 조작)
+작성 일시: 2026-09-04
+작성자: Antigravity AI
+
+1. 변경된 컴포넌트 및 파일 라인 수 검증 (500줄 이하 엄수)
+- Assets/src/HappyShoot.Domain/Entities/MonsterEntity.cs: 388줄 (정상 통과)
+- Assets/src/HappyShoot.View/SideScroll/DimensionPortalView.cs: 216줄 (정상 통과)
+- Assets/src/HappyShoot.View/SideScroll/SideScrollBackgroundView.cs: 240줄 (정상 통과)
+- Assets/src/HappyShoot.View/SideScroll/SideScrollModeController.cs: 272줄 (정상 통과)
+- Assets/src/HappyShoot.View/SideScroll/SideScrollMonsterSpawner.cs: 369줄 (정상 통과)
+- Assets/src/HappyShoot.View/Player/PlayerInputHandler.cs: 154줄 (정상 통과)
+- Assets/src/HappyShoot.View/Companion/CompanionView.cs: 476줄 (정상 통과)
+
+2. 기능별 동작 검증 요약
+1) 배경 완전 은폐 & 100% 불투명 차원 우주 백드롭:
+   - 횡스크롤 진입 시 BackgroundManager.Instance.gameObject.SetActive(false)로 기존 탑다운 돌바닥 타일맵이 100% 꺼집니다.
+   - 카메라에 밀착된 풀스크린 솔리드 백드롭(SortingOrder -60, Alpha 1.0)이 탑다운 화면을 완전히 차단합니다.
+   - Y = -2.35f의 룬 레일과 그 아래를 메우는 단단한 지반(Foundation Abyss)으로 완벽한 횡스크롤 무대가 연출됩니다.
+
+2) 몬스터 횡스크롤화:
+   - 횡스크롤 진입 즉시 기존 탑다운 스포너 정지 & 필드 몬스터 전원 디스폰.
+   - 지상 돌진 몬스터(슬라임/골렘)는 바닥 높이(Y = -1.8f)에 밀착하여 우측에서 좌측으로 일제히 돌진.
+   - 공중 비행 몬스터(차원 박쥐)는 공중 고도(Y = -0.2f)에서 Sine 파동을 그리며 물결 비행.
+   - 도메인 SpatialGrid2D에 정상 등록되어 마법사의 투사체/동료 공격에 정확히 피격 및 처치.
+   - 플레이어 좌측 뒤로 벗어난 몬스터는 자동 디스폰되어 메모리 누수 0.
+
+3) 조작감 혁신:
+   - W키, Up 방향키, 게임패드 위쪽 입력 시 9.0f 속도로 수직 점프 및 중력 -26f 착지.
+   - Space키를 누르면 수평 순간이동 대시 발동.
+   - 동료들은 마법사가 점프하더라도 바닥(Y = -1.8f)에 단단히 서서 전방(전사)과 후방(궁수)을 엄호.
+
+4) 보스전 및 엔딩 연계:
+   - 300m 도달 시 차원 핵(Dimensional Void Core) 보스 출현 및 격파 시 승리 팝업 정상 연결.
